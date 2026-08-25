@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-display: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+    
+    /* 3 Core Brand Colors */
+    --color-coffee-green: #0D6E44;
+    --color-coffee-green-dark: #074E2E;
+    --color-coffee-green-light: #10B981;
+    
+    --color-soil-brown: #381E15;
+    --color-soil-brown-dark: #22120C;
+    --color-soil-red: #7C2D12;
+    --color-soil-red-light: #9A3412;
+    
+    --color-dash-blue: #0284C7;
+    --color-dash-blue-light: #38BDF8;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: #1F2937;
+    background-color: #FAF8F5; /* Warm earthy light background */
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+  }
+}

@@ -1,0 +1,65 @@
+import React from 'react';
+import { MapPin } from 'lucide-react';
+import { EstateZone } from '../../types';
+
+interface ZoneFilterProps {
+  selectedZone: string;
+  onSelectZone: (zone: string) => void;
+  zoneCounts?: Record<string, number>;
+}
+
+export const ZONES: { id: string; name: string }[] = [
+  { id: 'all', name: 'All Kahawa West' },
+  { id: 'Congo Stage', name: 'Congo Stage' },
+  { id: 'Roundabout', name: 'Roundabout' },
+  { id: 'Jacaranda Estate', name: 'Jacaranda' },
+  { id: 'Bima Road', name: 'Bima Road' },
+  { id: 'Soweto', name: 'Soweto' },
+  { id: 'Kamae', name: 'Kamae' },
+  { id: 'Station / Railway', name: 'Station / Railway' },
+  { id: 'Mahiga', name: 'Mahiga' },
+  { id: 'Kamiti Road', name: 'Kamiti Road' },
+  { id: 'Kiamumbi Border', name: 'Kiamumbi Border' },
+];
+
+export const ZoneFilter: React.FC<ZoneFilterProps> = ({
+  selectedZone,
+  onSelectZone,
+  zoneCounts = {},
+}) => {
+  return (
+    <div id="zone-filter-scroll" className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 flex-shrink-0 mr-1">
+        <MapPin className="w-3.5 h-3.5 text-emerald-600" /> Zones:
+      </span>
+
+      {ZONES.map((z) => {
+        const isSelected = selectedZone === z.id;
+        const count = z.id === 'all' ? undefined : zoneCounts[z.id];
+
+        return (
+          <button
+            key={z.id}
+            onClick={() => onSelectZone(z.id)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 flex-shrink-0 ${
+              isSelected
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <span>{z.name}</span>
+            {count !== undefined && (
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  isSelected ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+};

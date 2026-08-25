@@ -1,0 +1,6 @@
+{
+  "name": "Kahawa West Directory",
+  "description": "Comprehensive local business and community directory for Kahawa West, featuring verified listings, estate zones, direct WhatsApp & M-Pesa integration, Community Spotlight stories, and local notices.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

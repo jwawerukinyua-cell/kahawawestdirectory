@@ -1,0 +1,88 @@
+import { Category } from '../types';
+
+export const CATEGORIES: Category[] = [
+  {
+    id: 'food-dining',
+    name: 'Food & Dining',
+    icon: 'Utensils',
+    color: 'from-[#7C2D12] to-[#451A03]',
+    description: 'Nyama choma, local kibandas, fast food joints, bakeries & family cafes across Kahawa West.',
+  },
+  {
+    id: 'health-medical',
+    name: 'Health & Medical',
+    icon: 'HeartPulse',
+    color: 'from-[#0D6E44] to-[#044E2E]',
+    description: 'Clinics, 24/7 pharmacies & chemists, dental care, lab diagnostics and optical centers.',
+  },
+  {
+    id: 'beauty-grooming',
+    name: 'Beauty & Grooming',
+    icon: 'Scissors',
+    color: 'from-[#9A3412] to-[#7C2D12]',
+    description: 'Executive barbershops (kinyozi), hair salons, spas, nail bars and makeup studios.',
+  },
+  {
+    id: 'shopping-groceries',
+    name: 'Shopping & Groceries',
+    icon: 'ShoppingBag',
+    color: 'from-[#0D6E44] to-[#065F46]',
+    description: 'Supermarkets, fresh vegetable mamas, mini-marts, butcheries and wholesale distributors.',
+  },
+  {
+    id: 'fundis-trades',
+    name: 'Fundis & Artisan Trades',
+    icon: 'Wrench',
+    color: 'from-[#0284C7] to-[#0369A1]',
+    description: 'Certified plumbers, electricians, carpenters, welders, painters & masonry experts.',
+  },
+  {
+    id: 'auto-transport',
+    name: 'Auto & Transport',
+    icon: 'Car',
+    color: 'from-[#381E15] to-[#24140E]',
+    description: 'Mechanics, car wash bays, tyre centers, spare parts, bodaboda stages & matatu Saccos.',
+  },
+  {
+    id: 'tech-cyber',
+    name: 'Tech, Cyber & Printing',
+    icon: 'Laptop',
+    color: 'from-[#0284C7] to-[#075985]',
+    description: 'Cyber cafes, KRA / eCitizen services, phone & laptop repair, printing & stationery.',
+  },
+  {
+    id: 'financial-mpesa',
+    name: 'Financial & M-Pesa',
+    icon: 'CreditCard',
+    color: 'from-[#0D6E44] to-[#047857]',
+    description: 'M-Pesa agency shops, Equity / KCB agency banking, SACCOs, microfinance & insurance.',
+  },
+  {
+    id: 'education-daycare',
+    name: 'Schools & Daycare',
+    icon: 'GraduationCap',
+    color: 'from-[#854D0E] to-[#713F12]',
+    description: 'Kindergartens, daycare centers, primary & secondary schools, tutoring & driving schools.',
+  },
+  {
+    id: 'home-rentals',
+    name: 'Housing & Property',
+    icon: 'Home',
+    color: 'from-[#7C2D12] to-[#381E15]',
+    description: 'Caretakers, real estate agents, bedsitter & apartment rentals, moving & storage.',
+  },
+  {
+    id: 'events-leisure',
+    name: 'Events & Entertainment',
+    icon: 'PartyPopper',
+    color: 'from-[#0D6E44] to-[#0284C7]',
+    description: 'Sports lounges, pool tables, event grounds, sound & PA hire, photography & DJs.',
+  },
+  {
+    id: 'laundry-cleaning',
+    name: 'Laundry & Cleaning',
+    icon: 'Droplets',
+    color: 'from-[#0284C7] to-[#0D6E44]',
+    description: 'Dry cleaners, mama fua services, carpet cleaning, fumigation and garbage collection.',
+  },
+];
