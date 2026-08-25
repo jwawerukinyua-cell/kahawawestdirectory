@@ -6,7 +6,7 @@ export const INITIAL_COMMUNITY_STORIES: CommunityStory[] = [
     title: 'How Congo Stage Youth Turned an Abandoned Plot into a Thriving Urban Nursery',
     subtitle: 'Over 4,500 tree seedlings distributed across Bima Road and Jacaranda Estate in six months.',
     category: 'Environment & Clean-up',
-    zone: 'Congo Stage',
+    zone: 'Congo',
     excerpt: 'A grassroots team of twelve young residents collaborated with neighborhood shopkeepers to green local avenues, reduce roadside dust, and train high schoolers in horticulture.',
     content: `What started as an informal Saturday morning clean-up by a dozen youth around Congo Stage has evolved into one of Kahawa West's most impactful green corridors.
 
@@ -114,7 +114,7 @@ export function saveCommunityStory(story: CommunityStory): void {
 
 export function updateStoryModerationStatus(
   storyId: string,
-  status: 'published' | 'pending_review' | 'archived',
+  status: 'published' | 'pending_review' | 'archived' | 'rejected',
   featured?: boolean,
   rejectionReason?: string
 ): CommunityStory[] {
@@ -142,6 +142,8 @@ export function updateStoryModerationStatus(
     return getStoredCommunityStories();
   }
 }
+
+export const updateStoryModeration = updateStoryModerationStatus;
 
 export function deleteCommunityStory(storyId: string): CommunityStory[] {
   try {

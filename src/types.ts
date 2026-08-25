@@ -9,9 +9,12 @@ export interface OpeningHours {
 }
 
 export type EstateZone =
-  | 'Congo Stage'
+  | 'Congo'
   | 'Roundabout'
   | 'Jacaranda Estate'
+  | 'Jubilee Estate'
+  | 'Northern Bypass'
+  | 'Kware / Quarry'
   | 'Bima Road'
   | 'Soweto'
   | 'Kamae'
@@ -126,17 +129,26 @@ export interface CommunityFeedback {
   created_at: string;
 }
 
+export type UpdateType = 'alert' | 'event' | 'business' | 'community' | 'notice';
+
 export interface CommunityUpdate {
   id: string;
   title: string;
-  type: 'vacancy' | 'notice' | 'alert' | 'spotlight';
-  badge?: string;
-  zone?: EstateZone;
+  type: UpdateType;
+  timeInfo: string; // e.g. "Tomorrow • 9:00 AM - 4:00 PM", "Saturday • 10:00 AM", "This Friday", "Sunday • 8:00 AM"
+  location: string; // e.g. "Kahawa West", "Kahawa West Grounds", "Kamiti Road", "PCEA Kahawa West"
+  zone?: EstateZone | string;
   date: string;
   author: string;
+  authorPhone?: string;
+  authorEmail?: string;
   content: string;
   contact?: string;
+  badge?: string;
   imageUrl?: string;
+  status?: 'published' | 'pending_review' | 'rejected';
+  rejectionReason?: string;
+  submittedAt?: string;
 }
 
 export type StoryCategory =
@@ -166,7 +178,7 @@ export interface CommunityStory {
   date: string;
   readTimeMinutes?: number;
   featured?: boolean;
-  status: 'published' | 'pending_review' | 'archived';
+  status: 'published' | 'pending_review' | 'archived' | 'rejected';
   likes?: number;
   submittedAt?: string;
   rejectionReason?: string;

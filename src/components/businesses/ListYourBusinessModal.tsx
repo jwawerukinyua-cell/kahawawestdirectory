@@ -12,6 +12,8 @@ import {
   Globe,
   CreditCard,
   Loader2,
+  Upload,
+  UploadCloud,
 } from 'lucide-react';
 import { Business, EstateZone, BusinessApplication } from '../../types';
 import { saveBusinessApplication, saveCustomizedBusiness } from '../../lib/supabase';
@@ -39,7 +41,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   const [tagline, setTagline] = useState('');
   const [category, setCategory] = useState('food-dining');
   const [subCategory, setSubCategory] = useState('');
-  const [zone, setZone] = useState<EstateZone>('Congo Stage');
+  const [zone, setZone] = useState<EstateZone>('Congo');
   const [landmark, setLandmark] = useState('');
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -64,6 +66,80 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
     const updated = [...photos];
     updated[index] = val;
     setPhotos(updated);
+  };
+
+  const compressAndReadFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round((width * MAX_HEIGHT) / height);
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.85));
+          } else {
+            resolve(e.target?.result as string);
+          }
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleDeviceFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      const updatedPhotos = [...photos];
+      const maxToLoad = Math.min(files.length, 5);
+
+      for (let i = 0; i < maxToLoad; i++) {
+        const dataUrl = await compressAndReadFile(files[i]);
+        updatedPhotos[i] = dataUrl;
+      }
+      setPhotos(updatedPhotos);
+    } catch (err) {
+      console.error('Error reading files:', err);
+      alert('Could not process selected image files.');
+    }
+  };
+
+  const handleSingleSlotUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      const dataUrl = await compressAndReadFile(files[0]);
+      handlePhotoChange(index, dataUrl);
+    } catch (err) {
+      console.error('Error reading file for slot:', err);
+      alert('Could not process selected image file.');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,9 +226,12 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   };
 
   const zones: EstateZone[] = [
-    'Congo Stage',
+    'Congo',
     'Roundabout',
     'Jacaranda Estate',
+    'Jubilee Estate',
+    'Northern Bypass',
+    'Kware / Quarry',
     'Bima Road',
     'Soweto',
     'Kamae',
@@ -406,25 +485,75 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
             </div>
 
             {/* 5 Photos */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-emerald-600" />
-                  <span className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-                    5 Photos (Photo #1 is Main Card Hero)
-                  </span>
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-200">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-emerald-600" />
+                    <span className="font-bold text-slate-900 text-xs uppercase tracking-wider">
+                      5 Business Photos (Photo #1 is Main Card Hero)
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Upload directly from your phone camera or gallery.
+                  </p>
                 </div>
+
+                <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition shadow-sm self-start sm:self-auto">
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>Upload Photos from Device</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleDeviceFileUpload}
+                    className="hidden"
+                  />
+                </label>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
                 {photos.map((p, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <img src={p} alt="thumb" className="w-full h-16 object-cover rounded-lg border border-slate-300" />
+                  <div key={idx} className="space-y-1.5 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
+                    <div className="relative h-20 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
+                      <img src={p} alt="thumb" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
+                        {idx === 0 ? '★ Primary' : `#${idx + 1}`}
+                      </span>
+
+                      <label className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 cursor-pointer transition-opacity duration-200">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span className="text-[9px] font-bold">Replace</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleSingleSlotUpload(idx, e)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    <label className="block w-full text-center py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[10px] cursor-pointer transition border border-slate-300">
+                      <span>Choose File</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleSingleSlotUpload(idx, e)}
+                        className="hidden"
+                      />
+                    </label>
+
                     <input
                       type="text"
-                      value={p}
-                      onChange={(e) => handlePhotoChange(idx, e.target.value)}
-                      placeholder={`URL ${idx + 1}`}
-                      className="w-full p-1 text-[10px] font-mono rounded border border-slate-300"
+                      value={p.startsWith('data:') ? '[Device Photo Loaded]' : p}
+                      onChange={(e) => {
+                        if (!e.target.value.includes('[Device Photo Loaded]')) {
+                          handlePhotoChange(idx, e.target.value);
+                        }
+                      }}
+                      placeholder={`URL or link`}
+                      className="w-full p-1 text-[10px] font-mono text-slate-600 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 truncate"
+                      title={p.startsWith('data:') ? 'Image uploaded from device' : p}
                     />
                   </div>
                 ))}

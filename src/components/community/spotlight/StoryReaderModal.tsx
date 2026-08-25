@@ -55,7 +55,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <div className="bg-[#1D0C06] text-white px-5 sm:px-7 py-4 flex items-center justify-between border-b border-[#3D1A0E] flex-shrink-0">
+        <div className="bg-[#4D0202] text-white px-5 sm:px-7 py-4 flex items-center justify-between border-b border-[#630303] flex-shrink-0">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50">
               {story.category}
@@ -69,7 +69,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#34160C] text-stone-300 hover:text-white transition active:scale-95"
+            className="p-2 rounded-xl bg-[#630303] text-stone-200 hover:text-white transition active:scale-95"
           >
             <X className="w-5 h-5" />
           </button>
@@ -79,7 +79,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
         <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-6">
           {/* Title & Subtitle */}
           <div>
-            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#1D0C06] tracking-tight leading-tight mb-2">
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#630303] tracking-tight leading-tight mb-2">
               {story.title}
             </h1>
             {story.subtitle && (

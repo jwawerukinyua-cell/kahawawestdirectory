@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, PhoneCall, Info, Megaphone } from 'lucide-react';
+import { PlusCircle, PhoneCall, Info, Megaphone, Users } from 'lucide-react';
 import { BrandLogo } from '../ui/BrandLogo';
 
 interface HeaderProps {
@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
   onEmergencyClick,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-[#1D0C06]/95 text-white backdrop-blur-md border-b border-[#3D1A0E] shadow-lg">
+    <header className="sticky top-0 z-40 bg-[#630303]/95 text-white backdrop-blur-md border-b border-[#4A0202] shadow-xl">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between gap-3">
         {/* Brand Logo & Domain */}
         <div
@@ -30,34 +30,34 @@ export const Header: React.FC<HeaderProps> = ({
         <nav className="hidden md:flex items-center gap-2 text-xs lg:text-sm font-sans font-semibold text-stone-200">
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#34160C] transition"
+            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition"
           >
             All Businesses
           </button>
           <button
             onClick={onNoticeboardClick}
-            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#34160C] transition flex items-center gap-1.5 text-emerald-400"
+            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-emerald-300"
           >
-            <Megaphone className="w-4 h-4" />
-            Community Spotlight
+            <Users className="w-4 h-4" />
+            <span>Community</span>
           </button>
           <button
             onClick={onEmergencyClick}
-            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#34160C] transition flex items-center gap-1.5 text-sky-400"
+            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-sky-300"
           >
             <PhoneCall className="w-4 h-4" />
             Emergency Contacts
           </button>
           <button
             onClick={onAboutClick}
-            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#34160C] transition flex items-center gap-1.5 text-stone-300"
+            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-stone-300"
           >
             <Info className="w-4 h-4" />
             About KWEST
           </button>
         </nav>
 
-        {/* Header Action Button: Coffee Green CTA */}
+        {/* Header Action Button */}
         <div className="flex items-center gap-2">
           <button
             id="header-list-business-btn"
@@ -73,4 +73,3 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-

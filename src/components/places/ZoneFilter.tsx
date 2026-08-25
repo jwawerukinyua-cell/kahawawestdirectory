@@ -10,9 +10,12 @@ interface ZoneFilterProps {
 
 export const ZONES: { id: string; name: string }[] = [
   { id: 'all', name: 'All Kahawa West' },
-  { id: 'Congo Stage', name: 'Congo Stage' },
+  { id: 'Congo', name: 'Congo' },
   { id: 'Roundabout', name: 'Roundabout' },
   { id: 'Jacaranda Estate', name: 'Jacaranda' },
+  { id: 'Jubilee Estate', name: 'Jubilee Estate' },
+  { id: 'Northern Bypass', name: 'Northern Bypass' },
+  { id: 'Kware / Quarry', name: 'Kware / Quarry' },
   { id: 'Bima Road', name: 'Bima Road' },
   { id: 'Soweto', name: 'Soweto' },
   { id: 'Kamae', name: 'Kamae' },

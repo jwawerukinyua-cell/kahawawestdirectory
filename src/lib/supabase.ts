@@ -1,18 +1,44 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Business, BusinessClaim, CommunityFeedback, BusinessApplication } from '../types';
 
-// The user's Supabase project: qmdhxdrmywvjbevxsnfd
-const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://qmdhxdrmywvjbevxsnfd.supabase.co';
-const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_anon_fallback';
+// The user's Supabase project URL and anon key
+const rawUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://wfsqnhujjqldcxnhnzvf.supabase.co';
+const rawKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+
+function isValidHttpUrl(stringUrl: string): boolean {
+  try {
+    const url = new URL(stringUrl);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+export const SUPABASE_URL = isValidHttpUrl(rawUrl) ? rawUrl : 'https://wfsqnhujjqldcxnhnzvf.supabase.co';
+export const SUPABASE_ANON_KEY = typeof rawKey === 'string' ? rawKey.trim() : '';
 
 export const isSupabaseConfigured = Boolean(
-  (import.meta as any).env?.VITE_SUPABASE_ANON_KEY &&
-  (import.meta as any).env?.VITE_SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_anon_fallback'
+  SUPABASE_ANON_KEY &&
+  SUPABASE_ANON_KEY.length > 20 &&
+  SUPABASE_ANON_KEY !== 'dummy_anon_fallback'
 );
 
-export const supabase: SupabaseClient | null = SUPABASE_URL && SUPABASE_ANON_KEY
-  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
+let clientInstance: SupabaseClient | null = null;
+if (isValidHttpUrl(SUPABASE_URL) && isSupabaseConfigured) {
+  try {
+    clientInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    });
+  } catch (initErr) {
+    console.warn('Supabase client initialization warning, using local storage fallback:', initErr);
+    clientInstance = null;
+  }
+}
+
+export const supabase: SupabaseClient | null = clientInstance;
 
 // Local storage backup keys for seamless preview & persistence
 const CLAIMS_STORAGE_KEY = 'kwest_directory_claims';
@@ -165,3 +191,40 @@ export const saveBusinessApplication = async (app: BusinessApplication): Promise
     return false;
   }
 };
+
+export const syncStoryToSupabase = async (story: any): Promise<boolean> => {
+  try {
+    if (supabase && isSupabaseConfigured) {
+      await supabase.from('community_stories').upsert([
+        {
+          id: story.id,
+          title: story.title,
+          subtitle: story.subtitle || null,
+          category: story.category,
+          zone: story.zone,
+          content: story.content,
+          excerpt: story.excerpt || null,
+          image_url: story.imageUrl || null,
+          image_caption: story.imageCaption || null,
+          is_real_photo_confirmed: story.isRealPhotoConfirmed ?? true,
+          author_name: story.authorName,
+          author_role: story.authorRole,
+          author_email: story.authorEmail,
+          author_phone: story.authorPhone,
+          date: story.date || new Date().toISOString().split('T')[0],
+          read_time_minutes: story.readTimeMinutes || 3,
+          featured: story.featured || false,
+          status: story.status || 'pending_review',
+          rejection_reason: story.rejectionReason || null,
+          likes: story.likes || 0,
+        },
+      ]);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn('Supabase community story sync error:', err);
+    return false;
+  }
+};
+

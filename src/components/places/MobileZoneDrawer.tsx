@@ -11,9 +11,12 @@ interface MobileZoneDrawerProps {
 
 const ZONES_LIST: { name: string; description: string }[] = [
   { name: 'All Zones', description: 'Browse all businesses across Kahawa West' },
-  { name: 'Congo Stage', description: 'Busiest commercial hub, main stage, markets & electronics' },
+  { name: 'Congo', description: 'Busiest commercial hub, main stage, markets & electronics' },
   { name: 'Roundabout', description: 'Central intersection, Super Metro, mini-marts & chemists' },
   { name: 'Jacaranda Estate', description: 'Residential apartments, quiet lanes, groceries & daycare' },
+  { name: 'Jubilee Estate', description: 'Gated residential courts, modern maisonettes & family stores' },
+  { name: 'Northern Bypass', description: 'Highway corridor, bypass lounges, hardware & distribution' },
+  { name: 'Kware / Quarry', description: 'Quarry artisan area, fabrication, stone works & local shops' },
   { name: 'Bima Road', description: 'Hardware stores, auto garages, bakeries & lounges' },
   { name: 'Soweto', description: 'Local kibandas, artisan fundis, welding & fresh produce' },
   { name: 'Kamae', description: 'Timber yards, construction materials & residential zones' },
@@ -35,15 +38,15 @@ export const MobileZoneDrawer: React.FC<MobileZoneDrawerProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 font-sans">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-[#140B07]/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
       {/* Sheet Content */}
-      <div className="relative w-full max-w-lg bg-[#22120C] text-white rounded-t-3xl sm:rounded-3xl border border-[#4A2518] shadow-2xl max-h-[85vh] flex flex-col z-10 animate-in slide-in-from-bottom duration-200">
+      <div className="relative w-full max-w-lg bg-[#3B0202] text-white rounded-t-3xl sm:rounded-3xl border border-[#630303] shadow-2xl max-h-[85vh] flex flex-col z-10 animate-in slide-in-from-bottom duration-200">
         {/* Handle for drag indicator on mobile */}
-        <div className="w-12 h-1.5 bg-[#4A2518] rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+        <div className="w-12 h-1.5 bg-[#630303] rounded-full mx-auto mt-3 mb-1 sm:hidden" />
 
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#381E15]">
+        <div className="flex items-center justify-between p-5 border-b border-[#4D0202]">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-emerald-900/60 text-emerald-300 flex items-center justify-center border border-emerald-600/40">
               <MapPin className="w-5 h-5" />
@@ -56,14 +59,14 @@ export const MobileZoneDrawer: React.FC<MobileZoneDrawerProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#2D1810] text-stone-300 hover:text-white transition"
+            className="p-2 rounded-xl bg-[#4D0202] text-stone-300 hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Zones List */}
-        <div className="p-4 overflow-y-auto space-y-2 flex-1 divide-y divide-[#381E15]">
+        <div className="p-4 overflow-y-auto space-y-2 flex-1 divide-y divide-[#4D0202]">
           {ZONES_LIST.map((zone) => {
             const isSelected =
               (zone.name === 'All Zones' && selectedZone === 'all') || selectedZone === zone.name;
@@ -83,33 +86,29 @@ export const MobileZoneDrawer: React.FC<MobileZoneDrawerProps> = ({
                 className={`w-full pt-3 pb-3 px-3 rounded-2xl text-left flex items-center justify-between transition ${
                   isSelected
                     ? 'bg-emerald-950/60 border border-emerald-600/40 text-emerald-200'
-                    : 'hover:bg-[#2D1810] text-stone-200'
+                    : 'hover:bg-[#4D0202] text-stone-200'
                 }`}
               >
                 <div className="pr-3">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-white">{zone.name}</span>
-                    {isSelected && <Check className="w-4 h-4 text-emerald-400" />}
+                    <span className="font-display font-bold text-sm text-white">{zone.name}</span>
+                    {count > 0 && (
+                      <span className="text-[11px] px-2 py-0.2 rounded-full bg-[#630303] text-stone-200">
+                        {count} {count === 1 ? 'place' : 'places'}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-stone-300 line-clamp-1 mt-0.5">{zone.description}</p>
+                  <p className="text-xs text-stone-300 mt-0.5">{zone.description}</p>
                 </div>
 
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#1A0D08] text-stone-300 border border-[#381E15] flex-shrink-0">
-                  {count}
-                </span>
+                {isSelected && (
+                  <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
+                )}
               </button>
             );
           })}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-[#381E15] bg-[#1A0D08]/90 rounded-b-3xl">
-          <button
-            onClick={onClose}
-            className="w-full py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm transition"
-          >
-            Apply Zone Filter
-          </button>
         </div>
       </div>
     </div>

@@ -18,15 +18,15 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200 font-sans"
     >
       <div
-        className="bg-[#FAF8F5] w-full max-w-2xl rounded-3xl shadow-2xl border border-[#4A2518]/30 overflow-hidden my-auto max-h-[90vh] flex flex-col text-slate-800"
+        className="bg-[#FAF8F5] w-full max-w-2xl rounded-3xl shadow-2xl border border-[#630303]/30 overflow-hidden my-auto max-h-[90vh] flex flex-col text-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-[#22120C] text-white p-5 sm:p-6 flex items-center justify-between flex-shrink-0 border-b border-[#381E15]">
+        <div className="bg-[#4D0202] text-white p-5 sm:p-6 flex items-center justify-between flex-shrink-0 border-b border-[#630303]">
           <BrandLogo size="sm" showText={true} theme="dark" />
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#341B12] text-stone-300 hover:text-white transition"
+            className="p-2 rounded-xl bg-[#630303] text-stone-200 hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -34,7 +34,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
         {/* Optional About photo (/about.jpg) */}
         {!aboutImgError && (
-          <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-[#24140E]">
+          <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-[#3B0202]">
             <img
               src="/about.jpg"
               alt="Kahawa West Community"
@@ -48,9 +48,9 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5 text-sm text-slate-700 leading-relaxed flex-1">
           <div>
-            <h4 className="font-display text-base font-bold text-[#24140E] mb-1">Our Mission</h4>
+            <h4 className="font-display text-base font-bold text-[#630303] mb-1">Our Mission</h4>
             <p>
-              <strong>Kahawa West Directory (KWEST)</strong> is the dedicated digital bridge for one of Nairobi’s most vibrant and self-sufficient residential and commercial hubs. We empower residents to instantly find certified local fundis, 24/7 pharmacies, trusted clinics, nyama choma grills, organic produce, and verified bedsitter/apartment vacancies.
+              <strong>Kahawa West Directory (KWEST)</strong> is the dedicated digital bridge for one of Nairobi’s most vibrant and self-sufficient residential and commercial hubs. We empower residents to instantly find certified local fundis, 24/7 pharmacies, trusted clinics, nyama choma grills, organic produce, and verified local businesses.
             </p>
           </div>
 
@@ -59,43 +59,49 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               <ShieldCheck className="w-5 h-5 text-emerald-700" />
               The Seed & Claim Architecture
             </h5>
-            <p className="text-xs text-emerald-900 leading-relaxed">
-              We seed the directory with 50+ rich, essential neighborhood businesses. Business owners and managers can easily locate their listing, click <strong>"Claim This Business"</strong>, and customize their 5 photos, Lipa na M-Pesa Tills, WhatsApp lines, operating hours, and special resident discounts in real time.
+            <p className="text-xs leading-relaxed text-emerald-900">
+              KWEST pre-populates verified neighborhood businesses across 10 zones in Kahawa West. Business owners can search their listing, click <strong>"Claim this Business"</strong>, verify their identity, and upload their authentic storefront images, M-Pesa Tills, and operating hours.
             </p>
           </div>
 
           <div>
-            <h4 className="font-display text-base font-bold text-[#24140E] mb-2">Key Estate Features</h4>
-            <div className="space-y-2.5 text-xs">
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                <span><strong>Hyper-Local Zones:</strong> Congo Stage, Roundabout, Jacaranda Estate, Bima Road, Soweto, Kamae, Station/Railway, and Mahiga.</span>
+            <h4 className="font-display text-base font-bold text-[#630303] mb-2">
+              Zones & Neighborhoods Covered
+            </h4>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center gap-1.5 text-stone-700">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Congo Stage Commercial Core</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                <span><strong>5-Photo Business Galleries:</strong> Primary hero image on search cards, full 5-photo high-resolution gallery on details view.</span>
+              <div className="flex items-center gap-1.5 text-stone-700">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Roundabout & Super Metro Hub</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                <span><strong>Direct WhatsApp & Call Buttons:</strong> Connect instantly with shop owners and fundis with a dash of sky-blue fast dialers.</span>
+              <div className="flex items-center gap-1.5 text-stone-700">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Jacaranda Estate Courts 1-6</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                <span><strong>Verified Resident Reviews:</strong> Community feedback filtered by local residents to combat spam and ensure trust.</span>
+              <div className="flex items-center gap-1.5 text-stone-700">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Bima Road Light Industries</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-stone-700">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Soweto Artisans & Fundis</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-stone-700">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Mahiga Ridge & Kiamumbi Border</span>
               </div>
             </div>
           </div>
-
-          <div className="pt-3 border-t border-stone-300 flex items-center justify-between text-xs text-stone-500">
-            <span>Official Portal: kwestdirectory.co.ke</span>
-            <span className="font-semibold text-[#24140E]">Built for Kahawa West Residents</span>
-          </div>
         </div>
 
+        {/* Modal Footer */}
         <div className="p-4 bg-stone-100 border-t border-stone-200 flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-[#24140E] hover:bg-[#381E15] text-white font-semibold text-xs transition"
+            className="px-5 py-2 rounded-xl bg-[#630303] hover:bg-[#4E0202] text-white text-xs font-bold transition"
           >
             Close
           </button>

@@ -22,7 +22,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
   )}`;
 
   return (
-    <div id="business-hero-section" className="relative bg-[#22120C] text-white rounded-2xl overflow-hidden shadow-xl mb-6 border border-[#4A2518] font-sans">
+    <div id="business-hero-section" className="relative bg-[#3B0202] text-white rounded-2xl overflow-hidden shadow-xl mb-6 border border-[#630303] font-sans">
       {/* Background Cover Overlay */}
       <div className="absolute inset-0 opacity-25">
         <img
@@ -31,7 +31,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
           className="w-full h-full object-cover filter blur-md scale-105"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1F100A] via-[#22120C]/90 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#240101] via-[#3B0202]/90 to-transparent" />
       </div>
 
       <div className="relative z-10 p-6 md:p-8">
@@ -42,7 +42,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
               {business.zone}
             </span>
             {business.subCategory && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-[#381E15] text-stone-200 border border-[#4A2518]">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-[#4D0202] text-stone-200 border border-[#630303]">
                 <Tag className="w-3 h-3" />
                 {business.subCategory}
               </span>
@@ -54,7 +54,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
             <button
               id="share-listing-btn"
               onClick={onShareClick}
-              className="p-2 rounded-xl bg-[#341B12] hover:bg-[#442318] text-stone-200 hover:text-white border border-[#4A2518] transition"
+              className="p-2 rounded-xl bg-[#4D0202] hover:bg-[#630303] text-stone-200 hover:text-white border border-[#630303] transition"
               title="Share listing"
             >
               <Share2 className="w-4 h-4" />
@@ -63,7 +63,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
               <button
                 id="hero-claim-business-btn"
                 onClick={onClaimClick}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white transition shadow-sm border border-emerald-500/30"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#630303] hover:bg-[#7D0404] text-white transition shadow-sm border border-rose-400/30"
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Claim This Business
@@ -81,7 +81,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
         </p>
 
         {/* Quick Stats / Meta */}
-        <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm text-stone-300 pb-4 mb-5 border-t sm:border-t-0 sm:border-b border-[#381E15]">
+        <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm text-stone-300 pb-4 mb-5 border-t sm:border-t-0 sm:border-b border-[#630303]/40">
           <div className="flex items-center gap-1.5">
             <div className="flex items-center text-amber-400">
               <Star className={`w-4 h-4 ${business.rating > 0 ? 'fill-amber-400 text-amber-400' : 'text-stone-400'}`} />
@@ -90,7 +90,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
               </span>
             </div>
             <span className="text-stone-400">
-              ({business.reviewCount} {business.reviewCount === 1 ? 'review' : 'reviews'})
+              ({(business.reviewCount ?? 0)} {(business.reviewCount ?? 0) === 1 ? 'review' : 'reviews'})
             </span>
           </div>
           <span className="text-stone-600">•</span>
@@ -101,7 +101,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
           {business.isClaimed && business.claimedBy && (
             <>
               <span className="text-stone-600">•</span>
-              <span className="text-emerald-400 font-medium text-xs">
+              <span className="text-rose-300 font-medium text-xs">
                 Managed by {business.claimedBy}
               </span>
             </>
@@ -124,7 +124,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
           <a
             id="hero-call-btn"
             href={`tel:${business.phone}`}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-sky-700 hover:bg-sky-600 text-white shadow-md transition active:scale-95 border border-sky-500/40"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#630303] hover:bg-[#7D0404] text-white shadow-md transition active:scale-95 border border-rose-400/40"
           >
             <Phone className="w-4 h-4" />
             Call {business.phone}
@@ -135,7 +135,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
             variant="outline"
             size="md"
             onClick={onFeedbackClick}
-            className="border-[#4A2518] bg-[#2D1810] text-stone-200 hover:bg-[#3D2015] hover:text-white"
+            className="border-[#630303] bg-[#4D0202] text-stone-200 hover:bg-[#630303] hover:text-white"
           >
             Leave a Review
           </Button>

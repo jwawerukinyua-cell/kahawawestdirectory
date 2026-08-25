@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, ShieldCheck, Mail, Phone } from 'lucide-react';
+import { MapPin, ShieldCheck, Mail, Phone, Users } from 'lucide-react';
 import { BrandLogo } from '../ui/BrandLogo';
 
 interface FooterProps {
@@ -14,20 +14,20 @@ export const Footer: React.FC<FooterProps> = ({
   onListBusinessClick,
 }) => {
   return (
-    <footer className="bg-[#1C0E08] text-stone-300 pt-12 pb-24 md:pb-12 border-t border-[#381E15] text-xs font-sans">
+    <footer className="bg-[#450202] text-stone-200 pt-12 pb-24 md:pb-12 border-t border-[#630303] text-xs font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Column 1: Brand & Domain */}
           <div className="space-y-3 md:col-span-1">
             <BrandLogo size="md" showText={true} theme="dark" />
-            <p className="text-stone-400 leading-relaxed text-xs pt-2">
+            <p className="text-stone-300 leading-relaxed text-xs pt-2">
               The verified hyper-local merchant directory and community portal connecting residents, fundis, clinics, and businesses across Kahawa West, Nairobi.
             </p>
           </div>
 
           {/* Column 2: Estate Zones */}
           <div>
-            <h4 className="font-display font-bold text-white uppercase tracking-wider text-xs mb-3 text-emerald-400">
+            <h4 className="font-display font-bold text-white uppercase tracking-wider text-xs mb-3 text-emerald-300">
               Estate Zones Covered
             </h4>
             <ul className="space-y-1.5 text-xs text-stone-300">
@@ -41,9 +41,9 @@ export const Footer: React.FC<FooterProps> = ({
             </ul>
           </div>
 
-          {/* Column 3: Merchants & Directory */}
+          {/* Column 3: Merchants & Community */}
           <div>
-            <h4 className="font-display font-bold text-white uppercase tracking-wider text-xs mb-3 text-emerald-400">
+            <h4 className="font-display font-bold text-white uppercase tracking-wider text-xs mb-3 text-emerald-300">
               Merchants & Community
             </h4>
             <ul className="space-y-1.5 text-xs">
@@ -72,7 +72,7 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Column 4: Legal & Contact */}
           <div>
-            <h4 className="font-display font-bold text-white uppercase tracking-wider text-xs mb-3 text-emerald-400">
+            <h4 className="font-display font-bold text-white uppercase tracking-wider text-xs mb-3 text-emerald-300">
               Legal & Support
             </h4>
             <ul className="space-y-1.5 text-xs mb-4">
@@ -89,23 +89,27 @@ export const Footer: React.FC<FooterProps> = ({
             </ul>
             <div className="text-stone-300 space-y-1">
               <p className="flex items-center gap-1.5 text-xs">
-                <Mail className="w-3.5 h-3.5 text-sky-400" />
+                <Mail className="w-3.5 h-3.5 text-sky-300" />
                 <span>info@kwestdirectory.co.ke</span>
               </p>
               <p className="flex items-center gap-1.5 text-xs">
-                <Phone className="w-3.5 h-3.5 text-sky-400" />
+                <Phone className="w-3.5 h-3.5 text-sky-300" />
                 <span>+254 700 000 000</span>
               </p>
             </div>
           </div>
         </div>
 
-        <div className="pt-6 border-t border-[#381E15] flex flex-wrap items-center justify-between gap-4 text-xs text-stone-400">
-          <p>© {new Date().getFullYear()} kwestdirectory.co.ke. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <button onClick={() => onLegalClick('privacy')} className="hover:text-white transition">Privacy</button>
-            <button onClick={() => onLegalClick('terms')} className="hover:text-white transition">Terms</button>
-            <button onClick={onAboutClick} className="hover:text-white transition">About</button>
+        {/* Bottom copyright */}
+        <div className="pt-8 border-t border-[#630303]/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-stone-400 text-[11px]">
+          <div>
+            © {new Date().getFullYear()} KWEST (Kahawa West Directory). Built for local businesses and residents.
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1 text-emerald-400">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Verified Local Portal
+            </span>
           </div>
         </div>
       </div>

@@ -24,9 +24,9 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
   return (
     <div className={`inline-flex items-center gap-3 select-none ${className}`}>
-      {/* Brand Icon / Logo: loads /kwest-icon.png or /kwest-logo.png */}
+      {/* Brand Icon / Logo */}
       <div
-        className="relative rounded-2xl flex items-center justify-center overflow-hidden border border-emerald-500/40 shadow-md flex-shrink-0 bg-[#1C0E07]"
+        className="relative rounded-2xl flex items-center justify-center overflow-hidden border border-emerald-500/40 shadow-md flex-shrink-0 bg-[#4A0202]"
         style={{
           width: `${iconDimensions.width}px`,
           height: `${iconDimensions.height}px`,
@@ -38,7 +38,6 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             alt="Kahawa West Directory"
             className="w-full h-full object-cover"
             onError={() => {
-              // Try kwest-logo.png or logo.png fallback
               setImgError(true);
             }}
           />
@@ -48,7 +47,6 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             alt="Kahawa West Directory"
             className="w-full h-full object-contain"
             onError={(e) => {
-              // Fallback to SVG if none loaded
               (e.target as HTMLElement).style.display = 'none';
             }}
           />
@@ -60,12 +58,12 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         <div className="flex flex-col justify-center leading-tight">
           <span
             className={`font-display font-black tracking-tight transition text-lg sm:text-xl md:text-2xl ${
-              theme === 'dark' ? 'text-white' : 'text-[#24140E]'
+              theme === 'dark' ? 'text-white' : 'text-[#630303]'
             }`}
           >
             Kahawa West
           </span>
-          <span className="text-xs sm:text-[13px] font-sans text-sky-400 font-semibold tracking-tight">
+          <span className="text-xs sm:text-[13px] font-sans text-sky-300 font-semibold tracking-tight">
             kwestdirectory.co.ke
           </span>
         </div>
@@ -73,4 +71,3 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
     </div>
   );
 };
-

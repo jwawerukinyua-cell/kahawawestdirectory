@@ -34,12 +34,7 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
         />
 
         {/* Top Badges Overlay */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#22120C]/90 text-white backdrop-blur-md border border-white/10 shadow-xs">
-            <MapPin className="w-3 h-3 text-emerald-400" />
-            {business.zone}
-          </span>
-
+        <div className="absolute top-3 right-3 flex items-center justify-end pointer-events-none">
           <VerifiedBadge type={business.isClaimed ? 'claimed' : business.isVerified ? 'verified' : 'unclaimed'} size="sm" />
         </div>
 
@@ -74,9 +69,9 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
             </span>
 
             <div className="flex items-center gap-1 text-xs">
-              <Star className={`w-3.5 h-3.5 ${business.rating > 0 ? 'fill-amber-500 text-amber-500' : 'text-stone-300'}`} />
-              <span className="font-bold text-[#24140E]">{business.rating > 0 ? business.rating.toFixed(1) : '0.0'}</span>
-              <span className="text-stone-400">({business.reviewCount})</span>
+              <Star className={`w-3.5 h-3.5 ${(business.rating ?? 0) > 0 ? 'fill-amber-500 text-amber-500' : 'text-stone-300'}`} />
+              <span className="font-bold text-[#24140E]">{(business.rating ?? 0) > 0 ? business.rating.toFixed(1) : '0.0'}</span>
+              <span className="text-stone-400">({business.reviewCount ?? 0})</span>
             </div>
           </div>
 
@@ -127,7 +122,7 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
             <button
               id={`view-details-${business.id}`}
               onClick={() => onViewDetails(business)}
-              className="flex-1 py-2 px-3 rounded-xl bg-[#24140E] hover:bg-[#381E15] text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-xs"
+              className="flex-1 py-2 px-3 rounded-xl bg-[#630303] hover:bg-[#7D0404] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
             >
               <span>VIEW FULL DETAILS</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -138,9 +133,9 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
                 id={`claim-btn-${business.id}`}
                 onClick={() => onClaim(business)}
                 title="Claim this business"
-                className="py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold transition flex items-center gap-1"
+                className="py-2 px-3 rounded-xl bg-[#630303]/10 hover:bg-[#630303]/20 text-[#630303] border border-[#630303]/30 text-xs font-bold transition flex items-center gap-1"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                <ShieldCheck className="w-3.5 h-3.5 text-[#630303]" />
                 <span>Claim</span>
               </button>
             )}

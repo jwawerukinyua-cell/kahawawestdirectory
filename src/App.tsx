@@ -15,9 +15,25 @@ import {
 import { Business, BusinessClaim, Category, CommunityFeedback, CommunityStory, CommunityUpdate } from './types';
 import { SEED_50_BUSINESSES } from './data/businesses';
 import { CATEGORIES } from './data/categories';
-import { COMMUNITY_UPDATES } from './data/communityUpdates';
-import { getStoredCommunityStories, saveCommunityStory } from './data/communityStories';
-import { getStoredBusinesses, saveCustomizedBusiness, getStoredFeedback } from './lib/supabase';
+import {
+  getStoredCommunityUpdates,
+  saveCommunityUpdate,
+  updateCommunityUpdateModeration,
+  deleteCommunityUpdate,
+} from './data/communityUpdates';
+import {
+  getStoredCommunityStories,
+  saveCommunityStory,
+  updateStoryModeration,
+  deleteCommunityStory,
+} from './data/communityStories';
+import {
+  getStoredBusinesses,
+  saveCustomizedBusiness,
+  getStoredFeedback,
+  syncStoryToSupabase,
+  getSavedClaims,
+} from './lib/supabase';
 
 // Layout & Components
 import { Header } from './components/layout/Header';
@@ -35,11 +51,16 @@ import { ClaimBusinessModal } from './components/businesses/ClaimBusinessModal';
 import { ListYourBusinessModal } from './components/businesses/ListYourBusinessModal';
 import { CommunityFeedbackModal } from './components/community/feedback/CommunityFeedbackModal';
 import { CommunitySpotlight } from './components/community/spotlight/CommunitySpotlight';
+import { CommunityUpdates } from './components/community/updates/CommunityUpdates';
+import { SubmitUpdateModal } from './components/community/updates/SubmitUpdateModal';
 import { StoryReaderModal } from './components/community/spotlight/StoryReaderModal';
 import { SubmitStoryModal } from './components/community/spotlight/SubmitStoryModal';
+import { EditorialReviewModal } from './components/community/spotlight/EditorialReviewModal';
 import { EmergencyModal } from './components/EmergencyModal';
 import { AboutModal } from './components/about/AboutModal';
 import { LegalModal } from './components/legal/LegalModal';
+import { MonetizationPlaceholders } from './components/home/MonetizationPlaceholders';
+import { AdEnquiryModal } from './components/home/AdEnquiryModal';
 
 export default function App() {
   // 1. Core State
@@ -47,8 +68,9 @@ export default function App() {
     return getStoredBusinesses(SEED_50_BUSINESSES);
   });
 
-  const [updates, setUpdates] = useState<CommunityUpdate[]>(COMMUNITY_UPDATES);
+  const [updates, setUpdates] = useState<CommunityUpdate[]>(() => getStoredCommunityUpdates());
   const [stories, setStories] = useState<CommunityStory[]>(() => getStoredCommunityStories());
+  const [claims, setClaims] = useState<BusinessClaim[]>(() => getSavedClaims());
 
   // 2. Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,11 +86,19 @@ export default function App() {
   const [businessForFeedback, setBusinessForFeedback] = useState<Business | null>(null);
   const [selectedStoryForReading, setSelectedStoryForReading] = useState<CommunityStory | null>(null);
   const [isSubmitStoryOpen, setIsSubmitStoryOpen] = useState(false);
+  const [isSubmitUpdateOpen, setIsSubmitUpdateOpen] = useState(false);
+  const [isEditorialReviewOpen, setIsEditorialReviewOpen] = useState(false);
   const [isListBusinessOpen, setIsListBusinessOpen] = useState(false);
   const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isMobileZoneOpen, setIsMobileZoneOpen] = useState(false);
+  const [isAdEnquiryOpen, setIsAdEnquiryOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<'guidelines' | 'community' | 'privacy' | 'terms' | null>(null);
+
+  // 3b. Businesses with active special resident offers
+  const businessesWithOffers = useMemo(() => {
+    return businesses.filter((b) => Boolean(b.specialOffer));
+  }, [businesses]);
 
   // 4. Check URL hash on load for deep linking (e.g. #slug or ?id=)
   useEffect(() => {
@@ -147,19 +177,19 @@ export default function App() {
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === 'rating') return b.rating - a.rating;
-        if (sortBy === 'reviews') return b.reviewCount - a.reviewCount;
+        if (sortBy === 'rating') return (b.rating ?? 0) - (a.rating ?? 0);
+        if (sortBy === 'reviews') return (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
         if (sortBy === 'verified') {
           if (a.isClaimed !== b.isClaimed) return a.isClaimed ? -1 : 1;
           if (a.isVerified !== b.isVerified) return a.isVerified ? -1 : 1;
-          return b.rating - a.rating;
+          return (b.rating ?? 0) - (a.rating ?? 0);
         }
-        if (sortBy === 'name') return a.name.localeCompare(b.name);
+        if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
         return 0;
       });
   }, [businesses, searchQuery, selectedCategory, selectedZone, verifiedOnly, mpesaOnly, sortBy]);
 
-  // Handlers
+  // Handlers for Businesses
   const handleViewDetails = (business: Business) => {
     setSelectedBusinessForDetails(business);
     window.history.replaceState(null, '', `#${business.slug}`);
@@ -170,13 +200,62 @@ export default function App() {
     window.history.replaceState(null, '', window.location.pathname);
   };
 
-  const handleClaimSuccess = (updatedBusiness: Business, _claim: BusinessClaim) => {
+  const handleClaimSuccess = (updatedBusiness: Business, claim: BusinessClaim) => {
     setBusinesses((prev) =>
       prev.map((b) => (b.id === updatedBusiness.id ? updatedBusiness : b))
     );
+    setClaims((prev) => {
+      const filtered = prev.filter((c) => c.business_id !== claim.business_id);
+      return [claim, ...filtered];
+    });
     if (selectedBusinessForDetails?.id === updatedBusiness.id) {
       setSelectedBusinessForDetails(updatedBusiness);
     }
+  };
+
+  const handleApproveClaim = (businessId: string) => {
+    setClaims((prev) => {
+      const updated = prev.map((c) =>
+        c.business_id === businessId ? { ...c, status: 'verified' as const } : c
+      );
+      try {
+        localStorage.setItem('kwest_directory_claims', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
+    setBusinesses((prev) =>
+      prev.map((b) => (b.id === businessId ? { ...b, isClaimed: true } : b))
+    );
+  };
+
+  const handleRejectClaim = (businessId: string, reason?: string) => {
+    setClaims((prev) => {
+      const updated = prev.map((c) =>
+        c.business_id === businessId
+          ? { ...c, status: 'rejected' as const, notes: reason ? `${c.notes || ''} [Rejected: ${reason}]` : c.notes }
+          : c
+      );
+      try {
+        localStorage.setItem('kwest_directory_claims', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
+  };
+
+  const handleDeleteClaim = (businessId: string) => {
+    setClaims((prev) => {
+      const updated = prev.filter((c) => c.business_id !== businessId);
+      try {
+        localStorage.setItem('kwest_directory_claims', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
   };
 
   const handleBusinessAdded = (newBusiness: Business) => {
@@ -203,15 +282,67 @@ export default function App() {
     );
   };
 
+  // Handlers for Stories
   const handleStorySubmitted = (newStory: CommunityStory) => {
     saveCommunityStory(newStory);
+    syncStoryToSupabase(newStory);
     setStories((prev) => [newStory, ...prev.filter((s) => s.id !== newStory.id)]);
+  };
+
+  const handleApproveStory = (storyId: string, featured?: boolean) => {
+    const updated = updateStoryModeration(storyId, 'published', featured);
+    setStories(updated);
+    const story = updated.find((s) => s.id === storyId);
+    if (story) {
+      syncStoryToSupabase(story);
+    }
+  };
+
+  const handleRejectStory = (storyId: string, reason: string) => {
+    const updated = updateStoryModeration(storyId, 'rejected', false, reason);
+    setStories(updated);
+    const story = updated.find((s) => s.id === storyId);
+    if (story) {
+      syncStoryToSupabase(story);
+    }
+  };
+
+  const handleDeleteStory = (storyId: string) => {
+    const updated = deleteCommunityStory(storyId);
+    setStories(updated);
+  };
+
+  const handleUpdateStoryContent = (updatedStory: CommunityStory) => {
+    saveCommunityStory(updatedStory);
+    syncStoryToSupabase(updatedStory);
+    setStories((prev) => prev.map((s) => (s.id === updatedStory.id ? updatedStory : s)));
   };
 
   const handleLikeStory = (storyId: string) => {
     setStories((prev) =>
       prev.map((s) => (s.id === storyId ? { ...s, likes: (s.likes || 0) + 1 } : s))
     );
+  };
+
+  // Handlers for Community Updates
+  const handleUpdateSubmitted = (newUpdate: CommunityUpdate) => {
+    saveCommunityUpdate(newUpdate);
+    setUpdates(getStoredCommunityUpdates());
+  };
+
+  const handleApproveUpdate = (updateId: string) => {
+    const updated = updateCommunityUpdateModeration(updateId, 'published');
+    setUpdates(updated);
+  };
+
+  const handleRejectUpdate = (updateId: string, reason: string) => {
+    const updated = updateCommunityUpdateModeration(updateId, 'rejected', reason);
+    setUpdates(updated);
+  };
+
+  const handleDeleteUpdate = (updateId: string) => {
+    const updated = deleteCommunityUpdate(updateId);
+    setUpdates(updated);
   };
 
   const handleResetFilters = () => {
@@ -224,7 +355,7 @@ export default function App() {
   };
 
   const scrollToNoticeboard = () => {
-    const el = document.getElementById('community-spotlight-section') || document.getElementById('community-updates-section');
+    const el = document.getElementById('community-hub-section') || document.getElementById('community-spotlight-section');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
@@ -237,6 +368,10 @@ export default function App() {
       input.focus();
     }
   };
+
+  const pendingCount =
+    stories.filter((s) => s.status === 'pending_review').length +
+    updates.filter((u) => u.status === 'pending_review').length;
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col font-sans antialiased text-stone-900 selection:bg-emerald-700 selection:text-white pb-16 md:pb-0">
@@ -269,7 +404,7 @@ export default function App() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-xl sm:text-2xl font-black text-[#24140E] tracking-tight">
+                <h2 className="font-display text-xl sm:text-2xl font-black text-[#630303] tracking-tight">
                   {selectedCategory === 'all'
                     ? 'All Kahawa West Businesses'
                     : CATEGORIES.find((c) => c.id === selectedCategory)?.name || 'Businesses'}
@@ -336,7 +471,7 @@ export default function App() {
             onListBusiness={() => setIsListBusinessOpen(true)}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-16">
             {filteredBusinesses.map((b) => (
               <BusinessCard
                 key={b.id}
@@ -348,25 +483,33 @@ export default function App() {
           </div>
         )}
 
-        {/* Community Spotlight & Housing Updates Section */}
-        <section className="mb-12">
+        {/* 3. UNIFIED COMMUNITY SECTION: Community Spotlight + Community Updates below it */}
+        <section id="community-hub-section" className="space-y-12 mb-12">
+          {/* A. Community Spotlight */}
           <CommunitySpotlight
-            stories={stories}
-            updates={updates}
+            stories={stories.filter((s) => s.status === 'published' || !s.status)}
             onReadStory={(story) => setSelectedStoryForReading(story)}
             onSubmitStoryClick={() => setIsSubmitStoryOpen(true)}
+            onOpenEditorialDesk={() => setIsEditorialReviewOpen(true)}
+            pendingCount={pendingCount}
+          />
+
+          {/* B. Community Updates (Directly below Community Spotlight) */}
+          <CommunityUpdates
+            updates={updates.filter((u) => u.status === 'published' || !u.status)}
+            onPostUpdateClick={() => setIsSubmitUpdateOpen(true)}
           />
         </section>
       </main>
 
-      {/* 3. Footer */}
+      {/* 4. Footer */}
       <Footer
         onLegalClick={(tab) => setLegalTab(tab)}
         onAboutClick={() => setIsAboutOpen(true)}
         onListBusinessClick={() => setIsListBusinessOpen(true)}
       />
 
-      {/* 4. Mobile Fixed Bottom Navigation for Smartphones */}
+      {/* 5. Mobile Fixed Bottom Navigation */}
       <MobileBottomNav
         onSearchClick={scrollToSearch}
         onZonesClick={() => setIsMobileZoneOpen(true)}
@@ -375,7 +518,7 @@ export default function App() {
         onEmergencyClick={() => setIsEmergencyOpen(true)}
       />
 
-      {/* 5. Mobile Zone Selector Drawer */}
+      {/* 6. Mobile Zone Selector Drawer */}
       <MobileZoneDrawer
         isOpen={isMobileZoneOpen}
         onClose={() => setIsMobileZoneOpen(false)}
@@ -384,7 +527,28 @@ export default function App() {
         zoneCounts={zoneCounts}
       />
 
-      {/* 6. Modals & Dialogs */}
+      {/* 7. Modals & Dialogs */}
+
+      {/* Central Editorial Review & Approval Desk Modal */}
+      <EditorialReviewModal
+        isOpen={isEditorialReviewOpen}
+        onClose={() => setIsEditorialReviewOpen(false)}
+        stories={stories}
+        updates={updates}
+        claims={claims}
+        onApproveStory={handleApproveStory}
+        onRejectStory={handleRejectStory}
+        onDeleteStory={handleDeleteStory}
+        onUpdateStoryContent={handleUpdateStoryContent}
+        onApproveUpdate={handleApproveUpdate}
+        onRejectUpdate={handleRejectUpdate}
+        onDeleteUpdate={handleDeleteUpdate}
+        onApproveClaim={handleApproveClaim}
+        onRejectClaim={handleRejectClaim}
+        onDeleteClaim={handleDeleteClaim}
+        onOpenSubmitModal={() => setIsSubmitStoryOpen(true)}
+        onOpenSubmitUpdateModal={() => setIsSubmitUpdateOpen(true)}
+      />
 
       {/* Community Spotlight Story Reader Modal */}
       <StoryReaderModal
@@ -401,7 +565,14 @@ export default function App() {
         onStorySubmitted={handleStorySubmitted}
       />
 
-      {/* Business Full Detail Modal (5 Photos, Hours, Contacts, M-Pesa, Feedback) */}
+      {/* Submit Community Update Modal (Alerts, Events, Business Openings, Community Drives) */}
+      <SubmitUpdateModal
+        isOpen={isSubmitUpdateOpen}
+        onClose={() => setIsSubmitUpdateOpen(false)}
+        onUpdateSubmitted={handleUpdateSubmitted}
+      />
+
+      {/* Business Full Detail Modal */}
       <BusinessDetailModal
         business={selectedBusinessForDetails}
         isOpen={Boolean(selectedBusinessForDetails)}
@@ -414,7 +585,7 @@ export default function App() {
         }}
       />
 
-      {/* Claim & Customize Business Modal (Supabase 'claims' table & 5 photos) */}
+      {/* Claim & Customize Business Modal */}
       {businessToClaim && (
         <ClaimBusinessModal
           business={businessToClaim}

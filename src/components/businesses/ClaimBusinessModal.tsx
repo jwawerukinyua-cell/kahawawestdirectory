@@ -18,6 +18,8 @@ import {
   Globe,
   Loader2,
   ArrowRight,
+  Upload,
+  UploadCloud,
 } from 'lucide-react';
 import { Business, BusinessClaim, EstateZone } from '../../types';
 import { saveBusinessClaim, saveCustomizedBusiness } from '../../lib/supabase';
@@ -81,7 +83,6 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   const [mpesaAccNumber, setMpesaAccNumber] = useState(business.mpesa?.accountNumber || '');
 
   // Social Links
-  const [website, setWebsite] = useState(business.socialLinks?.website || '');
   const [facebook, setFacebook] = useState(business.socialLinks?.facebook || '');
   const [instagram, setInstagram] = useState(business.socialLinks?.instagram || '');
   const [tiktok, setTiktok] = useState(business.socialLinks?.tiktok || '');
@@ -107,6 +108,80 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
     const updated = [...photos];
     updated[index] = url;
     setPhotos(updated);
+  };
+
+  const compressAndReadFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round((width * MAX_HEIGHT) / height);
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.85));
+          } else {
+            resolve(e.target?.result as string);
+          }
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleDeviceFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      const updatedPhotos = [...photos];
+      const maxToLoad = Math.min(files.length, 5);
+
+      for (let i = 0; i < maxToLoad; i++) {
+        const dataUrl = await compressAndReadFile(files[i]);
+        updatedPhotos[i] = dataUrl;
+      }
+      setPhotos(updatedPhotos);
+    } catch (err) {
+      console.error('Error reading files:', err);
+      alert('Could not process selected image files.');
+    }
+  };
+
+  const handleSingleSlotUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      const dataUrl = await compressAndReadFile(files[0]);
+      handlePhotoChange(index, dataUrl);
+    } catch (err) {
+      console.error('Error reading file for slot:', err);
+      alert('Could not process selected image file.');
+    }
   };
 
   const handleSubmitClaim = async (e: React.FormEvent) => {
@@ -158,7 +233,6 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
             }
           : undefined,
         socialLinks: {
-          website: website || undefined,
           facebook: facebook || undefined,
           instagram: instagram || undefined,
           tiktok: tiktok || undefined,
@@ -167,7 +241,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
           ? {
               title: offerTitle,
               description: offerDescription,
-              badgeText: 'Owner Special',
+              badgeText: 'Resident Deal',
             }
           : undefined,
         updatedAt: new Date().toISOString(),
@@ -191,9 +265,12 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   };
 
   const zones: EstateZone[] = [
-    'Congo Stage',
+    'Congo',
     'Roundabout',
     'Jacaranda Estate',
+    'Jubilee Estate',
+    'Northern Bypass',
+    'Kware / Quarry',
     'Bima Road',
     'Soweto',
     'Kamae',
@@ -213,13 +290,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-slate-900 text-white p-5 sm:p-6 flex items-center justify-between flex-shrink-0">
+        <div className="bg-[#630303] text-white p-5 sm:p-6 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
+            <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs uppercase tracking-wider font-semibold text-amber-400">
+              <span className="text-xs uppercase tracking-wider font-semibold text-rose-200">
                 kwestdirectory.co.ke • Claim & Edit Listing
               </span>
               <h2 className="text-lg sm:text-xl font-bold text-white">
@@ -229,20 +306,20 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+            className="p-2 rounded-xl bg-[#4D0202] hover:bg-[#3B0202] text-stone-200 hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex border-b border-slate-200 bg-slate-50 px-6 pt-3 flex-shrink-0">
+        <div className="flex border-b border-stone-200 bg-stone-50 px-6 pt-3 flex-shrink-0">
           <button
             onClick={() => setActiveTab('claimant')}
             className={`pb-3 px-4 text-xs sm:text-sm font-semibold border-b-2 transition flex items-center gap-2 ${
               activeTab === 'claimant'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-[#630303] text-[#630303]'
+                : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
             <User className="w-4 h-4" />
@@ -252,8 +329,8 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
             onClick={() => setActiveTab('customize')}
             className={`pb-3 px-4 text-xs sm:text-sm font-semibold border-b-2 transition flex items-center gap-2 ${
               activeTab === 'customize'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-[#630303] text-[#630303]'
+                : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
             <Building className="w-4 h-4" />
@@ -385,37 +462,80 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
             ) : (
               <div className="space-y-6">
                 {/* 5 Photos Section */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Camera className="w-4 h-4 text-emerald-600" />
-                      <h4 className="font-bold text-slate-900 text-sm">
-                        5 Business Photos (Primary Hero + 4 Gallery Images)
-                      </h4>
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-200">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Camera className="w-4 h-4 text-emerald-600" />
+                        <h4 className="font-bold text-slate-900 text-sm">
+                          5 Business Photos (Primary Hero + 4 Gallery Images)
+                        </h4>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Upload directly from your smartphone camera or device gallery. Photo #1 is shown on directory cards.
+                      </p>
                     </div>
-                    <span className="text-[11px] text-slate-500">Only Photo #1 appears on cards</span>
+
+                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition shadow-sm self-start sm:self-auto">
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      <span>Upload from Device</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleDeviceFileUpload}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
                     {photos.map((photoUrl, idx) => (
-                      <div key={idx} className="space-y-1.5">
-                        <div className="relative h-20 rounded-lg overflow-hidden border border-slate-300 bg-slate-200 group">
+                      <div key={idx} className="space-y-1.5 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
+                        <div className="relative h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
                           <img
                             src={photoUrl}
                             alt={`Photo ${idx + 1}`}
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
                           />
-                          <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/70 text-white">
-                            {idx === 0 ? 'Primary' : `#${idx + 1}`}
+                          <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
+                            {idx === 0 ? '★ Primary' : `#${idx + 1}`}
                           </span>
+
+                          <label className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 cursor-pointer transition-opacity duration-200">
+                            <Upload className="w-4 h-4" />
+                            <span className="text-[10px] font-bold">Replace</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleSingleSlotUpload(idx, e)}
+                              className="hidden"
+                            />
+                          </label>
                         </div>
+
+                        <label className="block w-full text-center py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[10px] cursor-pointer transition border border-slate-300">
+                          <span>Choose File</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleSingleSlotUpload(idx, e)}
+                            className="hidden"
+                          />
+                        </label>
+
                         <input
                           type="text"
-                          value={photoUrl}
-                          onChange={(e) => handlePhotoChange(idx, e.target.value)}
-                          placeholder={`Image URL ${idx + 1}`}
-                          className="w-full p-1.5 text-[11px] font-mono rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          value={photoUrl.startsWith('data:') ? '[Device Photo Loaded]' : photoUrl}
+                          onChange={(e) => {
+                            if (!e.target.value.includes('[Device Photo Loaded]')) {
+                              handlePhotoChange(idx, e.target.value);
+                            }
+                          }}
+                          placeholder={`URL or paste link`}
+                          className="w-full p-1 text-[10px] font-mono text-slate-600 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 truncate"
+                          title={photoUrl.startsWith('data:') ? 'Image uploaded from device' : photoUrl}
                         />
                       </div>
                     ))}
@@ -555,11 +675,17 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                 </div>
 
                 {/* Services List Tagging */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Services Offered
-                  </label>
-                  <div className="flex gap-2 mb-2">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-0.5">
+                      Services & Key Specialties
+                    </label>
+                    <p className="text-[11px] text-slate-500">
+                      Add services, specialties, and perks your business provides.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
                     <input
                       type="text"
                       value={newServiceInput}
@@ -570,86 +696,132 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                           handleAddService();
                         }
                       }}
-                      placeholder="Type a service (e.g. Free Estate Delivery) & press Add"
-                      className="flex-1 p-2 rounded-xl border border-slate-300 text-xs"
+                      placeholder="Type service (e.g. Free Estate Delivery, 24hr Emergency) & click Add"
+                      className="flex-1 p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs bg-white"
                     />
-                    <Button type="button" size="sm" variant="secondary" onClick={handleAddService}>
-                      <Plus className="w-3.5 h-3.5" /> Add
-                    </Button>
+                    <button
+                      type="button"
+                      onClick={handleAddService}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs flex-shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add</span>
+                    </button>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5">
-                    {servicesList.map((svc, sIdx) => (
-                      <span
-                        key={sIdx}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-xs font-medium border border-slate-200"
+                  {/* Quick Suggested Tags */}
+                  <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                    <span className="text-slate-400 font-medium">Quick suggestions:</span>
+                    {['Free Estate Delivery', 'M-Pesa Accepted', 'Walk-ins Welcome', 'Open Late', 'Custom Orders', 'Bulk Discounts'].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => {
+                          if (!servicesList.includes(s)) {
+                            setServicesList([...servicesList, s]);
+                          }
+                        }}
+                        className="px-2 py-0.5 rounded-md bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 text-[10px] transition"
                       >
-                        {svc}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveService(sIdx)}
-                          className="text-slate-400 hover:text-rose-600"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </span>
+                        + {s}
+                      </button>
                     ))}
                   </div>
+
+                  {servicesList.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {servicesList.map((svc, sIdx) => (
+                        <span
+                          key={sIdx}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 text-xs font-semibold border border-emerald-200"
+                        >
+                          <span>{svc}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveService(sIdx)}
+                            className="text-emerald-700 hover:text-rose-600 p-0.5 rounded-full hover:bg-rose-50 transition"
+                            title="Remove service"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-400 italic">No custom services added yet. Type above and click "Add".</p>
+                  )}
                 </div>
 
-                {/* Social Links */}
+                {/* Social Links (TikTok, Instagram, Facebook) */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Website URL</label>
-                    <input
-                      type="url"
-                      value={website}
-                      onChange={(e) => setWebsite(e.target.value)}
-                      placeholder="https://..."
-                      className="w-full p-2 text-xs rounded-lg border border-slate-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Facebook Page URL</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      🎵 TikTok (@handle or link)
+                    </label>
                     <input
                       type="text"
-                      value={facebook}
-                      onChange={(e) => setFacebook(e.target.value)}
-                      placeholder="https://facebook.com/..."
-                      className="w-full p-2 text-xs rounded-lg border border-slate-300"
+                      value={tiktok}
+                      onChange={(e) => setTiktok(e.target.value)}
+                      placeholder="@username or tiktok.com/..."
+                      className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Instagram Handle / URL</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      📸 Instagram (@handle or link)
+                    </label>
                     <input
                       type="text"
                       value={instagram}
                       onChange={(e) => setInstagram(e.target.value)}
-                      placeholder="https://instagram.com/..."
-                      className="w-full p-2 text-xs rounded-lg border border-slate-300"
+                      placeholder="@username or instagram.com/..."
+                      className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      📘 Facebook Page URL
+                    </label>
+                    <input
+                      type="text"
+                      value={facebook}
+                      onChange={(e) => setFacebook(e.target.value)}
+                      placeholder="facebook.com/yourpage"
+                      className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
                     />
                   </div>
                 </div>
 
-                {/* Resident Promo Offer */}
-                <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200">
-                  <label className="block text-xs font-bold text-amber-900 uppercase tracking-wider mb-1">
-                    Special Resident Offer / Promotion (Optional)
-                  </label>
+                {/* Special Resident Offer / Promotion (Optional) - Monetization Feature */}
+                <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200/90 space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Tag className="w-4 h-4 text-amber-700" />
+                      <label className="text-xs font-bold text-amber-950 uppercase tracking-wider">
+                        Special Resident Offer / Promotion (Optional)
+                      </label>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
+                      ★ Active / Spotlight Promo
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    Set up an exclusive estate resident discount or seasonal deal. Once active, this badge highlights your business prominently on directory cards and search rankings.
+                  </p>
                   <div className="space-y-2">
                     <input
                       type="text"
                       value={offerTitle}
                       onChange={(e) => setOfferTitle(e.target.value)}
-                      placeholder="Offer title: e.g. 10% Off Weekend Car Wash"
-                      className="w-full p-2 text-xs rounded-lg border border-amber-300 bg-white"
+                      placeholder="Offer title: e.g. 10% Off Weekend Car Wash or Free Delivery on 50kg Rice"
+                      className="w-full p-2 text-xs rounded-lg border border-amber-300 bg-white font-medium focus:ring-1 focus:ring-amber-500 focus:outline-none"
                     />
                     <input
                       type="text"
                       value={offerDescription}
                       onChange={(e) => setOfferDescription(e.target.value)}
-                      placeholder="Offer details: e.g. Mention KWEST Directory to claim your 10% discount on Saturdays."
-                      className="w-full p-2 text-xs rounded-lg border border-amber-300 bg-white"
+                      placeholder="Offer details: e.g. Mention KWEST Directory when ordering via WhatsApp or calling."
+                      className="w-full p-2 text-xs rounded-lg border border-amber-300 bg-white font-medium focus:ring-1 focus:ring-amber-500 focus:outline-none"
                     />
                   </div>
                 </div>

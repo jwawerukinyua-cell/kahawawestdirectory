@@ -36,9 +36,12 @@ interface SubmitStoryModalProps {
 }
 
 const SPOTLIGHT_ZONES: EstateZone[] = [
-  'Congo Stage',
+  'Congo',
   'Roundabout',
   'Jacaranda Estate',
+  'Jubilee Estate',
+  'Northern Bypass',
+  'Kware / Quarry',
   'Bima Road',
   'Soweto',
   'Kamae',
@@ -216,7 +219,7 @@ Residents interested in joining our upcoming Saturday clean-ups can meet at the 
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Top Header */}
-        <div className="bg-[#1D0C06] text-white px-5 sm:px-7 py-4 flex items-center justify-between border-b border-[#3D1A0E] flex-shrink-0">
+        <div className="bg-[#4D0202] text-white px-5 sm:px-7 py-4 flex items-center justify-between border-b border-[#630303] flex-shrink-0">
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-950/90 text-emerald-300 border border-emerald-600/50">
@@ -233,7 +236,7 @@ Residents interested in joining our upcoming Saturday clean-ups can meet at the 
               <button
                 type="button"
                 onClick={() => setShowLivePreview(!showLivePreview)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#34160C] hover:bg-[#4A2012] text-xs font-semibold text-emerald-300 transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#630303] hover:bg-[#7D0404] text-xs font-semibold text-emerald-300 transition"
               >
                 {showLivePreview ? (
                   <>
@@ -251,7 +254,7 @@ Residents interested in joining our upcoming Saturday clean-ups can meet at the 
 
             <button
               onClick={handleResetAndClose}
-              className="p-2 rounded-xl bg-[#34160C] text-stone-300 hover:text-white transition active:scale-95"
+              className="p-2 rounded-xl bg-[#630303] text-stone-200 hover:text-white transition active:scale-95"
             >
               <X className="w-5 h-5" />
             </button>
@@ -265,7 +268,7 @@ Residents interested in joining our upcoming Saturday clean-ups can meet at the 
               <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 animate-bounce">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h4 className="text-2xl font-bold font-display text-[#1D0C06] mb-2">
+              <h4 className="text-2xl font-bold font-display text-[#630303] mb-2">
                 Asante Sana for Sharing Your Story!
               </h4>
               <p className="text-stone-600 text-sm max-w-md mx-auto mb-6 leading-relaxed">

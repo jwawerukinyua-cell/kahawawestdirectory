@@ -12,6 +12,10 @@ export const BusinessCommunityFeedback: React.FC<BusinessCommunityFeedbackProps>
   business,
   onLeaveReviewClick,
 }) => {
+  if (!business) return null;
+  const reviewCount = business.reviewCount ?? 0;
+  const rating = business.rating ?? 0;
+
   return (
     <div id="business-feedback-section" className="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm mb-6 font-sans">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
@@ -32,7 +36,7 @@ export const BusinessCommunityFeedback: React.FC<BusinessCommunityFeedbackProps>
         </Button>
       </div>
 
-      {business.reviewCount === 0 ? (
+      {reviewCount === 0 ? (
         <div className="text-center py-8 px-4 rounded-2xl bg-[#FAF8F5] border border-dashed border-stone-300">
           <div className="flex justify-center gap-2 mb-3">
             <span className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-200">
@@ -65,19 +69,19 @@ export const BusinessCommunityFeedback: React.FC<BusinessCommunityFeedbackProps>
       ) : (
         <div className="flex items-center gap-6 p-4 rounded-2xl bg-[#FAF8F5] border border-stone-200 mb-6">
           <div className="text-center pr-6 border-r border-stone-200">
-            <div className="text-3xl font-extrabold text-[#1D0C06] tracking-tight">{business.rating.toFixed(1)}</div>
+            <div className="text-3xl font-extrabold text-[#1D0C06] tracking-tight">{rating.toFixed(1)}</div>
             <div className="flex items-center justify-center text-amber-400 mt-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
                   className={`w-3.5 h-3.5 ${
-                    star <= Math.round(business.rating) ? 'fill-amber-400 text-amber-400' : 'text-stone-300'
+                    star <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-stone-300'
                   }`}
                 />
               ))}
             </div>
             <span className="text-[11px] text-stone-500 font-medium mt-1 block">
-              {business.reviewCount} total reviews
+              {reviewCount} total reviews
             </span>
           </div>
         </div>

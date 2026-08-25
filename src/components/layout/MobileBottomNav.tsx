@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, MapPin, PlusCircle, Megaphone, PhoneCall } from 'lucide-react';
+import { Search, MapPin, PlusCircle, Users, PhoneCall } from 'lucide-react';
 
 interface MobileBottomNavProps {
   onSearchClick: () => void;
@@ -16,16 +16,15 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onListBusinessClick,
   onNoticeboardClick,
   onEmergencyClick,
-  activeSection = 'explore',
 }) => {
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1D0F09]/95 backdrop-blur-lg border-t border-[#381E15] px-2 py-1.5 safe-area-pb shadow-2xl">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#4A0202]/95 backdrop-blur-lg border-t border-[#630303] px-2 py-1.5 safe-area-pb shadow-2xl">
       <div className="grid grid-cols-5 gap-1 max-w-md mx-auto">
         {/* 1. Explore / Search */}
         <button
           id="mobile-nav-explore"
           onClick={onSearchClick}
-          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-300 hover:text-emerald-400 active:scale-95 transition"
+          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-200 hover:text-emerald-300 active:scale-95 transition"
         >
           <Search className="w-5 h-5 mb-0.5" />
           <span className="text-[10px] font-medium tracking-tight">Explore</span>
@@ -35,9 +34,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         <button
           id="mobile-nav-zones"
           onClick={onZonesClick}
-          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-300 hover:text-emerald-400 active:scale-95 transition"
+          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-200 hover:text-emerald-300 active:scale-95 transition"
         >
-          <MapPin className="w-5 h-5 mb-0.5 text-emerald-400" />
+          <MapPin className="w-5 h-5 mb-0.5 text-emerald-300" />
           <span className="text-[10px] font-medium tracking-tight">Estates</span>
         </button>
 
@@ -47,29 +46,29 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           onClick={onListBusinessClick}
           className="flex flex-col items-center justify-center -mt-3.5"
         >
-          <div className="w-12 h-12 rounded-full bg-emerald-700 text-white flex items-center justify-center shadow-lg shadow-emerald-950/60 border-2 border-[#1D0F09] active:scale-90 transition">
+          <div className="w-12 h-12 rounded-full bg-emerald-700 text-white flex items-center justify-center shadow-lg shadow-emerald-950/60 border-2 border-[#4A0202] active:scale-90 transition">
             <PlusCircle className="w-6 h-6 stroke-[2.5]" />
           </div>
-          <span className="text-[10px] font-bold text-emerald-400 tracking-tight mt-0.5">List Shop</span>
+          <span className="text-[10px] font-bold text-emerald-300 tracking-tight mt-0.5">List Shop</span>
         </button>
 
-        {/* 4. Noticeboard / Housing */}
+        {/* 4. Community Hub */}
         <button
           id="mobile-nav-noticeboard"
           onClick={onNoticeboardClick}
-          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-300 hover:text-sky-400 active:scale-95 transition"
+          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-200 hover:text-sky-300 active:scale-95 transition"
         >
-          <Megaphone className="w-5 h-5 mb-0.5 text-sky-400" />
-          <span className="text-[10px] font-medium tracking-tight">Updates</span>
+          <Users className="w-5 h-5 mb-0.5 text-sky-300" />
+          <span className="text-[10px] font-medium tracking-tight">Community</span>
         </button>
 
         {/* 5. Emergency */}
         <button
           id="mobile-nav-emergency"
           onClick={onEmergencyClick}
-          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-300 hover:text-red-400 active:scale-95 transition"
+          className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-200 hover:text-red-300 active:scale-95 transition"
         >
-          <PhoneCall className="w-5 h-5 mb-0.5 text-[#B91C1C]" />
+          <PhoneCall className="w-5 h-5 mb-0.5 text-rose-400" />
           <span className="text-[10px] font-medium tracking-tight">Hotlines</span>
         </button>
       </div>
