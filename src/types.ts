@@ -50,6 +50,12 @@ export interface ReviewItem {
   avatarUrl?: string;
 }
 
+export type OperationType =
+  | 'physical_shop'
+  | 'home_based'
+  | 'mobile_service'
+  | 'freelancer';
+
 export interface Business {
   id: string;
   slug: string;
@@ -57,6 +63,7 @@ export interface Business {
   tagline: string;
   category: string;
   subCategory?: string;
+  operationType?: OperationType;
   zone: EstateZone;
   landmark: string;
   addressDetails?: string;
@@ -187,6 +194,7 @@ export interface CommunityStory {
 export interface BusinessApplication {
   name: string;
   category: string;
+  operationType?: OperationType;
   zone: EstateZone;
   landmark: string;
   phone: string;

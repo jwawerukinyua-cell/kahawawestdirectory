@@ -18,7 +18,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
   onShareClick,
 }) => {
   const whatsappUrl = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(
-    `Hello ${business.name}, I found your business on KWEST Directory (kwestdirectory.co.ke) and would like to inquire about your services.`
+    `Hello ${business.name}, I found your business on KWEST Directory and would like to inquire about your services.`
   )}`;
 
   return (
@@ -45,6 +45,13 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-[#4D0202] text-stone-200 border border-[#630303]">
                 <Tag className="w-3 h-3" />
                 {business.subCategory}
+              </span>
+            )}
+            {business.operationType && business.operationType !== 'physical_shop' && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-300 border border-amber-600/40">
+                {business.operationType === 'home_based' && '🏠 Home-Based'}
+                {business.operationType === 'mobile_service' && '🚗 Mobile Service'}
+                {business.operationType === 'freelancer' && '💻 Freelancer'}
               </span>
             )}
             <VerifiedBadge type={business.isClaimed ? 'claimed' : business.isVerified ? 'verified' : 'unclaimed'} />
@@ -109,35 +116,44 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
         </div>
 
         {/* Direct Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           <a
             id="hero-whatsapp-btn"
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow-md transition active:scale-95 border border-emerald-500/40"
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow-md transition active:scale-95 border border-emerald-500/40"
           >
             <MessageSquare className="w-4 h-4" />
-            Chat on WhatsApp
+            <span>WhatsApp</span>
           </a>
 
           <a
             id="hero-call-btn"
             href={`tel:${business.phone}`}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#630303] hover:bg-[#7D0404] text-white shadow-md transition active:scale-95 border border-rose-400/40"
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#630303] hover:bg-[#7D0404] text-white shadow-md transition active:scale-95 border border-rose-400/40"
           >
             <Phone className="w-4 h-4" />
-            Call {business.phone}
+            <span>Call {business.phone}</span>
           </a>
+
+          <button
+            id="hero-share-action-btn"
+            onClick={onShareClick}
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#4D0202] hover:bg-[#630303] text-stone-200 hover:text-white shadow-md transition active:scale-95 border border-[#7D0404]"
+          >
+            <Share2 className="w-4 h-4 text-amber-400" />
+            <span>Share</span>
+          </button>
 
           <Button
             id="hero-review-btn"
             variant="outline"
             size="md"
             onClick={onFeedbackClick}
-            className="border-[#630303] bg-[#4D0202] text-stone-200 hover:bg-[#630303] hover:text-white"
+            className="border-stone-300 bg-stone-100 text-black hover:bg-white font-bold shadow-sm"
           >
-            Leave a Review
+            Leave Review
           </Button>
         </div>
       </div>

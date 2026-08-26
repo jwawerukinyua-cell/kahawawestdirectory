@@ -15,7 +15,7 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
   onClaim,
 }) => {
   const whatsappUrl = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(
-    `Hello ${business.name}, I saw your listing on KWEST Directory (kwestdirectory.co.ke).`
+    `Hello ${business.name}, I saw your listing on KWEST Directory.`
   )}`;
 
   return (
@@ -63,10 +63,19 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
         <div>
           {/* Category & Rating */}
           <div className="flex items-center justify-between gap-2 mb-1.5">
-            <span className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider flex items-center gap-1">
-              <Tag className="w-2.5 h-2.5" />
-              {business.subCategory || business.category}
-            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider flex items-center gap-1">
+                <Tag className="w-2.5 h-2.5" />
+                {business.subCategory || business.category}
+              </span>
+              {business.operationType && business.operationType !== 'physical_shop' && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                  {business.operationType === 'home_based' && 'Home-Based'}
+                  {business.operationType === 'mobile_service' && 'Mobile'}
+                  {business.operationType === 'freelancer' && 'Freelancer'}
+                </span>
+              )}
+            </div>
 
             <div className="flex items-center gap-1 text-xs">
               <Star className={`w-3.5 h-3.5 ${(business.rating ?? 0) > 0 ? 'fill-amber-500 text-amber-500' : 'text-stone-300'}`} />

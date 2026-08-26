@@ -61,6 +61,7 @@ import { AboutModal } from './components/about/AboutModal';
 import { LegalModal } from './components/legal/LegalModal';
 import { MonetizationPlaceholders } from './components/home/MonetizationPlaceholders';
 import { AdEnquiryModal } from './components/home/AdEnquiryModal';
+import { FloatingShareButton } from './components/ui/FloatingShareButton';
 
 export default function App() {
   // 1. Core State
@@ -517,6 +518,9 @@ export default function App() {
         onNoticeboardClick={scrollToNoticeboard}
         onEmergencyClick={() => setIsEmergencyOpen(true)}
       />
+
+      {/* 5b. Floating Share KWEST Action Button */}
+      <FloatingShareButton />
 
       {/* 6. Mobile Zone Selector Drawer */}
       <MobileZoneDrawer

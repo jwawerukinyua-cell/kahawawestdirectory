@@ -15,7 +15,7 @@ import {
   Upload,
   UploadCloud,
 } from 'lucide-react';
-import { Business, EstateZone, BusinessApplication } from '../../types';
+import { Business, EstateZone, BusinessApplication, OperationType } from '../../types';
 import { saveBusinessApplication, saveCustomizedBusiness } from '../../lib/supabase';
 import { DEFAULT_OPENING_HOURS } from '../../data/defaultOpeningHours';
 import { Button } from '../ui/Button';
@@ -39,6 +39,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   const [applicantRole, setApplicantRole] = useState('Owner');
   const [name, setName] = useState('');
   const [tagline, setTagline] = useState('');
+  const [operationType, setOperationType] = useState<OperationType>('physical_shop');
   const [category, setCategory] = useState('food-dining');
   const [subCategory, setSubCategory] = useState('');
   const [zone, setZone] = useState<EstateZone>('Congo');
@@ -162,6 +163,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         tagline: tagline || `${name} in ${zone}, Kahawa West`,
         category: category,
         subCategory: subCategory || undefined,
+        operationType: operationType,
         zone: zone,
         landmark: landmark,
         phone: phone,
@@ -192,6 +194,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
       const application: BusinessApplication = {
         name,
         category,
+        operationType,
         zone,
         landmark,
         phone,
@@ -244,37 +247,37 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   return (
     <div
       id="list-business-modal"
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
     >
       <div
-        className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[92vh] flex flex-col"
+        className="bg-white w-full max-w-3xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[94vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-slate-900 text-white p-5 sm:p-6 flex items-center justify-between flex-shrink-0">
+        <div className="bg-[#2E0202] text-white p-4 sm:p-6 flex items-center justify-between flex-shrink-0 border-b border-[#4D0202]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 flex-shrink-0">
               <PlusCircle className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs uppercase tracking-wider font-semibold text-emerald-400">
-                kwestdirectory.co.ke • Merchant Portal
+              <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider font-extrabold text-emerald-400">
+                Merchant Registration Portal
               </span>
-              <h2 className="text-lg sm:text-xl font-bold text-white">
+              <h2 className="text-base sm:text-xl font-bold text-white leading-snug">
                 List Your Business in Kahawa West
               </h2>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {successMode ? (
-          <div className="p-8 sm:p-12 text-center my-auto">
+          <div className="p-6 sm:p-12 text-center my-auto">
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 animate-bounce">
               <CheckCircle2 className="w-10 h-10" />
             </div>
@@ -283,13 +286,13 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
               <strong>{name}</strong> is now live on the Kahawa West directory and accessible to estate neighbors.
             </p>
             <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-200">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Live on kwestdirectory.co.ke
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Live on KWEST Directory
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-5 flex-1 text-sm">
+          <form onSubmit={handleSubmit} className="overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 flex-1 text-sm">
             {/* Applicant identity */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Your Full Name *
@@ -302,7 +305,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                     value={applicantName}
                     onChange={(e) => setApplicantName(e.target.value)}
                     placeholder="e.g. Grace Wambui"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                   />
                 </div>
               </div>
@@ -314,7 +317,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                 <select
                   value={applicantRole}
                   onChange={(e) => setApplicantRole(e.target.value)}
-                  className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white text-xs sm:text-sm"
                 >
                   <option value="Owner">Owner / Proprietor</option>
                   <option value="Manager">Manager</option>
@@ -324,10 +327,10 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
             </div>
 
             {/* Business Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Business Name *
+                  Business / Brand / Trade Name *
                 </label>
                 <div className="relative">
                   <Building className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -336,22 +339,42 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Jacaranda Clean Water & Gas"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold"
+                    placeholder="e.g. Jacaranda Clean Water & Gas, or Kevin Electricals"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-xs sm:text-sm"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Estate Zone in Kahawa West *
+                  Operating Model / Work Type *
+                </label>
+                <select
+                  value={operationType}
+                  onChange={(e) => setOperationType(e.target.value as OperationType)}
+                  className="w-full p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/50 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm font-semibold text-emerald-950"
+                >
+                  <option value="physical_shop">🏢 Physical Store / Commercial Shop / Office</option>
+                  <option value="home_based">🏠 Home-Based (Operates from Home / Residential Base)</option>
+                  <option value="mobile_service">🚗 Mobile Service (Moves from Place to Place / Doorstep)</option>
+                  <option value="freelancer">💻 Freelancer / Independent Professional</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  {operationType === 'physical_shop' 
+                    ? 'Estate Zone in Kahawa West *' 
+                    : 'Residential Base Zone in Kahawa West *'}
                 </label>
                 <div className="relative">
                   <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   <select
                     value={zone}
                     onChange={(e) => setZone(e.target.value as EstateZone)}
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white text-xs sm:text-sm"
                   >
                     {zones.map((z) => (
                       <option key={z} value={z}>
@@ -360,10 +383,13 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                     ))}
                   </select>
                 </div>
+                {operationType !== 'physical_shop' && (
+                  <p className="text-[11px] text-emerald-700 font-medium mt-1">
+                    💡 Freelancers & home-based providers: select the zone where you live/operate from.
+                  </p>
+                )}
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Category *
@@ -371,7 +397,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full p-2 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                 >
                   <option value="food-dining">Food & Dining</option>
                   <option value="health-medical">Health & Medical</option>
@@ -387,7 +413,9 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                   <option value="laundry-cleaning">Laundry & Cleaning</option>
                 </select>
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Specific Sub-Specialty
@@ -396,41 +424,51 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                   type="text"
                   value={subCategory}
                   onChange={(e) => setSubCategory(e.target.value)}
-                  placeholder="e.g. Chemist, Nyama Choma, Electrician"
-                  className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  placeholder="e.g. Chemist, Plumber, Graphic Designer, Tutor"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  {operationType === 'physical_shop'
+                    ? 'Landmark & Physical Building Spot *'
+                    : 'Landmark / Service Area Description *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={landmark}
+                  onChange={(e) => setLandmark(e.target.value)}
+                  placeholder={
+                    operationType === 'physical_shop'
+                      ? 'e.g. Opposite Congo Shell, next to Equity agent'
+                      : operationType === 'home_based'
+                      ? 'e.g. Jacaranda Court 4 (Pick-up or doorstep delivery)'
+                      : operationType === 'mobile_service'
+                      ? 'e.g. Mobile across all Kahawa West zones, based in Bima'
+                      : 'e.g. Remote / client site visits across Kahawa West'
+                  }
+                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Landmark & Building Spot *
-              </label>
-              <input
-                type="text"
-                required
-                value={landmark}
-                onChange={(e) => setLandmark(e.target.value)}
-                placeholder="e.g. Opposite Congo Shell, next to Equity agent"
-                className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
-            </div>
-
             {/* Contacts & WhatsApp */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Phone Number for Direct Calls *
                 </label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
                   <input
                     type="tel"
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+254712345678"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 font-mono text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    placeholder="0712 345 678"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 font-mono text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -443,21 +481,21 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                   type="tel"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="254712345678"
-                  className="w-full p-2 rounded-xl border border-slate-300 font-mono text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  placeholder="0712 345 678"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
             </div>
 
             {/* M-Pesa Setup */}
-            <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-50/70 border border-emerald-200">
               <div className="flex items-center gap-2 mb-2">
                 <CreditCard className="w-4 h-4 text-emerald-700" />
                 <span className="font-bold text-emerald-950 text-xs uppercase tracking-wider">
                   Lipa na M-Pesa (Optional)
                 </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                 <select
                   value={mpesaType}
                   onChange={(e) => setMpesaType(e.target.value as any)}
@@ -484,9 +522,9 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
               </div>
             </div>
 
-            {/* 5 Photos */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-200">
+            {/* 5 Photos Section - Clean Mobile Optimized */}
+            <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-200">
                 <div>
                   <div className="flex items-center gap-2">
                     <Camera className="w-4 h-4 text-emerald-600" />
@@ -495,13 +533,13 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    Upload directly from your phone camera or gallery.
+                    Select photos from your phone gallery or take new pictures.
                   </p>
                 </div>
 
-                <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition shadow-sm self-start sm:self-auto">
-                  <UploadCloud className="w-3.5 h-3.5" />
-                  <span>Upload Photos from Device</span>
+                <label className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs cursor-pointer transition shadow-sm w-full sm:w-auto">
+                  <UploadCloud className="w-4 h-4" />
+                  <span>Choose from Gallery / Camera</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -512,18 +550,19 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                 </label>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+              {/* 5 Responsive Photo Slots Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
                 {photos.map((p, idx) => (
-                  <div key={idx} className="space-y-1.5 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
-                    <div className="relative h-20 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
+                  <div key={idx} className="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs space-y-1.5 flex flex-col justify-between">
+                    <div className="relative h-20 sm:h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
                       <img src={p} alt="thumb" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
-                        {idx === 0 ? '★ Primary' : `#${idx + 1}`}
+                        {idx === 0 ? '★ Main' : `#${idx + 1}`}
                       </span>
 
-                      <label className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 cursor-pointer transition-opacity duration-200">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span className="text-[9px] font-bold">Replace</span>
+                      <label className="absolute inset-0 bg-black/60 text-white flex flex-col items-center justify-center gap-1 cursor-pointer opacity-0 hover:opacity-100 sm:group-hover:opacity-100 transition-opacity">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-[10px] font-bold">Replace</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -533,8 +572,8 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                       </label>
                     </div>
 
-                    <label className="block w-full text-center py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[10px] cursor-pointer transition border border-slate-300">
-                      <span>Choose File</span>
+                    <label className="block w-full text-center py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold text-[11px] cursor-pointer transition border border-slate-300">
+                      <span>Change</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -542,19 +581,6 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                         className="hidden"
                       />
                     </label>
-
-                    <input
-                      type="text"
-                      value={p.startsWith('data:') ? '[Device Photo Loaded]' : p}
-                      onChange={(e) => {
-                        if (!e.target.value.includes('[Device Photo Loaded]')) {
-                          handlePhotoChange(idx, e.target.value);
-                        }
-                      }}
-                      placeholder={`URL or link`}
-                      className="w-full p-1 text-[10px] font-mono text-slate-600 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 truncate"
-                      title={p.startsWith('data:') ? 'Image uploaded from device' : p}
-                    />
                   </div>
                 ))}
               </div>
@@ -570,16 +596,16 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Tell your Kahawa West neighbors what you sell or specialize in..."
-                className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
               />
             </div>
 
             {/* Footer Buttons */}
-            <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
+            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition order-2 sm:order-1"
               >
                 Cancel
               </button>
@@ -590,9 +616,10 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                 variant="primary"
                 size="md"
                 disabled={isSubmitting}
+                className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-600 text-white font-bold order-1 sm:order-2"
                 icon={isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlusCircle className="w-4 h-4" />}
               >
-                {isSubmitting ? 'Publishing Listing...' : 'Publish Listing to kwestdirectory.co.ke'}
+                {isSubmitting ? 'Submitting Listing...' : 'Submit Business Listing'}
               </Button>
             </div>
           </form>

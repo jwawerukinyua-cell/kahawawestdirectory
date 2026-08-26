@@ -156,12 +156,10 @@ export const Hero: React.FC<HeroProps> = ({
       <div className="relative z-10 p-5 sm:p-8 lg:p-10">
         {/* Top Header & Search Area */}
         <div className="max-w-3xl mx-auto text-center mb-8 sm:mb-10">
-          {/* Brand Domain Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-sans font-semibold bg-[#1F0101]/90 text-sky-200 border border-sky-500/40 mb-4 shadow-lg backdrop-blur-md">
+          {/* Brand Directory Badge */}
+          <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-sans font-semibold bg-[#1F0101]/90 text-emerald-300 border border-emerald-500/40 mb-4 shadow-lg backdrop-blur-md">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-mono font-bold tracking-tight text-sky-200">kwestdirectory.co.ke</span>
-            <span className="text-stone-500">•</span>
-            <span className="text-emerald-300">Official Kahawa West Business Directory</span>
+            <span>Official Kahawa West Business Directory</span>
           </div>
 
           {/* Main Title */}
@@ -178,31 +176,49 @@ export const Hero: React.FC<HeroProps> = ({
           </div>
 
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-5 sm:mb-6 shadow-2xl">
+          <div className="max-w-2xl mx-auto shadow-2xl">
             <SearchBar
               value={searchQuery}
               onChange={onSearchChange}
               placeholder="Search 'Mama Fua', 'Plumber', 'Chemist', 'Super Metro', 'Mbuzi Choma'..."
             />
           </div>
+        </div>
 
-          {/* Quick Estate Tags */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-xs font-sans text-stone-200">
-            <span className="text-stone-300 font-semibold text-[11px] sm:text-xs">Quick Zones:</span>
-            {['Congo', 'Roundabout', 'Jacaranda Estate', 'Jubilee Estate', 'Northern Bypass', 'Kware / Quarry', 'Bima Road', 'Soweto', 'Mahiga', 'Kamae'].map((z) => (
-              <button
-                key={z}
-                onClick={() => onSearchChange(z)}
-                className="px-2.5 py-1 rounded-xl bg-[#260101]/90 hover:bg-[#630303] text-stone-200 hover:text-white border border-[#630303] hover:border-stone-400 text-[11px] sm:text-xs transition active:scale-95 backdrop-blur-xs"
-              >
-                {z}
-              </button>
-            ))}
+        {/* Elegant Quick Zones Transition Ribbon on the Divider Line */}
+        <div className="my-6 sm:my-8 pt-4 border-t border-white/20">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pb-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-stone-200 uppercase tracking-wider self-start sm:self-auto">
+              <MapPin className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+              <span>Explore by Estate Zone:</span>
+            </div>
+
+            {/* Mobile swipeable & Desktop flex-wrap Quick Zones */}
+            <div className="w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0 -mx-2 px-2 sm:mx-0 sm:px-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
+                {['Congo', 'Roundabout', 'Jacaranda Estate', 'Jubilee Estate', 'Northern Bypass', 'Kware / Quarry', 'Bima Road', 'Soweto', 'Mahiga', 'Kamae'].map((z) => {
+                  const isActive = searchQuery.toLowerCase() === z.toLowerCase();
+                  return (
+                    <button
+                      key={z}
+                      onClick={() => onSearchChange(isActive ? '' : z)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 flex-shrink-0 active:scale-95 flex items-center gap-1 border ${
+                        isActive
+                          ? 'bg-emerald-600 text-white border-emerald-400 shadow-md ring-2 ring-emerald-400/40'
+                          : 'bg-black/50 hover:bg-[#630303] text-stone-200 hover:text-white border-white/25 hover:border-rose-400 backdrop-blur-md'
+                      }`}
+                    >
+                      <span>{z}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Browse by Category Section */}
-        <div className="pt-6 sm:pt-8 border-t border-white/20">
+        <div>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display text-lg sm:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
@@ -273,24 +289,6 @@ export const Hero: React.FC<HeroProps> = ({
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* 3 Core Value Pillars */}
-        <div className="mt-8 pt-5 border-t border-white/20 grid grid-cols-3 gap-2 sm:gap-4 text-center font-sans text-stone-200">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 p-2 rounded-xl bg-[#1F0101]/85 border border-white/10 backdrop-blur-md">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span className="text-[11px] sm:text-xs font-medium">Claim & Manage</span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 p-2 rounded-xl bg-[#1F0101]/85 border border-white/10 backdrop-blur-md">
-            <CreditCard className="w-4 h-4 text-sky-400 flex-shrink-0" />
-            <span className="text-[11px] sm:text-xs font-medium">Direct M-Pesa Tills</span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 p-2 rounded-xl bg-[#1F0101]/85 border border-white/10 backdrop-blur-md">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span className="text-[11px] sm:text-xs font-medium">Community Reviews</span>
           </div>
         </div>
       </div>

@@ -50,23 +50,23 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           <div>
             <h4 className="font-display text-base font-bold text-[#630303] mb-1">Our Mission</h4>
             <p>
-              <strong>Kahawa West Directory (KWEST)</strong> is the dedicated digital bridge for one of Nairobi’s most vibrant and self-sufficient residential and commercial hubs. We empower residents to instantly find certified local fundis, 24/7 pharmacies, trusted clinics, nyama choma grills, organic produce, and verified local businesses.
+              <strong>KWEST (kahawawestdirectory.co.ke / Kahawa West Directory)</strong> is the official hyper-local digital bridge for one of Nairobi’s most vibrant and self-sufficient residential and commercial hubs. We empower residents to instantly find certified local fundis, 24/7 pharmacies, trusted clinics, nyama choma grills, organic produce, mobile freelancers, and verified local businesses.
             </p>
           </div>
 
           <div className="p-4 rounded-2xl bg-emerald-900/10 border border-emerald-700/30 text-emerald-950">
             <h5 className="font-display font-bold text-emerald-950 mb-2 flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-700" />
-              The Seed & Claim Architecture
+              The KWEST Verified Seed & Claim Ecosystem
             </h5>
             <p className="text-xs leading-relaxed text-emerald-900">
-              KWEST pre-populates verified neighborhood businesses across 10 zones in Kahawa West. Business owners can search their listing, click <strong>"Claim this Business"</strong>, verify their identity, and upload their authentic storefront images, M-Pesa Tills, and operating hours.
+              Through <strong>kahawawestdirectory</strong>, neighborhood businesses and local service providers across 10 zones in Kahawa West are pre-verified. Business owners and freelancers can search their listing, click <strong>"Claim this Business"</strong>, verify their identity, and upload their authentic storefront images, M-Pesa Tills, and operating hours.
             </p>
           </div>
 
           <div>
             <h4 className="font-display text-base font-bold text-[#630303] mb-2">
-              Zones & Neighborhoods Covered
+              Zones & Neighborhoods Covered on KWEST
             </h4>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="flex items-center gap-1.5 text-stone-700">
@@ -94,6 +94,11 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <span>Mahiga Ridge & Kiamumbi Border</span>
               </div>
             </div>
+          </div>
+
+          <div className="pt-2 border-t border-stone-200 text-xs text-stone-500 flex flex-wrap items-center justify-between gap-2">
+            <span>Official Domain: <strong>kwestdirectory.co.ke</strong></span>
+            <span>Platform Alias: <strong>kahawawestdirectory</strong></span>
           </div>
         </div>
 

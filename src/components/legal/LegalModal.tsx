@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Shield, FileText, Lock, Users } from 'lucide-react';
+import { X, Shield, AlertTriangle, Lock, FileText, CheckCircle2 } from 'lucide-react';
 
 interface LegalModalProps {
   tab: 'guidelines' | 'community' | 'privacy' | 'terms';
@@ -19,138 +19,191 @@ export const LegalModal: React.FC<LegalModalProps> = ({
   return (
     <div
       id="legal-modal"
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200 font-sans"
     >
       <div
-        className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[90vh] flex flex-col"
+        className="bg-white w-full max-w-3xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-slate-900 text-white p-5 flex items-center justify-between flex-shrink-0">
+        <div className="bg-[#2E0202] text-white p-4 sm:p-6 flex items-center justify-between flex-shrink-0 border-b border-[#4D0202]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-400/30 text-rose-300 flex items-center justify-center flex-shrink-0">
               <Shield className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs uppercase tracking-wider font-semibold text-emerald-400">
-                kwestdirectory.co.ke
+              <span className="text-[11px] uppercase tracking-wider font-extrabold text-emerald-400">
+                Official Directory Policies
               </span>
-              <h3 className="text-lg font-bold text-white">Guidelines & Policies</h3>
+              <h3 className="text-base sm:text-xl font-bold text-white leading-tight">
+                Guidelines, Privacy & Terms of Use
+              </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition"
+            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab navigation */}
-        <div className="flex border-b border-slate-200 bg-slate-50 px-4 pt-2 overflow-x-auto scrollbar-none flex-shrink-0">
+        <div className="flex border-b border-slate-200 bg-slate-50 px-3 sm:px-6 pt-2 overflow-x-auto no-scrollbar flex-shrink-0 gap-1 sm:gap-2">
           <button
-            onClick={() => onSelectTab('guidelines')}
-            className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition ${
-              tab === 'guidelines' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500'
+            onClick={() => onSelectTab('terms')}
+            className={`pb-3 px-3 text-xs font-bold border-b-2 whitespace-nowrap transition flex items-center gap-1.5 ${
+              tab === 'terms' ? 'border-rose-600 text-rose-800' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            Business Listing Guidelines
-          </button>
-          <button
-            onClick={() => onSelectTab('community')}
-            className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition ${
-              tab === 'community' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500'
-            }`}
-          >
-            Community Standards
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>Terms & Liability Disclaimer</span>
           </button>
           <button
             onClick={() => onSelectTab('privacy')}
-            className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition ${
-              tab === 'privacy' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500'
+            className={`pb-3 px-3 text-xs font-bold border-b-2 whitespace-nowrap transition flex items-center gap-1.5 ${
+              tab === 'privacy' ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            Privacy Policy
+            <Lock className="w-3.5 h-3.5" />
+            <span>Privacy & Kenya Data Laws</span>
           </button>
           <button
-            onClick={() => onSelectTab('terms')}
-            className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition ${
-              tab === 'terms' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500'
+            onClick={() => onSelectTab('guidelines')}
+            className={`pb-3 px-3 text-xs font-bold border-b-2 whitespace-nowrap transition flex items-center gap-1.5 ${
+              tab === 'guidelines' ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            Terms of Use
+            <FileText className="w-3.5 h-3.5" />
+            <span>Listing Guidelines</span>
+          </button>
+          <button
+            onClick={() => onSelectTab('community')}
+            className={`pb-3 px-3 text-xs font-bold border-b-2 whitespace-nowrap transition flex items-center gap-1.5 ${
+              tab === 'community' ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Shield className="w-3.5 h-3.5" />
+            <span>Community Standards</span>
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto text-sm text-slate-700 space-y-4 leading-relaxed flex-1">
-          {tab === 'guidelines' && (
-            <div>
-              <h4 className="text-lg font-bold text-slate-900 mb-2">Business Listing Guidelines</h4>
-              <p>
-                To maintain trust and accuracy across Kahawa West, all listings must adhere to these principles:
-              </p>
-              <ul className="list-disc pl-5 space-y-2 mt-2">
-                <li><strong>Physical Presence / Service Area:</strong> The business must operate within Kahawa West or directly provide doorstep services to estate residents.</li>
-                <li><strong>Accurate Contact & Pricing:</strong> Phone numbers, WhatsApp lines, and Lipa na M-Pesa Tills/Paybills must be valid and monitored.</li>
-                <li><strong>Photo Integrity:</strong> Upload real, unedited photos of your actual premises, menu items, equipment, or products (5 photos recommended).</li>
-                <li><strong>Claim Verification:</strong> Business owners must verify their identity and authorization before making edits to prevent fraudulent claims.</li>
-              </ul>
-            </div>
-          )}
+        <div className="p-4 sm:p-6 overflow-y-auto text-xs sm:text-sm text-slate-700 space-y-4 leading-relaxed flex-1">
+          {tab === 'terms' && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950">
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h5 className="font-bold text-sm text-amber-900 mb-1">
+                      Important Notice: Full Platform Absolution & Disclaimer of Liability
+                    </h5>
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      KWEST Directory is strictly a community information and local business discovery platform. We are NOT a party to, broker of, or guarantor for any transaction, agreement, service, or payment arranged between users, residents, merchants, fundis, or freelance service providers.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-          {tab === 'community' && (
-            <div>
-              <h4 className="text-lg font-bold text-slate-900 mb-2">Community Standards & Reviews</h4>
-              <p>
-                KWEST Directory is built by and for the neighbors of Kahawa West:
-              </p>
-              <ul className="list-disc pl-5 space-y-2 mt-2">
-                <li><strong>Honest Resident Feedback:</strong> Reviews must represent authentic customer experiences. Fake or paid reviews will be removed.</li>
-                <li><strong>Civil Discourse:</strong> Abusive language, defamation, or harassment of local merchants or reviewers is strictly prohibited.</li>
-                <li><strong>Zero Tolerance for Scams:</strong> Fraudulent house listings, fake deposit requests, or untrusted fundi impersonation will result in permanent blacklisting.</li>
-              </ul>
+              <div>
+                <h4 className="text-base sm:text-lg font-bold text-slate-900 mb-2">1. Absolution from Loss, Scams, or Disputes</h4>
+                <p className="mb-2">
+                  By using this directory, you explicitly acknowledge and agree that:
+                </p>
+                <ul className="list-disc pl-5 space-y-2 text-slate-600">
+                  <li><strong>Zero Liability for Financial Loss:</strong> The platform, administrators, founders, and community coordinators shall have <strong>NO responsibility or liability whatsoever</strong> for any monetary loss, fraudulent scam, default, defective product, poor workmanship, missed appointment, or unmet expectation arising from contacts initiated through this site.</li>
+                  <li><strong>Buyer Due Diligence (Caveat Emptor):</strong> Users are solely responsible for conducting their own independent verification before making any financial commitment. <strong>Never send advance deposits, down-payments, or booking fees</strong> for house rentals, fundi tools, or commercial purchases to unverified individuals without physical inspection.</li>
+                  <li><strong>Independent Merchant Status:</strong> All listed businesses, shops, artisans, and mobile freelancers operate independently and are not agents, franchisees, or employees of KWEST Directory.</li>
+                </ul>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200">
+                <h4 className="text-sm font-bold text-slate-900 mb-1.5">2. Reporting Suspicious Activity</h4>
+                <p className="text-slate-600 text-xs">
+                  While we do not arbitrate commercial disputes, we actively safeguard our community. If you suspect any fraudulent listing, fake till number, impersonation, or scammer, immediately report it to directory administration or the Kahawa West Police Post. Verified fraudulent profiles will be permanently removed.
+                </p>
+              </div>
             </div>
           )}
 
           {tab === 'privacy' && (
-            <div>
-              <h4 className="text-lg font-bold text-slate-900 mb-2">Privacy Policy</h4>
-              <p>
-                At <strong>kwestdirectory.co.ke</strong>, we respect the privacy of residents and merchants:
-              </p>
-              <ul className="list-disc pl-5 space-y-2 mt-2">
-                <li>We do not sell personal phone numbers or email addresses to third parties.</li>
-                <li>Contact details submitted on public listings are explicitly made available for customer inquiries.</li>
-                <li>Claim verification documents or private notes are retained strictly for security auditing and management validation.</li>
-              </ul>
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h5 className="font-bold text-sm text-emerald-900 mb-1">
+                      Adherence to Kenyan Data Protection Laws
+                    </h5>
+                    <p className="text-xs text-emerald-800 leading-relaxed">
+                      KWEST Directory operates in strict compliance with the <strong>Kenya Data Protection Act (No. 24 of 2019)</strong> and the statutory regulations guided by the <strong>Office of the Data Protection Commissioner (ODPC)</strong> of Kenya.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-base sm:text-lg font-bold text-slate-900 mb-2">Our Data Protection Principles</h4>
+                <ul className="list-disc pl-5 space-y-2 text-slate-600">
+                  <li><strong>Lawful, Fair & Transparent Processing:</strong> We collect and publish business contact details (names, phone numbers, WhatsApp, physical/residential zones) solely based on explicit consent provided by the business owner, merchant, or freelancer during listing or claim submission.</li>
+                  <li><strong>Purpose Limitation:</strong> Information submitted for business listings is used exclusively to facilitate customer discovery, neighborhood commerce, and emergency local services across Kahawa West.</li>
+                  <li><strong>No Commercial Resale of Personal Data:</strong> We <strong>never sell, lease, or distribute</strong> user phone numbers, emails, or personal data to bulk telemarketers, third-party advertisers, or data brokers.</li>
+                  <li><strong>Right to Rectification & Erasure:</strong> In accordance with Section 40 of the Kenya Data Protection Act 2019, any business owner or individual has the right to request modification, correction, or immediate deletion of their personal listing from the directory.</li>
+                  <li><strong>Security & Storage:</strong> Data is secured using encrypted cloud storage protocols to protect against unauthorized access, alteration, or unlawful disclosure.</li>
+                </ul>
+              </div>
             </div>
           )}
 
-          {tab === 'terms' && (
-            <div>
-              <h4 className="text-lg font-bold text-slate-900 mb-2">Terms of Use</h4>
-              <p>
-                By accessing <strong>kwestdirectory.co.ke</strong>, you agree to:
-              </p>
-              <ul className="list-disc pl-5 space-y-2 mt-2">
-                <li>Use the information provided for lawful communication and commerce.</li>
-                <li>Verify independently before sending advance deposits for house rent or bulky goods purchases.</li>
-                <li>Notify the KWEST Directory administration of any inaccurate or outdated information.</li>
-              </ul>
+          {tab === 'guidelines' && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-base sm:text-lg font-bold text-slate-900 mb-2">Business & Freelancer Listing Guidelines</h4>
+                <p className="mb-2">
+                  To ensure quality and neighbor trust across all Kahawa West zones, all listings must adhere to these criteria:
+                </p>
+                <ul className="list-disc pl-5 space-y-2 text-slate-600">
+                  <li><strong>Local Operation & Residential Bases:</strong> The business must either operate a physical shop/office in Kahawa West OR operate from home/provide mobile services directly to Kahawa West residents (freelancers, plumbers, tutors, mobile bakers, etc.).</li>
+                  <li><strong>Accurate Contact Information:</strong> Phone lines, WhatsApp contacts, and M-Pesa Till/Paybill numbers must be authentic and actively monitored.</li>
+                  <li><strong>Photo Standards:</strong> Upload clear, authentic photos of your actual work, premises, products, or service team (up to 5 photo slots available).</li>
+                  <li><strong>Verification Authorization:</strong> Claiming an existing listing requires confirmation of proprietorship or management authority to protect local merchants from unauthorized edits.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {tab === 'community' && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-base sm:text-lg font-bold text-slate-900 mb-2">Community Standards & Neighbor Ethics</h4>
+                <p className="mb-2">
+                  KWEST Directory is an empowering community resource built for the mutual growth of Kahawa West neighbors:
+                </p>
+                <ul className="list-disc pl-5 space-y-2 text-slate-600">
+                  <li><strong>Authentic Resident Reviews:</strong> Feedback must reflect genuine resident experiences. Coordinated false reviews or malicious slander will be purged.</li>
+                  <li><strong>Respectful Communication:</strong> Defamation, abusive speech, or harassment directed at local merchants or fellow neighbors is prohibited.</li>
+                  <li><strong>Zero Tolerance for Fraud:</strong> Any attempt to post phantom apartment vacancies, impersonate certified technicians, or harvest deposits without delivering goods will lead to immediate removal and reporting to local authorities.</li>
+                </ul>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+        {/* Footer */}
+        <div className="p-3.5 sm:p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+          <span className="text-[11px] text-slate-500 font-medium">
+            Kahawa West Business Directory • Compliant with Kenya Data Protection Act, 2019
+          </span>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition"
+            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition active:scale-95"
           >
-            Close
+            I Understand & Accept
           </button>
         </div>
       </div>
     </div>
   );
 };
+

@@ -53,7 +53,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         )}
       </div>
 
-      {/* Brand Text: Prominent 'Kahawa West' and 'kwestdirectory.co.ke' */}
+      {/* Brand Text: Prominent 'Kahawa West' and 'Official Kahawa West Business Directory' */}
       {showText && (
         <div className="flex flex-col justify-center leading-tight">
           <span
@@ -63,8 +63,8 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           >
             Kahawa West
           </span>
-          <span className="text-xs sm:text-[13px] font-sans text-sky-300 font-semibold tracking-tight">
-            kwestdirectory.co.ke
+          <span className="text-[11px] sm:text-xs font-sans text-rose-200/90 font-medium tracking-tight">
+            Official Kahawa West Business Directory
           </span>
         </div>
       )}

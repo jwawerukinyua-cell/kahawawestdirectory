@@ -20,8 +20,9 @@ import {
   ArrowRight,
   Upload,
   UploadCloud,
+  Tag,
 } from 'lucide-react';
-import { Business, BusinessClaim, EstateZone } from '../../types';
+import { Business, BusinessClaim, EstateZone, OperationType } from '../../types';
 import { saveBusinessClaim, saveCustomizedBusiness } from '../../lib/supabase';
 import { Button } from '../ui/Button';
 
@@ -52,6 +53,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   // Business customization state (5 Photos, contacts, Lipa na M-Pesa, etc.)
   const [customName, setCustomName] = useState(business.name);
   const [customTagline, setCustomTagline] = useState(business.tagline);
+  const [customOperationType, setCustomOperationType] = useState<OperationType>(business.operationType || 'physical_shop');
   const [customPhone, setCustomPhone] = useState(business.phone);
   const [customWhatsapp, setCustomWhatsapp] = useState(business.whatsapp);
   const [customEmail, setCustomEmail] = useState(business.email || '');
@@ -212,6 +214,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         ...business,
         name: customName,
         tagline: customTagline,
+        operationType: customOperationType,
         phone: customPhone,
         whatsapp: customWhatsapp.replace(/[^0-9]/g, ''),
         email: customEmail,
@@ -297,7 +300,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
             </div>
             <div>
               <span className="text-xs uppercase tracking-wider font-semibold text-rose-200">
-                kwestdirectory.co.ke • Claim & Edit Listing
+                Claim & Edit Business Listing
               </span>
               <h2 className="text-lg sm:text-xl font-bold text-white">
                 Claim {business.name}
@@ -349,7 +352,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
               Your claim record has been recorded and <strong>{customName}</strong> is now verified with your customized contacts, 5 photos, and Lipa na M-Pesa details.
             </p>
             <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
-              <CheckCircle2 className="w-4 h-4" /> Live on kwestdirectory.co.ke
+              <CheckCircle2 className="w-4 h-4" /> Live on KWEST Directory
             </div>
           </div>
         ) : (
@@ -558,7 +561,27 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Estate Zone in Kahawa West
+                      Operating Model / Setup
+                    </label>
+                    <select
+                      value={customOperationType}
+                      onChange={(e) => setCustomOperationType(e.target.value as OperationType)}
+                      className="w-full p-2 rounded-xl border border-emerald-300 bg-emerald-50/50 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-semibold text-emerald-950"
+                    >
+                      <option value="physical_shop">🏢 Physical Store / Commercial Shop / Office</option>
+                      <option value="home_based">🏠 Home-Based (Operates from Home / Residential Base)</option>
+                      <option value="mobile_service">🚗 Mobile Service (Moves from Place to Place / Doorstep)</option>
+                      <option value="freelancer">💻 Freelancer / Independent Professional</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      {customOperationType === 'physical_shop' 
+                        ? 'Estate Zone in Kahawa West' 
+                        : 'Residential Base Zone in Kahawa West'}
                     </label>
                     <select
                       value={customZone}
@@ -571,19 +594,24 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                         </option>
                       ))}
                     </select>
+                    {customOperationType !== 'physical_shop' && (
+                      <p className="text-[11px] text-emerald-700 font-medium mt-1">
+                        💡 Freelancers & home-based providers: select your home/base estate zone.
+                      </p>
+                    )}
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Tagline / One-line Slogan
-                  </label>
-                  <input
-                    type="text"
-                    value={customTagline}
-                    onChange={(e) => setCustomTagline(e.target.value)}
-                    className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
-                  />
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Tagline / One-line Slogan
+                    </label>
+                    <input
+                      type="text"
+                      value={customTagline}
+                      onChange={(e) => setCustomTagline(e.target.value)}
+                      className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+                    />
+                  </div>
                 </div>
 
                 {/* Lipa na M-Pesa Integration */}
@@ -801,12 +829,12 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                         Special Resident Offer / Promotion (Optional)
                       </label>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
-                      ★ Active / Spotlight Promo
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-200 text-amber-900 border border-amber-300">
+                      Coming Soon • Premium Spotlight Deal
                     </span>
                   </div>
-                  <p className="text-[11px] text-amber-800 leading-relaxed">
-                    Set up an exclusive estate resident discount or seasonal deal. Once active, this badge highlights your business prominently on directory cards and search rankings.
+                  <p className="text-[11px] text-amber-900 leading-relaxed">
+                    Once the platform goes fully live, businesses can subscribe to activate this exclusive estate discount banner. Pre-draft your offer below so it is ready for activation upon launch!
                   </p>
                   <div className="space-y-2">
                     <input
