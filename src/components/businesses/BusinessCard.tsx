@@ -152,7 +152,7 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
             <button
               id={`view-details-${business.id}`}
               onClick={handleDetails}
-              className="flex-1 py-2 px-3 rounded-xl bg-[#630303] hover:bg-[#7D0404] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
+              className="flex-1 py-2 px-3 rounded-xl bg-[#00000f] hover:bg-[#7D0404] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
             >
               <span>VIEW FULL DETAILS</span>
               <ChevronRight className="w-3.5 h-3.5" />

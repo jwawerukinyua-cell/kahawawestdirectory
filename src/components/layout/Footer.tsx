@@ -38,7 +38,7 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <button onClick={onAboutClick} className="hover:text-emerald-300 transition text-left">
-                  About Kahawa West Project
+                  About Kahawa West Project Directory
                 </button>
               </li>
               <li>
