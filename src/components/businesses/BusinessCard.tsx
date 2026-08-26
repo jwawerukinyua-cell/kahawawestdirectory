@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin, Star, Phone, MessageSquare, ShieldCheck, ChevronRight, CreditCard, Tag } from 'lucide-react';
 import { Business } from '../../types';
 import { VerifiedBadge } from '../ui/VerifiedBadge';
+import { trackBusinessInteraction } from '../../lib/tracking';
 
 interface BusinessCardProps {
   business: Business;
@@ -18,15 +19,33 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
     `Hello ${business.name}, I saw your listing on KWEST Directory.`
   )}`;
 
+  const handleWhatsApp = () => {
+    trackBusinessInteraction(business.id, 'whatsapp');
+  };
+
+  const handlePhone = () => {
+    trackBusinessInteraction(business.id, 'phone');
+  };
+
+  const handleDetails = () => {
+    trackBusinessInteraction(business.id, 'view');
+    onViewDetails(business);
+  };
+
+  const heroImageUrl =
+    business.heroImage && business.heroImage.trim() !== ''
+      ? business.heroImage
+      : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+
   return (
     <div
       id={`business-card-${business.id}`}
       className="group bg-white rounded-2xl border border-stone-200 hover:border-[#4A2518]/50 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden font-sans"
     >
       {/* Main Single Photo (Hero Image Only on Card) */}
-      <div className="relative h-48 w-full bg-stone-100 overflow-hidden cursor-pointer" onClick={() => onViewDetails(business)}>
+      <div className="relative h-48 w-full bg-stone-100 overflow-hidden cursor-pointer" onClick={handleDetails}>
         <img
-          src={business.heroImage}
+          src={heroImageUrl}
           alt={business.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           referrerPolicy="no-referrer"
@@ -86,7 +105,7 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
 
           {/* Business Name */}
           <h3
-            onClick={() => onViewDetails(business)}
+            onClick={handleDetails}
             className="font-display font-bold text-[#24140E] text-base sm:text-lg group-hover:text-emerald-800 transition cursor-pointer line-clamp-1 mb-1"
           >
             {business.name}
@@ -111,6 +130,7 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={handleWhatsApp}
               className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-semibold transition active:scale-95 border border-emerald-200"
             >
               <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
@@ -119,6 +139,7 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
 
             <a
               href={`tel:${business.phone}`}
+              onClick={handlePhone}
               className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-900 text-xs font-semibold transition active:scale-95 border border-sky-200"
             >
               <Phone className="w-3.5 h-3.5 text-sky-700" />
@@ -130,7 +151,7 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
           <div className="flex items-center gap-2">
             <button
               id={`view-details-${business.id}`}
-              onClick={() => onViewDetails(business)}
+              onClick={handleDetails}
               className="flex-1 py-2 px-3 rounded-xl bg-[#630303] hover:bg-[#7D0404] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
             >
               <span>VIEW FULL DETAILS</span>

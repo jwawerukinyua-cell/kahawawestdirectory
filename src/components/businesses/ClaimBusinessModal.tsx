@@ -493,11 +493,16 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                    {photos.map((photoUrl, idx) => (
+                    {photos.map((photoUrl, idx) => {
+                      const displayPhoto =
+                        photoUrl && photoUrl.trim() !== ''
+                          ? photoUrl
+                          : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+                      return (
                       <div key={idx} className="space-y-1.5 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
                         <div className="relative h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
                           <img
-                            src={photoUrl}
+                            src={displayPhoto}
                             alt={`Photo ${idx + 1}`}
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -541,7 +546,8 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                           title={photoUrl.startsWith('data:') ? 'Image uploaded from device' : photoUrl}
                         />
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 </div>
 

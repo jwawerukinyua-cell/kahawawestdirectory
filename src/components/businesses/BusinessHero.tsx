@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Star, Phone, MessageSquare, ShieldCheck, Share2, Tag } from 'lucide-react';
+import { MapPin, Star, Phone, MessageSquare, ShieldCheck, Share2, Tag, Edit3 } from 'lucide-react';
 import { Business } from '../../types';
 import { VerifiedBadge } from '../ui/VerifiedBadge';
 import { Button } from '../ui/Button';
@@ -9,6 +9,7 @@ interface BusinessHeroProps {
   onClaimClick: () => void;
   onFeedbackClick: () => void;
   onShareClick: () => void;
+  onEditClick?: () => void;
 }
 
 export const BusinessHero: React.FC<BusinessHeroProps> = ({
@@ -16,17 +17,23 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
   onClaimClick,
   onFeedbackClick,
   onShareClick,
+  onEditClick,
 }) => {
   const whatsappUrl = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(
     `Hello ${business.name}, I found your business on KWEST Directory and would like to inquire about your services.`
   )}`;
+
+  const heroImageUrl =
+    business.heroImage && business.heroImage.trim() !== ''
+      ? business.heroImage
+      : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
 
   return (
     <div id="business-hero-section" className="relative bg-[#3B0202] text-white rounded-2xl overflow-hidden shadow-xl mb-6 border border-[#630303] font-sans">
       {/* Background Cover Overlay */}
       <div className="absolute inset-0 opacity-25">
         <img
-          src={business.heroImage}
+          src={heroImageUrl}
           alt={business.name}
           className="w-full h-full object-cover filter blur-md scale-105"
           referrerPolicy="no-referrer"
@@ -66,11 +73,23 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
             >
               <Share2 className="w-4 h-4" />
             </button>
-            {!business.isClaimed && (
+            {business.isClaimed ? (
+              onEditClick && (
+                <button
+                  id="hero-edit-business-btn"
+                  onClick={onEditClick}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white transition shadow-sm border border-stone-600 cursor-pointer"
+                  title="Update hours, photos, Lipa na M-Pesa, contacts"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Update Info</span>
+                </button>
+              )
+            ) : (
               <button
                 id="hero-claim-business-btn"
                 onClick={onClaimClick}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#630303] hover:bg-[#7D0404] text-white transition shadow-sm border border-rose-400/30"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#630303] hover:bg-[#7D0404] text-white transition shadow-sm border border-rose-400/30 cursor-pointer"
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Claim This Business

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Share2, ArrowLeft, Check, MessageSquare } from 'lucide-react';
 import { Business } from '../../types';
+import { trackBusinessInteraction } from '../../lib/tracking';
 import { BusinessHero } from './BusinessHero';
 import { BusinessGallery } from './BusinessGallery';
 import { BusinessAbout } from './BusinessAbout';
@@ -8,6 +9,7 @@ import { BusinessOffer } from './BusinessOffer';
 import { BusinessOpeningHours } from './BusinessOpeningHours';
 import { BusinessContact } from './BusinessContact';
 import { BusinessCommunityFeedback } from './BusinessCommunityFeedback';
+import { BusinessEngagementStats } from './BusinessEngagementStats';
 
 interface BusinessDetailModalProps {
   business: Business | null;
@@ -15,6 +17,8 @@ interface BusinessDetailModalProps {
   onClose: () => void;
   onClaimClick: (business: Business) => void;
   onLeaveFeedbackClick: (business: Business) => void;
+  onAdEnquiryClick?: (business?: Business) => void;
+  onEditClick?: (business: Business) => void;
 }
 
 export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
@@ -23,12 +27,21 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
   onClose,
   onClaimClick,
   onLeaveFeedbackClick,
+  onAdEnquiryClick,
+  onEditClick,
 }) => {
   const [showToast, setShowToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen && business?.id) {
+      trackBusinessInteraction(business.id, 'view');
+    }
+  }, [isOpen, business?.id]);
 
   if (!isOpen || !business) return null;
 
   const handleShare = async () => {
+    trackBusinessInteraction(business.id, 'share');
     const shareUrl = `${window.location.origin}/#${business.slug}`;
     const shareTitle = `${business.name} | Kahawa West Directory`;
     const shareText = `Check out *${business.name}* in Kahawa West (${business.zone}, near ${business.landmark}). Contact: ${business.phone}\n${shareUrl}`;
@@ -57,6 +70,7 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
       }
     }
   };
+
 
   return (
     <div
@@ -117,11 +131,19 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
             onClaimClick={() => onClaimClick(business)}
             onFeedbackClick={() => onLeaveFeedbackClick(business)}
             onShareClick={handleShare}
+            onEditClick={() => onEditClick?.(business)}
           />
 
           {/* 2. Full 5-Photo Gallery Component */}
           <BusinessGallery
-            images={business.galleryImages || (business as any).images || [business.heroImage]}
+            images={
+              (business.galleryImages && business.galleryImages.length > 0
+                ? business.galleryImages
+                : (business as any).images && (business as any).images.length > 0
+                ? (business as any).images
+                : [business.heroImage]
+              ).filter((img: any): img is string => typeof img === 'string' && img.trim() !== '')
+            }
             businessName={business.name}
           />
 
@@ -129,6 +151,13 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
           {business.specialOffer && (
             <BusinessOffer offer={business.specialOffer} />
           )}
+
+          {/* 3b. Live Directory Reach & Owner Engagement Analytics */}
+          <BusinessEngagementStats
+            business={business}
+            onClaimClick={() => onClaimClick(business)}
+            onAdEnquiryClick={() => onAdEnquiryClick?.(business)}
+          />
 
           {/* 4. Two Column Layout: Details & Contacts */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

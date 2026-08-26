@@ -8,7 +8,8 @@ interface BusinessGalleryProps {
 
 export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, businessName }) => {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
-  const gallery = images && images.length > 0 ? images : [
+  
+  const fallbackList = [
     'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
@@ -16,7 +17,13 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
     'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80',
   ];
 
-  const mainPhoto = gallery[0];
+  const validImages = Array.isArray(images)
+    ? images.filter((img) => typeof img === 'string' && img.trim() !== '')
+    : [];
+
+  const gallery = validImages.length > 0 ? validImages : fallbackList;
+
+  const mainPhoto = gallery[0] || fallbackList[0];
   const additionalPhotos = gallery.slice(1, 5);
 
   const handlePrev = (e: React.MouseEvent) => {

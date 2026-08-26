@@ -32,11 +32,11 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Optional About photo (/about.jpg) */}
+        {/* About photo */}
         {!aboutImgError && (
           <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-[#3B0202]">
             <img
-              src="/about.jpg"
+              src="/hero.jpg"
               alt="Kahawa West Community"
               className="w-full h-full object-cover"
               onError={() => setAboutImgError(true)}

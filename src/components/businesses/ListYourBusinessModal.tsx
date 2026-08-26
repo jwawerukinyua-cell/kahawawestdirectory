@@ -552,10 +552,15 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
 
               {/* 5 Responsive Photo Slots Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
-                {photos.map((p, idx) => (
+                {photos.map((p, idx) => {
+                  const photoSrc =
+                    p && p.trim() !== ''
+                      ? p
+                      : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
+                  return (
                   <div key={idx} className="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs space-y-1.5 flex flex-col justify-between">
                     <div className="relative h-20 sm:h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
-                      <img src={p} alt="thumb" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={photoSrc} alt="thumb" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
                         {idx === 0 ? '★ Main' : `#${idx + 1}`}
                       </span>
@@ -582,7 +587,8 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                       />
                     </label>
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
 

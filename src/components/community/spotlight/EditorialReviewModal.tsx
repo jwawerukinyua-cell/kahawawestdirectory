@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
   ShieldCheck,
@@ -33,8 +33,20 @@ import {
   Megaphone,
   PlusCircle,
   Building,
+  TrendingUp,
+  Download,
+  Search,
+  ExternalLink,
+  Share2,
 } from 'lucide-react';
-import { CommunityStory, CommunityUpdate, BusinessClaim, UpdateType } from '../../../types';
+import { CommunityStory, CommunityUpdate, BusinessClaim, Business, UpdateType } from '../../../types';
+import {
+  getAllBusinessAnalytics,
+  getBusinessStats,
+  calculateLeadScore,
+  exportAnalyticsCSV,
+  BusinessAnalytics,
+} from '../../../lib/tracking';
 import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
 
@@ -44,6 +56,7 @@ interface EditorialReviewModalProps {
   stories: CommunityStory[];
   updates?: CommunityUpdate[];
   claims?: BusinessClaim[];
+  businesses?: Business[];
   onApproveStory: (storyId: string, featured?: boolean) => void;
   onRejectStory: (storyId: string, reason: string) => void;
   onDeleteStory: (storyId: string) => void;
@@ -55,6 +68,7 @@ interface EditorialReviewModalProps {
   onApproveClaim?: (businessId: string) => void;
   onRejectClaim?: (businessId: string, reason?: string) => void;
   onDeleteClaim?: (businessId: string) => void;
+  onEditBusiness?: (business: Business) => void;
   onOpenSubmitModal: () => void;
   onOpenSubmitUpdateModal?: () => void;
 }
@@ -72,6 +86,7 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   stories,
   updates = [],
   claims = [],
+  businesses = [],
   onApproveStory,
   onRejectStory,
   onDeleteStory,
@@ -83,12 +98,135 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   onApproveClaim,
   onRejectClaim,
   onDeleteClaim,
+  onEditBusiness,
   onOpenSubmitModal,
   onOpenSubmitUpdateModal,
 }) => {
-  const [activeMainTab, setActiveMainTab] = useState<'stories' | 'updates' | 'claims' | 'supabase_guide'>('stories');
+  const [activeMainTab, setActiveMainTab] = useState<'stories' | 'updates' | 'claims' | 'ad_sales' | 'supabase_guide'>('stories');
   const [storySubTab, setStorySubTab] = useState<'pending' | 'published'>('pending');
   const [updateSubTab, setUpdateSubTab] = useState<'pending' | 'published'>('pending');
+  const [claimsSubTab, setClaimsSubTab] = useState<'pending_claims' | 'all_listings'>('pending_claims');
+  const [directorySearchQuery, setDirectorySearchQuery] = useState('');
+  const [directoryZoneFilter, setDirectoryZoneFilter] = useState('all');
+
+  // Ad Sales & Intelligence state
+  const [adSearchQuery, setAdSearchQuery] = useState('');
+  const [adSelectedFilter, setAdSelectedFilter] = useState<'all' | 'unclaimed' | 'billboard' | 'deals'>('all');
+  const [adSelectedZone, setAdSelectedZone] = useState('all');
+  const [copiedPitchId, setCopiedPitchId] = useState<string | null>(null);
+
+  // Fetch real-time analytics data for Editorial Desk
+  const allStats = useMemo(() => {
+    return getAllBusinessAnalytics();
+  }, [isOpen, activeMainTab]);
+
+  // Aggregate Metrics for KWEST platform
+  const aggregateMetrics = useMemo(() => {
+    let totalViews = 0;
+    let totalWhatsApp = 0;
+    let totalCalls = 0;
+    let totalShares = 0;
+
+    const statsList: BusinessAnalytics[] = Object.values(allStats);
+    statsList.forEach((stat: BusinessAnalytics) => {
+      totalViews += stat.views || 0;
+      totalWhatsApp += stat.whatsappClicks || 0;
+      totalCalls += stat.phoneCalls || 0;
+      totalShares += stat.shares || 0;
+    });
+
+    const totalLeads = totalWhatsApp + totalCalls;
+    const conversionRate = totalViews > 0 ? ((totalLeads / totalViews) * 100).toFixed(1) : '0';
+
+    return {
+      totalViews,
+      totalWhatsApp,
+      totalCalls,
+      totalShares,
+      totalLeads,
+      conversionRate,
+    };
+  }, [allStats]);
+
+  // Ranked businesses by lead score
+  const rankedBusinesses = useMemo(() => {
+    return businesses
+      .map((business) => {
+        const stats = allStats[business.id] || getBusinessStats(business.id);
+        const lead = calculateLeadScore(stats, business.isClaimed);
+        return {
+          business,
+          stats,
+          lead,
+        };
+      })
+      .filter(({ business, lead }) => {
+        if (adSelectedZone !== 'all' && business.zone !== adSelectedZone) return false;
+        if (adSearchQuery.trim() !== '') {
+          const q = adSearchQuery.toLowerCase();
+          const matchName = business.name.toLowerCase().includes(q);
+          const matchCat = business.category.toLowerCase().includes(q);
+          const matchZone = business.zone.toLowerCase().includes(q);
+          if (!matchName && !matchCat && !matchZone) return false;
+        }
+        if (adSelectedFilter === 'unclaimed' && business.isClaimed) return false;
+        if (adSelectedFilter === 'billboard' && lead.recommendation !== 'Prime Billboard Candidate') return false;
+        if (adSelectedFilter === 'deals' && lead.recommendation !== 'Spotlight Deals Candidate') return false;
+        return true;
+      })
+      .sort((a, b) => b.lead.totalInteractions - a.lead.totalInteractions);
+  }, [businesses, allStats, adSearchQuery, adSelectedFilter, adSelectedZone]);
+
+  // Filtered directory businesses for direct editing in Editorial Desk
+  const filteredDirectoryBusinesses = useMemo(() => {
+    return businesses.filter((b) => {
+      if (directoryZoneFilter !== 'all' && b.zone !== directoryZoneFilter) return false;
+      if (directorySearchQuery.trim() !== '') {
+        const q = directorySearchQuery.toLowerCase();
+        return (
+          b.name.toLowerCase().includes(q) ||
+          b.category.toLowerCase().includes(q) ||
+          (b.subCategory && b.subCategory.toLowerCase().includes(q)) ||
+          b.zone.toLowerCase().includes(q) ||
+          b.phone.includes(q)
+        );
+      }
+      return true;
+    });
+  }, [businesses, directorySearchQuery, directoryZoneFilter]);
+
+  const handleDownloadCSV = () => {
+    const csvContent = exportAnalyticsCSV(businesses);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `kwest_ad_sales_leads_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const getWhatsAppPitchCopy = (business: Business) => {
+    const stats = allStats[business.id] || getBusinessStats(business.id);
+    const totalLeads = stats.whatsappClicks + stats.phoneCalls;
+
+    return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (kwestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
+  };
+
+  const handleCopyPitch = (business: Business) => {
+    const text = getWhatsAppPitchCopy(business);
+    navigator.clipboard.writeText(text);
+    setCopiedPitchId(business.id);
+    setTimeout(() => setCopiedPitchId(null), 3000);
+  };
+
+  const handleOpenPitchWhatsApp = (business: Business) => {
+    const text = getWhatsAppPitchCopy(business);
+    const phone = business.whatsapp || business.phone;
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   const [previewStory, setPreviewStory] = useState<CommunityStory | null>(null);
   const [editingStory, setEditingStory] = useState<CommunityStory | null>(null);
@@ -522,12 +660,24 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                 }`}
               >
                 <Building className="w-3.5 h-3.5" />
-                <span>🏢 Business Claims</span>
+                <span>🏢 Claims & Directory</span>
                 {claims.filter((c) => c.status === 'pending').length > 0 && (
                   <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-black text-[10px] font-black">
                     {claims.filter((c) => c.status === 'pending').length}
                   </span>
                 )}
+              </button>
+
+              <button
+                onClick={() => setActiveMainTab('ad_sales')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                  activeMainTab === 'ad_sales'
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'bg-stone-800 text-amber-300 hover:text-amber-100'
+                }`}
+              >
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>📈 Ad Sales & Outreach</span>
               </button>
 
               <button
@@ -792,124 +942,459 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                 </div>
               )}
 
-              {/* TAB 3: CLAIMS */}
+              {/* TAB 3: CLAIMS & DIRECTORY */}
               {activeMainTab === 'claims' && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-display font-bold text-white text-base">
-                        Business Claim Verification Queue
-                      </h4>
-                      <p className="text-xs text-stone-400">
-                        Incoming claims submitted to the Supabase <code>claims</code> table by local merchants and authorized agents.
-                      </p>
+                  {/* Subtabs for Claims vs Directory Listings */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-800 pb-3">
+                    <div className="inline-flex p-1 rounded-xl bg-stone-900 border border-stone-800">
+                      <button
+                        onClick={() => setClaimsSubTab('pending_claims')}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                          claimsSubTab === 'pending_claims'
+                            ? 'bg-[#630303] text-white'
+                            : 'text-stone-400 hover:text-white'
+                        }`}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Claims Queue ({claims.length})</span>
+                      </button>
+                      <button
+                        onClick={() => setClaimsSubTab('all_listings')}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                          claimsSubTab === 'all_listings'
+                            ? 'bg-[#630303] text-white'
+                            : 'text-stone-400 hover:text-white'
+                        }`}
+                      >
+                        <Building className="w-3.5 h-3.5" />
+                        <span>All Directory Listings ({businesses.length})</span>
+                      </button>
                     </div>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#260101] text-rose-300 border border-rose-800">
-                      Total: {claims.length} {claims.length === 1 ? 'Record' : 'Records'}
-                    </span>
+
+                    {claimsSubTab === 'all_listings' && (
+                      <div className="flex items-center gap-2 flex-1 max-w-md justify-end">
+                        <div className="relative flex-1">
+                          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                          <input
+                            type="text"
+                            placeholder="Search directory to edit..."
+                            value={directorySearchQuery}
+                            onChange={(e) => setDirectorySearchQuery(e.target.value)}
+                            className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-stone-900 border border-stone-700 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-rose-400"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {claims.length === 0 ? (
-                    <div className="py-12 text-center text-stone-400 text-sm bg-[#181B20] rounded-2xl border border-stone-800">
-                      No business claims recorded yet. When a business owner or agent claims a listing, it will show up here.
+                  {claimsSubTab === 'pending_claims' ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-display font-bold text-white text-base">
+                            Business Claim Verification Queue
+                          </h4>
+                          <p className="text-xs text-stone-400">
+                            Incoming claims submitted to the Supabase <code>claims</code> table by local merchants and authorized agents.
+                          </p>
+                        </div>
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#260101] text-rose-300 border border-rose-800">
+                          Total: {claims.length} {claims.length === 1 ? 'Record' : 'Records'}
+                        </span>
+                      </div>
+
+                      {claims.length === 0 ? (
+                        <div className="py-12 text-center text-stone-400 text-sm bg-[#181B20] rounded-2xl border border-stone-800">
+                          No business claims recorded yet. When a business owner or agent claims a listing, it will show up here.
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {claims.map((claim, idx) => (
+                            <div
+                              key={claim.id || `${claim.business_id}-${idx}`}
+                              className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                            >
+                              <div className="space-y-1.5 flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h5 className="font-bold text-white text-base">
+                                    {claim.business_name || claim.business_id}
+                                  </h5>
+                                  <span
+                                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                      claim.status === 'verified'
+                                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                                        : claim.status === 'rejected'
+                                        ? 'bg-rose-950 text-rose-300 border border-rose-700'
+                                        : 'bg-amber-950 text-amber-300 border border-amber-700'
+                                    }`}
+                                  >
+                                    {claim.status || 'Pending'}
+                                  </span>
+                                  <span className="text-[11px] text-stone-500 font-mono">
+                                    ID: {claim.business_id}
+                                  </span>
+                                </div>
+
+                                <p className="text-xs text-stone-300">
+                                  Claimant: <strong className="text-white">{claim.full_name}</strong>{' '}
+                                  <span className="text-stone-400">({claim.business_role || 'Owner'})</span>
+                                </p>
+
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-400">
+                                  <span>📞 Phone: <strong className="text-stone-200">{claim.phone_number}</strong></span>
+                                  <span>✉️ Email: <strong className="text-stone-200">{claim.email}</strong></span>
+                                  {claim.created_at && (
+                                    <span>📅 Submitted: {new Date(claim.created_at).toLocaleDateString()}</span>
+                                  )}
+                                </div>
+
+                                {claim.notes && (
+                                  <div className="mt-2 p-2.5 rounded-xl bg-stone-900/80 border border-stone-800 text-xs text-stone-300">
+                                    <span className="font-semibold text-stone-400">Verification Notes: </span>
+                                    {claim.notes}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Moderation Actions */}
+                              <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-center">
+                                {claim.status !== 'verified' && onApproveClaim && (
+                                  <button
+                                    onClick={() => onApproveClaim(claim.business_id)}
+                                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                                    title="Approve & mark business as verified"
+                                  >
+                                    <CheckCircle className="w-4 h-4" />
+                                    <span>Verify Claim</span>
+                                  </button>
+                                )}
+
+                                {claim.status !== 'rejected' && onRejectClaim && (
+                                  <button
+                                    onClick={() => {
+                                      const reason = prompt('Enter rejection reason (optional):') || 'Unverified ownership proof';
+                                      onRejectClaim(claim.business_id, reason);
+                                    }}
+                                    className="px-3 py-2 rounded-xl bg-stone-800 hover:bg-rose-900/60 text-stone-300 hover:text-rose-200 border border-stone-700 font-medium text-xs flex items-center gap-1.5 transition"
+                                  >
+                                    <XCircle className="w-3.5 h-3.5" />
+                                    <span>Reject</span>
+                                  </button>
+                                )}
+
+                                {onDeleteClaim && (
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Remove claim record for "${claim.business_name || claim.business_id}"?`)) {
+                                        onDeleteClaim(claim.business_id);
+                                      }
+                                    }}
+                                    className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition"
+                                    title="Delete claim record"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {claims.map((claim, idx) => (
-                        <div
-                          key={claim.id || `${claim.business_id}-${idx}`}
-                          className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                        >
-                          <div className="space-y-1.5 flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h5 className="font-bold text-white text-base">
-                                {claim.business_name || claim.business_id}
-                              </h5>
-                              <span
-                                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                                  claim.status === 'verified'
-                                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
-                                    : claim.status === 'rejected'
-                                    ? 'bg-rose-950 text-rose-300 border border-rose-700'
-                                    : 'bg-amber-950 text-amber-300 border border-amber-700'
-                                }`}
-                              >
-                                {claim.status || 'Pending'}
-                              </span>
-                              <span className="text-[11px] text-stone-500 font-mono">
-                                ID: {claim.business_id}
-                              </span>
+                    /* Directory Listings Manager with Direct Edit Button */
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-display font-bold text-white text-base">
+                            Directory Business Listings & Metadata Editor
+                          </h4>
+                          <p className="text-xs text-stone-400">
+                            Edit details, operating hours, Lipa na M-Pesa till/paybill, and photo galleries directly for any listing.
+                          </p>
+                        </div>
+                        <span className="text-xs text-stone-400">
+                          Showing {filteredDirectoryBusinesses.length} of {businesses.length}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                        {filteredDirectoryBusinesses.map((b) => (
+                          <div
+                            key={b.id}
+                            className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 flex flex-col justify-between gap-3 hover:border-stone-700 transition"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <h5 className="font-bold text-white text-sm truncate">{b.name}</h5>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {b.isClaimed ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-800">
+                                      Claimed
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-800 text-stone-400">
+                                      Unclaimed
+                                    </span>
+                                  )}
+                                  {b.isVerified && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                                      Verified
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-xs text-stone-400 truncate mb-2">{b.tagline || b.category}</p>
+                              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-stone-500">
+                                <span>📍 {b.zone}</span>
+                                <span>📞 {b.phone}</span>
+                                {b.mpesa?.type && <span>💳 {b.mpesa.type}</span>}
+                              </div>
                             </div>
 
-                            <p className="text-xs text-stone-300">
-                              Claimant: <strong className="text-white">{claim.full_name}</strong>{' '}
-                              <span className="text-stone-400">({claim.business_role || 'Owner'})</span>
-                            </p>
-
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-400">
-                              <span>📞 Phone: <strong className="text-stone-200">{claim.phone_number}</strong></span>
-                              <span>✉️ Email: <strong className="text-stone-200">{claim.email}</strong></span>
-                              {claim.created_at && (
-                                <span>📅 Submitted: {new Date(claim.created_at).toLocaleDateString()}</span>
+                            <div className="pt-2 border-t border-stone-800/80 flex items-center justify-between">
+                              <span className="text-[11px] text-stone-500 font-mono">ID: {b.id}</span>
+                              {onEditBusiness && (
+                                <button
+                                  onClick={() => onEditBusiness(b)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#4D0202] hover:bg-[#630303] text-white text-xs font-bold transition shadow-xs border border-rose-800/40 cursor-pointer"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+                                  <span>Edit Listing</span>
+                                </button>
                               )}
                             </div>
-
-                            {claim.notes && (
-                              <div className="mt-2 p-2.5 rounded-xl bg-stone-900/80 border border-stone-800 text-xs text-stone-300">
-                                <span className="font-semibold text-stone-400">Verification Notes: </span>
-                                {claim.notes}
-                              </div>
-                            )}
                           </div>
-
-                          {/* Moderation Actions */}
-                          <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-center">
-                            {claim.status !== 'verified' && onApproveClaim && (
-                              <button
-                                onClick={() => onApproveClaim(claim.business_id)}
-                                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
-                                title="Approve & mark business as verified"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                <span>Verify Claim</span>
-                              </button>
-                            )}
-
-                            {claim.status !== 'rejected' && onRejectClaim && (
-                              <button
-                                onClick={() => {
-                                  const reason = prompt('Enter rejection reason (optional):') || 'Unverified ownership proof';
-                                  onRejectClaim(claim.business_id, reason);
-                                }}
-                                className="px-3 py-2 rounded-xl bg-stone-800 hover:bg-rose-900/60 text-stone-300 hover:text-rose-200 border border-stone-700 font-medium text-xs flex items-center gap-1.5 transition"
-                              >
-                                <XCircle className="w-3.5 h-3.5" />
-                                <span>Reject</span>
-                              </button>
-                            )}
-
-                            {onDeleteClaim && (
-                              <button
-                                onClick={() => {
-                                  if (confirm(`Remove claim record for "${claim.business_name || claim.business_id}"?`)) {
-                                    onDeleteClaim(claim.business_id);
-                                  }
-                                }}
-                                className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition"
-                                title="Delete claim record"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* TAB 4: SUPABASE GUIDE */}
+              {/* TAB 4: AD SALES & OUTREACH INTELLIGENCE (LOCKED FOR EDITOR ALONE) */}
+              {activeMainTab === 'ad_sales' && (
+                <div className="space-y-6 max-w-5xl">
+                  {/* Header & Export Actions */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-800">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-display font-black text-lg text-white">
+                          Ad Sales & Engagement Intelligence
+                        </h4>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                          Editor Confidential
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-400">
+                        Merchant traffic metrics, high-intent lead scoring, and 1-click WhatsApp ad proposal pitches.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleDownloadCSV}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm cursor-pointer self-start sm:self-auto"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Export Leads CSV</span>
+                    </button>
+                  </div>
+
+                  {/* Aggregate KPIs */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <div className="bg-[#181B20] p-4 rounded-2xl border border-stone-800 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-stone-400 text-xs mb-1">
+                        <span className="font-semibold uppercase text-[10px]">Total Views</span>
+                        <Eye className="w-4 h-4 text-sky-400" />
+                      </div>
+                      <span className="text-2xl font-display font-black text-white">
+                        {aggregateMetrics.totalViews.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="bg-emerald-950/40 p-4 rounded-2xl border border-emerald-800/60 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-emerald-400 text-xs mb-1">
+                        <span className="font-semibold uppercase text-[10px]">WhatsApp Chats</span>
+                        <MessageSquare className="w-4 h-4 text-[#25D366]" />
+                      </div>
+                      <span className="text-2xl font-display font-black text-emerald-300">
+                        {aggregateMetrics.totalWhatsApp.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="bg-[#181B20] p-4 rounded-2xl border border-stone-800 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-stone-400 text-xs mb-1">
+                        <span className="font-semibold uppercase text-[10px]">Phone Calls</span>
+                        <Phone className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <span className="text-2xl font-display font-black text-white">
+                        {aggregateMetrics.totalCalls.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="bg-[#181B20] p-4 rounded-2xl border border-stone-800 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-stone-400 text-xs mb-1">
+                        <span className="font-semibold uppercase text-[10px]">Shares</span>
+                        <Share2 className="w-4 h-4 text-purple-400" />
+                      </div>
+                      <span className="text-2xl font-display font-black text-white">
+                        {aggregateMetrics.totalShares.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="bg-[#181B20] p-4 rounded-2xl border border-stone-800 flex flex-col justify-between col-span-2 sm:col-span-1">
+                      <div className="flex items-center justify-between text-stone-400 text-xs mb-1">
+                        <span className="font-semibold uppercase text-[10px]">Lead Rate</span>
+                        <Sparkles className="w-4 h-4 text-rose-400" />
+                      </div>
+                      <span className="text-2xl font-display font-black text-rose-300">
+                        {aggregateMetrics.conversionRate}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Filter & Search Toolbar */}
+                  <div className="bg-[#181B20] p-3 rounded-2xl border border-stone-800 flex flex-wrap items-center justify-between gap-3">
+                    <div className="relative flex-1 min-w-[200px]">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                      <input
+                        type="text"
+                        placeholder="Search lead candidate or zone..."
+                        value={adSearchQuery}
+                        onChange={(e) => setAdSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 rounded-xl bg-stone-900 border border-stone-700 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        value={adSelectedFilter}
+                        onChange={(e) => setAdSelectedFilter(e.target.value as any)}
+                        className="px-3 py-2 rounded-xl bg-stone-900 border border-stone-700 text-xs text-stone-200 focus:outline-none focus:border-amber-400"
+                      >
+                        <option value="all">All Lead Types</option>
+                        <option value="unclaimed">Unclaimed Prospects</option>
+                        <option value="billboard">Prime Billboard Candidates</option>
+                        <option value="deals">Spotlight Deals Candidates</option>
+                      </select>
+
+                      <select
+                        value={adSelectedZone}
+                        onChange={(e) => setAdSelectedZone(e.target.value)}
+                        className="px-3 py-2 rounded-xl bg-stone-900 border border-stone-700 text-xs text-stone-200 focus:outline-none focus:border-amber-400"
+                      >
+                        <option value="all">All Estate Zones</option>
+                        <option value="Kongo">Kongo</option>
+                        <option value="Kamiti Road">Kamiti Road</option>
+                        <option value="Cooperative">Cooperative</option>
+                        <option value="Soweto">Soweto</option>
+                        <option value="St. Joseph">St. Joseph</option>
+                        <option value="Bima Road">Bima Road</option>
+                        <option value="Kiwanja">Kiwanja</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Ranked Lead Candidates */}
+                  <div className="space-y-3">
+                    <h5 className="font-bold text-xs text-stone-400 uppercase tracking-wider">
+                      Ranked Ad Sales Candidates ({rankedBusinesses.length})
+                    </h5>
+
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                      {rankedBusinesses.map(({ business, stats, lead }) => {
+                        const totalDirectInquiries = stats.whatsappClicks + stats.phoneCalls;
+
+                        return (
+                          <div
+                            key={business.id}
+                            className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-stone-700 transition"
+                          >
+                            <div className="space-y-2 flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h5 className="font-bold text-white text-base truncate">
+                                  {business.name}
+                                </h5>
+                                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#260101] text-rose-300 border border-rose-900">
+                                  {business.zone}
+                                </span>
+                                <span
+                                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                    lead.score >= 50
+                                      ? 'bg-rose-950 text-rose-300 border border-rose-800'
+                                      : lead.score >= 20
+                                      ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                                      : 'bg-stone-800 text-stone-400'
+                                  }`}
+                                >
+                                  Lead Score: {lead.score} ({lead.priority.toUpperCase()})
+                                </span>
+                              </div>
+
+                              <p className="text-xs text-stone-300">
+                                <strong className="text-amber-400 font-semibold">Recommended Pitch: </strong>
+                                {lead.recommendation} • {business.phone}
+                              </p>
+
+                              {/* Mini metrics ribbon */}
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-stone-400">
+                                <span className="flex items-center gap-1">
+                                  <Eye className="w-3.5 h-3.5 text-sky-400" />
+                                  <strong className="text-white">{stats.views}</strong> views
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                                  <strong className="text-white">{stats.whatsappClicks}</strong> chats
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Phone className="w-3.5 h-3.5 text-amber-400" />
+                                  <strong className="text-white">{stats.phoneCalls}</strong> calls
+                                </span>
+                                <span className="text-stone-500">
+                                  Total Inquiries: <strong className="text-emerald-400">{totalDirectInquiries}</strong>
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Outreach Pitch Action Buttons */}
+                            <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+                              <button
+                                onClick={() => handleCopyPitch(business)}
+                                className="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white font-bold text-xs flex items-center gap-1.5 transition border border-stone-700 cursor-pointer"
+                                title="Copy tailored WhatsApp pitch script"
+                              >
+                                {copiedPitchId === business.id ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span className="text-emerald-400">Copied Script!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>Copy Pitch</span>
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                onClick={() => handleOpenPitchWhatsApp(business)}
+                                className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-black font-bold text-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-sm"
+                                title="Open WhatsApp chat with pre-written pitch"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                <span>WhatsApp Pitch</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: SUPABASE GUIDE */}
               {activeMainTab === 'supabase_guide' && (
                 <div className="space-y-4 max-w-4xl">
                   <div className="flex items-center justify-between">

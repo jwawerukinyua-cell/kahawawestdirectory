@@ -121,7 +121,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           </div>
 
           {/* Featured Image */}
-          {story.imageUrl && (
+          {story.imageUrl && story.imageUrl.trim() !== '' && (
             <div className="space-y-1.5">
               <div className="relative rounded-2xl overflow-hidden shadow-md bg-stone-900 max-h-[420px]">
                 <img

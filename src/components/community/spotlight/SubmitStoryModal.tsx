@@ -329,7 +329,7 @@ Residents interested in joining our upcoming Saturday clean-ups can meet at the 
                 </span>
               </div>
 
-              {imageUrl ? (
+              {imageUrl && imageUrl.trim() !== '' ? (
                 <div className="rounded-2xl overflow-hidden shadow-md bg-stone-900 max-h-[350px]">
                   <img src={imageUrl} alt="Story preview" className="w-full h-full object-cover max-h-[350px]" />
                 </div>
@@ -630,7 +630,7 @@ Residents interested in joining our upcoming Saturday clean-ups can meet at the 
                   </div>
                 </div>
 
-                {imageUrl && (
+                {imageUrl && imageUrl.trim() !== '' && (
                   <div className="relative rounded-xl overflow-hidden h-36 bg-stone-900 border border-stone-300">
                     <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
                     <button

@@ -84,22 +84,22 @@ export const FloatingShareButton: React.FC = () => {
         {/* Share Options Popup Menu */}
         {isOpen && (
           <div
-            className="w-72 bg-[#260101] text-stone-100 rounded-2xl shadow-2xl border border-rose-500/40 p-4 animate-in fade-in slide-in-from-bottom-3 duration-200 backdrop-blur-xl"
+            className="w-72 bg-[#1A0101] text-stone-100 rounded-2xl shadow-2xl border border-emerald-500/40 p-4 animate-in fade-in slide-in-from-bottom-3 duration-200 backdrop-blur-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-rose-900/50 mb-3">
+            <div className="flex items-center justify-between pb-3 border-b border-emerald-900/50 mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-rose-600/30 border border-rose-500/40 flex items-center justify-center text-rose-300">
+                <div className="w-7 h-7 rounded-lg bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-300">
                   <Share2 className="w-3.5 h-3.5" />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-white leading-none">Share KWEST</h4>
-                  <span className="text-[10px] text-rose-300">kahawawestdirectory.co.ke</span>
+                  <span className="text-[10px] text-emerald-400">kahawawestdirectory.co.ke</span>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-6 h-6 rounded-md hover:bg-rose-900/60 text-stone-400 hover:text-white flex items-center justify-center transition"
+                className="w-6 h-6 rounded-md hover:bg-emerald-900/60 text-stone-400 hover:text-white flex items-center justify-center transition"
                 title="Close"
               >
                 <X className="w-3.5 h-3.5" />
@@ -114,25 +114,25 @@ export const FloatingShareButton: React.FC = () => {
               {/* WhatsApp Option */}
               <button
                 onClick={handleWhatsAppShare}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-sm active:scale-98"
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-black text-xs transition shadow-sm active:scale-98"
               >
                 <span className="flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4 text-slate-950" />
                   Share on WhatsApp
                 </span>
-                <span className="text-[10px] bg-emerald-700/60 px-1.5 py-0.5 rounded font-mono">Groups</span>
+                <span className="text-[10px] bg-black/20 text-slate-950 px-1.5 py-0.5 rounded font-mono font-bold">Groups</span>
               </button>
 
               {/* Copy Link Option */}
               <button
                 onClick={handleCopyLink}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 text-xs font-semibold border border-rose-800/40 transition active:scale-98"
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 text-xs font-semibold border border-emerald-800/40 transition active:scale-98"
               >
                 <span className="flex items-center gap-2">
-                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-stone-400" />}
+                  {copied ? <Check className="w-4 h-4 text-[#25D366]" /> : <Copy className="w-4 h-4 text-stone-400" />}
                   <span>{copied ? 'Link Copied to Clipboard!' : 'Copy Directory Link'}</span>
                 </span>
-                {copied && <span className="text-[10px] text-emerald-400 font-bold">Done!</span>}
+                {copied && <span className="text-[10px] text-[#25D366] font-bold">Done!</span>}
               </button>
 
               {/* Social Channels Row */}
@@ -161,22 +161,22 @@ export const FloatingShareButton: React.FC = () => {
         <button
           id="kwest-floating-share-btn"
           onClick={handleNativeShareOrToggle}
-          className="group relative flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-[#4D0202] via-[#630303] to-[#800404] text-amber-300 hover:text-white border-2 border-amber-400/90 shadow-[0_8px_25px_rgba(0,0,0,0.45)] hover:shadow-[0_10px_30px_rgba(99,3,3,0.6)] transition-all duration-200 active:scale-95"
+          className="group relative flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-[#1F0101] via-[#3B0202] to-[#4D0202] text-emerald-300 hover:text-white border-2 border-emerald-500/90 hover:border-[#25D366] shadow-[0_8px_25px_rgba(0,140,81,0.35)] hover:shadow-[0_10px_32px_rgba(37,211,102,0.6)] transition-all duration-300 active:scale-95"
           title="Share Kahawa West Directory (KWEST)"
         >
-          {/* Subtle glowing ring effect */}
-          <span className="absolute -inset-0.5 rounded-full bg-amber-400/30 blur-xs group-hover:bg-amber-400/50 transition-all pointer-events-none" />
+          {/* Glowing ring effect: Our brand emerald green normally, transitions to WhatsApp green glow on hover */}
+          <span className="absolute -inset-0.5 rounded-full bg-emerald-500/40 blur-xs group-hover:bg-[#25D366]/70 transition-all duration-300 pointer-events-none" />
 
           <div className="relative flex items-center gap-1.5">
-            <Share2 className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform duration-200" />
-            <span className="text-xs font-black tracking-wide uppercase text-stone-100 group-hover:text-amber-200">
+            <Share2 className="w-4 h-4 text-emerald-400 group-hover:text-[#25D366] group-hover:rotate-12 transition-all duration-300" />
+            <span className="text-xs font-black tracking-wide uppercase text-stone-100 group-hover:text-white transition-colors duration-200">
               Share KWEST
             </span>
           </div>
 
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 group-hover:bg-[#25D366] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 group-hover:bg-[#25D366] transition-colors duration-300"></span>
           </span>
         </button>
       </div>

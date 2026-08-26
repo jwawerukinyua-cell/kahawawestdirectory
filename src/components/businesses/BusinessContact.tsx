@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, MessageSquare, MapPin, Mail, Globe, Copy, Check, ExternalLink } from 'lucide-react';
 import { Business } from '../../types';
+import { trackBusinessInteraction } from '../../lib/tracking';
 
 interface BusinessContactProps {
   business: Business;
@@ -16,9 +17,18 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business }) =>
       setCopiedMpesa(true);
       setTimeout(() => setCopiedMpesa(false), 2000);
     } else {
+      trackBusinessInteraction(business.id, 'phone');
       setCopiedPhone(true);
       setTimeout(() => setCopiedPhone(false), 2000);
     }
+  };
+
+  const handlePhoneClick = () => {
+    trackBusinessInteraction(business.id, 'phone');
+  };
+
+  const handleWhatsAppClick = () => {
+    trackBusinessInteraction(business.id, 'whatsapp');
   };
 
   const whatsappUrl = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(
@@ -55,6 +65,7 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business }) =>
               <span className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider block">Phone Call</span>
               <a
                 href={`tel:${business.phone}`}
+                onClick={handlePhoneClick}
                 className="text-sm font-bold text-slate-900 hover:text-emerald-700 transition block truncate"
               >
                 {business.phone}
@@ -83,6 +94,7 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business }) =>
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={handleWhatsAppClick}
                 className="text-sm font-bold text-emerald-950 hover:underline flex items-center gap-1 truncate"
               >
                 <span>Send Message</span>
@@ -94,6 +106,7 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business }) =>
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleWhatsAppClick}
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex-shrink-0 active:scale-95 shadow-2xs"
           >
             Chat

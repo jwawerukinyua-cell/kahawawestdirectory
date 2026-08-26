@@ -69,3 +69,74 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Service Worker Notification Handling for KWEST PWA
+self.addEventListener('push', (event) => {
+  let data = {
+    title: 'Kahawa West Community Notice',
+    body: 'New update posted on KWEST Directory.',
+    icon: '/kwest-icon.png',
+    badge: '/kwest-icon.png',
+    data: { url: '/' },
+  };
+
+  if (event.data) {
+    try {
+      data = { ...data, ...event.data.json() };
+    } catch (e) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/kwest-icon.png',
+    badge: data.badge || '/kwest-icon.png',
+    vibrate: [200, 100, 200],
+    data: data.data || { url: '/' },
+    actions: [
+      { action: 'open', title: 'View Update' },
+      { action: 'close', title: 'Dismiss' },
+    ],
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+// Handle Notification Click
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'close') return;
+
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // If a window is already open, focus it
+      for (let client of windowClients) {
+        if (client.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
+// Listen for messages from client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, options } = event.data;
+    self.registration.showNotification(title, {
+      icon: '/kwest-icon.png',
+      badge: '/kwest-icon.png',
+      vibrate: [150, 50, 150],
+      ...options,
+    });
+  }
+});
+

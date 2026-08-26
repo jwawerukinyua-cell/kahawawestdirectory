@@ -98,7 +98,7 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
       <div className="bg-[#121820] text-white rounded-3xl overflow-hidden shadow-2xl border border-stone-800/80 mb-10">
         {/* Top Media / Photo Section */}
         <div className="relative w-full h-64 sm:h-80 md:h-96 bg-[#0E1318] flex items-center justify-center overflow-hidden border-b border-stone-800">
-          {featuredStory?.imageUrl && !featuredImgError ? (
+          {featuredStory?.imageUrl && featuredStory.imageUrl.trim() !== '' && !featuredImgError ? (
             <>
               <img
                 src={featuredStory.imageUrl}
@@ -226,7 +226,7 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
               <div>
                 {/* Story Photo */}
                 <div className="relative h-48 bg-stone-100 overflow-hidden">
-                  {story.imageUrl ? (
+                  {story.imageUrl && story.imageUrl.trim() !== '' ? (
                     <img
                       src={story.imageUrl}
                       alt={story.title}

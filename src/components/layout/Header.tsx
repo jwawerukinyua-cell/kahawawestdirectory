@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, PhoneCall, Info, Megaphone, Users } from 'lucide-react';
+import { PlusCircle, PhoneCall, Info, Megaphone, Users, Bell, TrendingUp } from 'lucide-react';
 import { BrandLogo } from '../ui/BrandLogo';
 
 interface HeaderProps {
@@ -7,6 +7,8 @@ interface HeaderProps {
   onAboutClick: () => void;
   onNoticeboardClick: () => void;
   onEmergencyClick: () => void;
+  onOpenNotifications?: () => void;
+  unreadNotificationsCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -14,6 +16,8 @@ export const Header: React.FC<HeaderProps> = ({
   onAboutClick,
   onNoticeboardClick,
   onEmergencyClick,
+  onOpenNotifications,
+  unreadNotificationsCount = 0,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-[#630303]/95 text-white backdrop-blur-md border-b border-[#4A0202] shadow-xl">
@@ -27,30 +31,30 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-2 text-xs lg:text-sm font-sans font-semibold text-stone-200">
+        <nav className="hidden md:flex items-center gap-1.5 text-xs lg:text-sm font-sans font-semibold text-stone-200">
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition"
+            className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition"
           >
             All Businesses
           </button>
           <button
             onClick={onNoticeboardClick}
-            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-emerald-300"
+            className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-emerald-300"
           >
             <Users className="w-4 h-4" />
             <span>Community</span>
           </button>
           <button
             onClick={onEmergencyClick}
-            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-sky-300"
+            className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-sky-300"
           >
             <PhoneCall className="w-4 h-4" />
-            Emergency Contacts
+            Emergency
           </button>
           <button
             onClick={onAboutClick}
-            className="px-3.5 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-stone-300"
+            className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-stone-300"
           >
             <Info className="w-4 h-4" />
             About KWEST
@@ -59,10 +63,27 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Header Action Button */}
         <div className="flex items-center gap-2">
+          {/* Notification Bell */}
+          {onOpenNotifications && (
+            <button
+              id="header-notification-btn"
+              onClick={onOpenNotifications}
+              className="p-2.5 rounded-xl bg-[#4D0202] hover:bg-[#3D0101] text-stone-200 hover:text-white transition relative active:scale-95 border border-[#630303]"
+              title="View community notices & power alerts"
+            >
+              <Bell className="w-4.5 h-4.5" />
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#25D366] text-slate-950 font-black text-[10px] flex items-center justify-center shadow-xs animate-pulse">
+                  {unreadNotificationsCount}
+                </span>
+              )}
+            </button>
+          )}
+
           <button
             id="header-list-business-btn"
             onClick={onListBusinessClick}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-sans font-bold text-xs sm:text-sm shadow-md shadow-emerald-950/50 active:scale-95 transition border border-emerald-500/40"
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-sans font-bold text-xs sm:text-sm shadow-md shadow-emerald-950/50 active:scale-95 transition border border-emerald-500/40"
           >
             <PlusCircle className="w-4 h-4 stroke-[2.5]" />
             <span className="hidden sm:inline">List Business</span>
@@ -73,3 +94,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

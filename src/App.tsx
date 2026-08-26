@@ -47,6 +47,7 @@ import { SortDropdown } from './components/directory/SortDropdown';
 import { EmptyState } from './components/directory/EmptyState';
 import { BusinessCard } from './components/businesses/BusinessCard';
 import { BusinessDetailModal } from './components/businesses/BusinessDetailModal';
+import { EditBusinessModal } from './components/businesses/EditBusinessModal';
 import { ClaimBusinessModal } from './components/businesses/ClaimBusinessModal';
 import { ListYourBusinessModal } from './components/businesses/ListYourBusinessModal';
 import { CommunityFeedbackModal } from './components/community/feedback/CommunityFeedbackModal';
@@ -62,6 +63,15 @@ import { LegalModal } from './components/legal/LegalModal';
 import { MonetizationPlaceholders } from './components/home/MonetizationPlaceholders';
 import { AdEnquiryModal } from './components/home/AdEnquiryModal';
 import { FloatingShareButton } from './components/ui/FloatingShareButton';
+import { NotificationCenter } from './components/notifications/NotificationCenter';
+import { NotificationToast } from './components/notifications/NotificationToast';
+import { AdminAnalyticsModal } from './components/admin/AdminAnalyticsModal';
+import { trackSearchQuery } from './lib/tracking';
+import {
+  AppNotification,
+  getStoredNotifications,
+  generateSearchMatchAlerts,
+} from './lib/notifications';
 
 export default function App() {
   // 1. Core State
@@ -83,6 +93,8 @@ export default function App() {
 
   // 3. Modal & Drawer States
   const [selectedBusinessForDetails, setSelectedBusinessForDetails] = useState<Business | null>(null);
+  const [selectedBusinessForEdit, setSelectedBusinessForEdit] = useState<Business | null>(null);
+  const [isEditBusinessOpen, setIsEditBusinessOpen] = useState(false);
   const [businessToClaim, setBusinessToClaim] = useState<Business | null>(null);
   const [businessForFeedback, setBusinessForFeedback] = useState<Business | null>(null);
   const [selectedStoryForReading, setSelectedStoryForReading] = useState<CommunityStory | null>(null);
@@ -94,7 +106,55 @@ export default function App() {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isMobileZoneOpen, setIsMobileZoneOpen] = useState(false);
   const [isAdEnquiryOpen, setIsAdEnquiryOpen] = useState(false);
+  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
+  const [isAdminAnalyticsOpen, setIsAdminAnalyticsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications());
+  const [activeToastNotification, setActiveToastNotification] = useState<AppNotification | null>(null);
   const [legalTab, setLegalTab] = useState<'guidelines' | 'community' | 'privacy' | 'terms' | null>(null);
+
+  // Unread notification count
+  const unreadNotificationsCount = useMemo(() => {
+    return notifications.filter((n) => !n.isRead).length;
+  }, [notifications]);
+
+  // Keep notifications reactive
+  useEffect(() => {
+    const handleNotifUpdate = (e: any) => {
+      if (e.detail) {
+        setNotifications(e.detail);
+      }
+    };
+    window.addEventListener('kwest_notifications_updated', handleNotifUpdate);
+
+    // Initial toast notification preview after 3.5 seconds
+    const timer = setTimeout(() => {
+      const all = getStoredNotifications();
+      const unread = all.find((n) => !n.isRead);
+      if (unread) {
+        setActiveToastNotification(unread);
+      }
+    }, 3500);
+
+    return () => {
+      window.removeEventListener('kwest_notifications_updated', handleNotifUpdate);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // Track search queries and check for matching community notices
+  useEffect(() => {
+    if (searchQuery.trim().length >= 3 || selectedZone !== 'all' || selectedCategory !== 'all') {
+      const timeout = setTimeout(() => {
+        trackSearchQuery(searchQuery, selectedZone, selectedCategory);
+        const match = generateSearchMatchAlerts(updates);
+        if (match) {
+          setActiveToastNotification(match);
+        }
+      }, 700);
+      return () => clearTimeout(timeout);
+    }
+  }, [searchQuery, selectedZone, selectedCategory, updates]);
+
 
   // 3b. Businesses with active special resident offers
   const businessesWithOffers = useMemo(() => {
@@ -199,6 +259,21 @@ export default function App() {
   const handleCloseDetails = () => {
     setSelectedBusinessForDetails(null);
     window.history.replaceState(null, '', window.location.pathname);
+  };
+
+  const handleOpenEditBusiness = (business: Business) => {
+    setSelectedBusinessForEdit(business);
+    setIsEditBusinessOpen(true);
+  };
+
+  const handleBusinessUpdated = (updatedBusiness: Business) => {
+    setBusinesses((prev) =>
+      prev.map((b) => (b.id === updatedBusiness.id ? updatedBusiness : b))
+    );
+    if (selectedBusinessForDetails?.id === updatedBusiness.id) {
+      setSelectedBusinessForDetails(updatedBusiness);
+    }
+    saveCustomizedBusiness(updatedBusiness);
   };
 
   const handleClaimSuccess = (updatedBusiness: Business, claim: BusinessClaim) => {
@@ -382,6 +457,8 @@ export default function App() {
         onAboutClick={() => setIsAboutOpen(true)}
         onNoticeboardClick={scrollToNoticeboard}
         onEmergencyClick={() => setIsEmergencyOpen(true)}
+        onOpenNotifications={() => setIsNotificationCenterOpen(true)}
+        unreadNotificationsCount={unreadNotificationsCount}
       />
 
       {/* 2. Main Page Container */}
@@ -397,6 +474,14 @@ export default function App() {
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
           categoryCounts={categoryCounts}
+        />
+
+        {/* Monetization Slot & Special Resident Offers Coming Soon Placeholders */}
+        <MonetizationPlaceholders
+          businessesWithOffers={businessesWithOffers}
+          onViewBusiness={handleViewDetails}
+          onClaimListing={() => setIsListBusinessOpen(true)}
+          onOpenAdEnquiry={() => setIsAdEnquiryOpen(true)}
         />
 
         {/* Directory Controls & Filtering Section */}
@@ -540,6 +625,7 @@ export default function App() {
         stories={stories}
         updates={updates}
         claims={claims}
+        businesses={businesses}
         onApproveStory={handleApproveStory}
         onRejectStory={handleRejectStory}
         onDeleteStory={handleDeleteStory}
@@ -550,6 +636,7 @@ export default function App() {
         onApproveClaim={handleApproveClaim}
         onRejectClaim={handleRejectClaim}
         onDeleteClaim={handleDeleteClaim}
+        onEditBusiness={handleOpenEditBusiness}
         onOpenSubmitModal={() => setIsSubmitStoryOpen(true)}
         onOpenSubmitUpdateModal={() => setIsSubmitUpdateOpen(true)}
       />
@@ -584,10 +671,25 @@ export default function App() {
         onClaimClick={(biz) => {
           setBusinessToClaim(biz);
         }}
+        onEditClick={handleOpenEditBusiness}
         onLeaveFeedbackClick={(biz) => {
           setBusinessForFeedback(biz);
         }}
       />
+
+      {/* Edit Business Modal (For Verified Owners / Claimed Listings & Editorial Desk) */}
+      {isEditBusinessOpen && (
+        <EditBusinessModal
+          business={selectedBusinessForEdit}
+          isOpen={isEditBusinessOpen}
+          onClose={() => {
+            setIsEditBusinessOpen(false);
+            setSelectedBusinessForEdit(null);
+          }}
+          onBusinessUpdated={handleBusinessUpdated}
+          isAdmin={true}
+        />
+      )}
 
       {/* Claim & Customize Business Modal */}
       {businessToClaim && (
@@ -637,6 +739,37 @@ export default function App() {
           onSelectTab={(t) => setLegalTab(t)}
         />
       )}
+
+      {/* Ad Space & Sponsorship Enquiry Modal */}
+      <AdEnquiryModal
+        isOpen={isAdEnquiryOpen}
+        onClose={() => setIsAdEnquiryOpen(false)}
+      />
+
+      {/* Notification Center Drawer */}
+      <NotificationCenter
+        isOpen={isNotificationCenterOpen}
+        onClose={() => setIsNotificationCenterOpen(false)}
+        updates={updates}
+      />
+
+      {/* Real-time Notification Toast Notification */}
+      <NotificationToast
+        notification={activeToastNotification}
+        onOpenCenter={() => setIsNotificationCenterOpen(true)}
+        onDismiss={() => setActiveToastNotification(null)}
+      />
+
+      {/* Internal Admin Business Intelligence & Ad Placement Lead Tracker */}
+      <AdminAnalyticsModal
+        isOpen={isAdminAnalyticsOpen}
+        onClose={() => setIsAdminAnalyticsOpen(false)}
+        businesses={businesses}
+        onSelectBusiness={(biz) => {
+          setIsAdminAnalyticsOpen(false);
+          setSelectedBusinessForDetails(biz);
+        }}
+      />
     </div>
   );
 }
