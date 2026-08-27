@@ -59,9 +59,16 @@ export const Header: React.FC<HeaderProps> = ({
             <Info className="w-4 h-4" />
             About KWEST
           </button>
+          <button
+            onClick={onListBusinessClick}
+            className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] text-emerald-300 hover:text-emerald-200 transition flex items-center gap-1.5 font-bold"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>+ List Business</span>
+          </button>
         </nav>
 
-        {/* Header Action Button */}
+        {/* Header Action / Notification Area */}
         <div className="flex items-center gap-2">
           {/* Notification Bell */}
           {onOpenNotifications && (
@@ -79,16 +86,6 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
           )}
-
-          <button
-            id="header-list-business-btn"
-            onClick={onListBusinessClick}
-            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-sans font-bold text-xs sm:text-sm shadow-md shadow-emerald-950/50 active:scale-95 transition border border-emerald-500/40"
-          >
-            <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-            <span className="hidden sm:inline">List Business</span>
-            <span className="sm:hidden">List</span>
-          </button>
         </div>
       </div>
     </header>

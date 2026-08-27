@@ -1,5 +1,26 @@
 import React, { useState } from 'react';
-import { Sparkles, Megaphone, Tag, ArrowRight, ShieldCheck, CheckCircle2, Phone, Mail, Clock } from 'lucide-react';
+import {
+  Megaphone,
+  Tag,
+  ArrowRight,
+  ShieldCheck,
+  CheckCircle2,
+  Phone,
+  Mail,
+  Clock,
+  Ruler,
+  FileImage,
+  Type,
+  Maximize2,
+  ChevronDown,
+  Info,
+  TrendingUp,
+  Flame,
+  Palette,
+  Target,
+  ExternalLink,
+  MessageSquare,
+} from 'lucide-react';
 import { Business } from '../../types';
 
 interface MonetizationPlaceholdersProps {
@@ -15,55 +36,155 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
   onClaimListing,
   onOpenAdEnquiry,
 }) => {
+  const [showBannerSpecs, setShowBannerSpecs] = useState(false);
+  const [showDealsSpecs, setShowDealsSpecs] = useState(false);
+
   return (
     <div className="space-y-8 my-8">
-      {/* 1. Main Homepage Promo / Ad Banner Placeholder (Monetization Slot #1) */}
+      {/* 1. Main Homepage Billboard Slot (Monetization Slot #1) - Styled with luxury #00000f background */}
       <div
         id="homepage-main-promo-banner"
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#260101] via-[#450505] to-[#630303] text-white p-5 sm:p-7 border border-[#630303]/60 shadow-xl"
+        className="relative overflow-hidden rounded-3xl bg-[#00000f] text-white p-6 sm:p-8 border-2 border-amber-400/70 shadow-2xl"
       >
-        {/* Background glow and decorative watermark */}
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 -mb-10 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+        {/* Subtle Luxury Ambient Accents */}
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-[#630303]/30 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
+          <div className="space-y-3 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-amber-400 text-stone-950 shadow-sm animate-pulse">
-                <Sparkles className="w-3.5 h-3.5" />
-                Coming Soon • Prime Ad Slot
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 shadow-md">
+                <Flame className="w-3.5 h-3.5 text-stone-950 fill-stone-950" />
+                <span>COMING SOON • OWN THIS SPACE</span>
               </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-200">
-                <Megaphone className="w-3.5 h-3.5" />
-                Homepage Billboard & Sponsor Spotlight
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-300">
+                <Target className="w-3.5 h-3.5" />
+                <span>Prime #1 Homepage Billboard</span>
               </span>
             </div>
 
-            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              Promote Your Brand Across Kahawa West
+            <h3 className="text-xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+              Put Your Business in Front of 10,000+ Kahawa West Residents Every Day
             </h3>
 
-            <p className="text-xs sm:text-sm text-stone-200 leading-relaxed font-sans">
-              This high-visibility homepage billboard will be available for local businesses, estates, schools, medical centers, and brands once the directory goes live. Drive foot-traffic and direct WhatsApp orders from over 10,000+ monthly estate visits.
+            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-sans">
+              Claim exclusive top-of-page visibility before your competitors do. Instant brand authority, maximum estate recognition, and direct WhatsApp / phone orders or website clicks from every resident searching for local services.
             </p>
+
+            {/* Creative Services & Direct Contact Banner Pill */}
+            <div className="p-3 rounded-xl bg-white/5 border border-amber-400/30 text-xs text-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2">
+                <Palette className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span className="font-semibold text-[11px] sm:text-xs">
+                  <strong>Need Ad Graphics & Copy?</strong> We write persuasive copy & design custom HD banners for your business.
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-[11px] font-bold text-amber-300 flex-shrink-0">
+                <a
+                  href="mailto:ads@kahawawestdirectory.co.ke"
+                  className="hover:underline flex items-center gap-1"
+                >
+                  <Mail className="w-3 h-3 text-amber-400" />
+                  <span>ads@kahawawestdirectory.co.ke</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Quick Specs Pill Badges */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 text-amber-200 border border-white/15">
+                <Ruler className="w-3 h-3 text-amber-400" />
+                <span>Specs: 1200 × 400 px (3:1) • 31.8 × 10.6 cm</span>
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 text-stone-300 border border-white/15">
+                <FileImage className="w-3 h-3 text-emerald-400" />
+                <span>PNG / WebP • Max 1.5MB</span>
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 text-sky-300 border border-white/15">
+                <ExternalLink className="w-3 h-3 text-sky-400" />
+                <span>Click Action: WhatsApp/Call or Website</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowBannerSpecs(!showBannerSpecs)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 border border-amber-400/40 transition active:scale-95"
+              >
+                <Info className="w-3 h-3 text-amber-300" />
+                <span>{showBannerSpecs ? 'Hide Ad Specs' : 'View Full Creative Dimensions'}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${showBannerSpecs ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-2.5 w-full md:w-auto flex-shrink-0">
             <button
               onClick={onOpenAdEnquiry}
-              className="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-amber-950/20"
+              className="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-amber-950/40 cursor-pointer"
             >
+              <Megaphone className="w-4 h-4 text-stone-950" />
               <span>Reserve Ad Space</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={onClaimListing}
-              className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/20 flex items-center justify-center gap-1.5 transition backdrop-blur-sm"
+              className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/25 flex items-center justify-center gap-1.5 transition backdrop-blur-sm cursor-pointer"
             >
-              <span>Claim & Edit Your Listing</span>
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Claim & List Business</span>
             </button>
           </div>
         </div>
+
+        {/* Detailed Creative Dimensions Drawer for Billboard */}
+        {showBannerSpecs && (
+          <div className="mt-5 pt-4 border-t border-white/20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-black/60 p-4 rounded-2xl backdrop-blur-md animate-in fade-in duration-200 border border-white/10">
+            <div className="space-y-1">
+              <div className="text-amber-300 font-bold flex items-center gap-1">
+                <Ruler className="w-3.5 h-3.5" />
+                <span>Recommended Resolution</span>
+              </div>
+              <p className="text-stone-300 text-[11px] leading-relaxed">
+                <strong>Desktop:</strong> 1200 × 400 px (3:1)<br />
+                <strong>Mobile:</strong> 800 × 400 px (2:1)
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="text-amber-300 font-bold flex items-center gap-1">
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>Physical Print / CM Eqv</span>
+              </div>
+              <p className="text-stone-300 text-[11px] leading-relaxed">
+                <strong>96 DPI (Web):</strong> 31.75 cm × 10.58 cm<br />
+                <strong>300 DPI (HD):</strong> 10.16 cm × 3.38 cm
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="text-amber-300 font-bold flex items-center gap-1">
+                <Type className="w-3.5 h-3.5" />
+                <span>Text & Copy Limits</span>
+              </div>
+              <p className="text-stone-300 text-[11px] leading-relaxed">
+                <strong>Headline:</strong> Max 45 characters<br />
+                <strong>Description:</strong> Max 110 characters<br />
+                <strong>CTA Button:</strong> Max 18 characters
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="text-amber-300 font-bold flex items-center gap-1">
+                <FileImage className="w-3.5 h-3.5" />
+                <span>Asset Requirements</span>
+              </div>
+              <p className="text-stone-300 text-[11px] leading-relaxed">
+                <strong>Formats:</strong> JPG, PNG, WebP<br />
+                <strong>Max File Size:</strong> 1.5 MB (sRGB)<br />
+                <strong>Click Action:</strong> Direct WhatsApp/Call or Website
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 2. Special Resident Offers & Hot Deals Showcase (Monetization Slot #2) */}
@@ -73,7 +194,7 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/70 pb-3">
           <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="p-1 rounded-md bg-amber-500 text-white">
                 <Tag className="w-4 h-4" />
               </span>
@@ -89,14 +210,42 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
             </p>
           </div>
 
-          <button
-            onClick={onClaimListing}
-            className="text-xs font-bold text-[#630303] hover:text-[#450505] flex items-center gap-1 hover:underline self-start sm:self-auto"
-          >
-            <span>Have a business? Post a resident offer</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setShowDealsSpecs(!showDealsSpecs)}
+              className="text-xs font-bold text-amber-900 hover:text-amber-950 px-2.5 py-1 rounded-lg bg-amber-200/80 hover:bg-amber-300/80 border border-amber-300 transition flex items-center gap-1"
+            >
+              <Ruler className="w-3 h-3 text-amber-800" />
+              <span>{showDealsSpecs ? 'Hide Specs' : 'Offer Card Specs (600×400px)'}</span>
+            </button>
+            <button
+              onClick={onClaimListing}
+              className="text-xs font-bold text-[#630303] hover:text-[#450505] flex items-center gap-1 hover:underline"
+            >
+              <span>Post Offer</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
+
+        {/* Deals Specs Panel */}
+        {showDealsSpecs && (
+          <div className="p-3.5 rounded-xl bg-amber-100/90 border border-amber-300 text-xs text-amber-950 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in duration-150">
+            <div>
+              <span className="font-bold block text-amber-900">Card Graphic Size:</span>
+              <span className="text-[11px] text-amber-800">600 × 400 px (3:2) • 15.88 × 10.58 cm (96 DPI) • Max 800 KB</span>
+            </div>
+            <div>
+              <span className="font-bold block text-amber-900">Text Limits:</span>
+              <span className="text-[11px] text-amber-800">Deal Title ≤ 35 chars • Promo Badge ≤ 14 chars • Details ≤ 120 chars</span>
+            </div>
+            <div>
+              <span className="font-bold block text-amber-900">Redemption Flow:</span>
+              <span className="text-[11px] text-amber-800">Direct WhatsApp/Call claim, Website or Lipa Na M-Pesa till discount on arrival</span>
+            </div>
+          </div>
+        )}
 
         {/* Offers Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -150,8 +299,8 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                   </p>
                 </div>
                 <div className="mt-3 pt-2 border-t border-amber-100 flex items-center justify-between text-[11px] text-amber-800 font-semibold">
-                  <span>Spotlight Slot Available</span>
-                  <Sparkles className="w-3 h-3 text-amber-600" />
+                  <span>Spotlight Slot Available (600×400px)</span>
+                  <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
                 </div>
               </div>
 
@@ -171,8 +320,8 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                   </p>
                 </div>
                 <div className="mt-3 pt-2 border-t border-amber-100 flex items-center justify-between text-[11px] text-emerald-800 font-semibold">
-                  <span>Spotlight Slot Available</span>
-                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                  <span>Spotlight Slot Available (600×400px)</span>
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
                 </div>
               </div>
 
@@ -192,8 +341,8 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                   </p>
                 </div>
                 <div className="mt-3 pt-2 border-t border-amber-100 flex items-center justify-between text-[11px] text-rose-800 font-semibold">
-                  <span>Spotlight Slot Available</span>
-                  <Sparkles className="w-3 h-3 text-rose-600" />
+                  <span>Spotlight Slot Available (600×400px)</span>
+                  <TrendingUp className="w-3.5 h-3.5 text-rose-600" />
                 </div>
               </div>
             </>

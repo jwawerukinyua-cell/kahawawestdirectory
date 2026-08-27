@@ -84,7 +84,8 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   const [mpesaAccountName, setMpesaAccountName] = useState(business.mpesa?.accountName || '');
   const [mpesaAccNumber, setMpesaAccNumber] = useState(business.mpesa?.accountNumber || '');
 
-  // Social Links
+  // Social Links & Website
+  const [website, setWebsite] = useState(business.socialLinks?.website || '');
   const [facebook, setFacebook] = useState(business.socialLinks?.facebook || '');
   const [instagram, setInstagram] = useState(business.socialLinks?.instagram || '');
   const [tiktok, setTiktok] = useState(business.socialLinks?.tiktok || '');
@@ -236,6 +237,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
             }
           : undefined,
         socialLinks: {
+          website: website ? (website.startsWith('http') ? website : `https://${website}`) : undefined,
           facebook: facebook || undefined,
           instagram: instagram || undefined,
           tiktok: tiktok || undefined,
@@ -786,43 +788,58 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   )}
                 </div>
 
-                {/* Social Links (TikTok, Instagram, Facebook) */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Website & Social Links */}
+                <div className="space-y-2">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      🎵 TikTok (@handle or link)
+                      🌐 Official Website / Landing Page (Optional)
                     </label>
                     <input
-                      type="text"
-                      value={tiktok}
-                      onChange={(e) => setTiktok(e.target.value)}
-                      placeholder="@username or tiktok.com/..."
+                      type="url"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      placeholder="e.g. https://yourbusiness.co.ke or mybrand.com"
                       className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      📸 Instagram (@handle or link)
-                    </label>
-                    <input
-                      type="text"
-                      value={instagram}
-                      onChange={(e) => setInstagram(e.target.value)}
-                      placeholder="@username or instagram.com/..."
-                      className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                      📘 Facebook Page URL
-                    </label>
-                    <input
-                      type="text"
-                      value={facebook}
-                      onChange={(e) => setFacebook(e.target.value)}
-                      placeholder="facebook.com/yourpage"
-                      className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        🎵 TikTok (@handle or link)
+                      </label>
+                      <input
+                        type="text"
+                        value={tiktok}
+                        onChange={(e) => setTiktok(e.target.value)}
+                        placeholder="@username or tiktok.com/..."
+                        className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        📸 Instagram (@handle or link)
+                      </label>
+                      <input
+                        type="text"
+                        value={instagram}
+                        onChange={(e) => setInstagram(e.target.value)}
+                        placeholder="@username or instagram.com/..."
+                        className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        📘 Facebook Page URL
+                      </label>
+                      <input
+                        type="text"
+                        value={facebook}
+                        onChange={(e) => setFacebook(e.target.value)}
+                        placeholder="facebook.com/yourpage"
+                        className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
+                      />
+                    </div>
                   </div>
                 </div>
 

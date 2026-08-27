@@ -495,9 +495,6 @@ export default function App() {
                     ? 'All Kahawa West Businesses'
                     : CATEGORIES.find((c) => c.id === selectedCategory)?.name || 'Businesses'}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  {filteredBusinesses.length} {filteredBusinesses.length === 1 ? 'place' : 'places'}
-                </span>
               </div>
               <p className="text-xs text-stone-500 mt-0.5">
                 {selectedZone === 'all' ? 'Across all estate zones' : `Filtered to ${selectedZone}`}

@@ -112,6 +112,37 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business }) =>
             Chat
           </a>
         </div>
+
+        {/* Official Website Card (if available) */}
+        {business.socialLinks?.website && (
+          <div className="p-3.5 rounded-xl bg-sky-50/80 border border-sky-200/80 flex items-center justify-between gap-3 min-w-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                <Globe className="w-4 h-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] text-sky-800 font-semibold uppercase tracking-wider block">Official Website</span>
+                <a
+                  href={business.socialLinks.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-bold text-sky-950 hover:underline flex items-center gap-1 truncate"
+                >
+                  <span className="truncate">{business.socialLinks.website.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                  <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-sky-700" />
+                </a>
+              </div>
+            </div>
+            <a
+              href={business.socialLinks.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white transition flex-shrink-0 active:scale-95 shadow-2xs"
+            >
+              Visit
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Lipa na M-Pesa Details */}

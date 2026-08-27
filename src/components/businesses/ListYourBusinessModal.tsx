@@ -47,6 +47,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
+  const [website, setWebsite] = useState('');
   const [description, setDescription] = useState('');
   const [mpesaType, setMpesaType] = useState<'Till' | 'Paybill' | 'Pochi la Biashara' | 'Send Money'>('Till');
   const [mpesaNumber, setMpesaNumber] = useState('');
@@ -178,6 +179,9 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         priceLevel: 'Moderate',
         heroImage: photos[0],
         galleryImages: photos,
+        socialLinks: website ? {
+          website: website.startsWith('http') ? website : `https://${website}`,
+        } : undefined,
         description: description || `Welcome to ${name}, serving residents in ${zone}, Kahawa West.`,
         services: ['Local Service in Kahawa West', 'Direct Resident Support'],
         mpesa: mpesaNumber
@@ -454,7 +458,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
               </div>
             </div>
 
-            {/* Contacts & WhatsApp */}
+            {/* Contacts & Online Presence */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
@@ -484,6 +488,38 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                   placeholder="0712 345 678"
                   className="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Official Website / Page (Optional)
+                </label>
+                <div className="relative">
+                  <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+                  <input
+                    type="url"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    placeholder="https://yourbusiness.co.ke"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Email Address (Optional)
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="contact@business.co.ke"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
 

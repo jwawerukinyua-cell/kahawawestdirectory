@@ -63,7 +63,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           >
             Kahawa West
           </span>
-          <span className="text-[11px] sm:text-xs font-sans text-rose-200/90 font-medium tracking-tight">
+          <span className="hidden lg:block text-[11px] sm:text-xs font-sans text-rose-200/90 font-medium tracking-tight">
             Official Kahawa West Business Directory
           </span>
         </div>
