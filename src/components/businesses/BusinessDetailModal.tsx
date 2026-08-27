@@ -10,6 +10,8 @@ import { BusinessOpeningHours } from './BusinessOpeningHours';
 import { BusinessContact } from './BusinessContact';
 import { BusinessCommunityFeedback } from './BusinessCommunityFeedback';
 import { BusinessEngagementStats } from './BusinessEngagementStats';
+import { BusinessAdSuite } from './BusinessAdSuite';
+import { PromoteShopModal } from './PromoteShopModal';
 
 interface BusinessDetailModalProps {
   business: Business | null;
@@ -19,6 +21,7 @@ interface BusinessDetailModalProps {
   onLeaveFeedbackClick: (business: Business) => void;
   onAdEnquiryClick?: (business?: Business) => void;
   onEditClick?: (business: Business) => void;
+  onPromoteShopClick?: (business: Business) => void;
 }
 
 export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
@@ -29,8 +32,10 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
   onLeaveFeedbackClick,
   onAdEnquiryClick,
   onEditClick,
+  onPromoteShopClick,
 }) => {
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [isPromoteShopModalOpen, setIsPromoteShopModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && business?.id) {
@@ -39,6 +44,14 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
   }, [isOpen, business?.id]);
 
   if (!isOpen || !business) return null;
+
+  const handleOpenPromote = () => {
+    if (onPromoteShopClick) {
+      onPromoteShopClick(business);
+    } else {
+      setIsPromoteShopModalOpen(true);
+    }
+  };
 
   const handleShare = async () => {
     trackBusinessInteraction(business.id, 'share');
@@ -132,6 +145,7 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
             onFeedbackClick={() => onLeaveFeedbackClick(business)}
             onShareClick={handleShare}
             onEditClick={() => onEditClick?.(business)}
+            onPromoteShopClick={handleOpenPromote}
           />
 
           {/* 2. Full 5-Photo Gallery Component */}
@@ -142,7 +156,7 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
                 : (business as any).images && (business as any).images.length > 0
                 ? (business as any).images
                 : [business.heroImage]
-              ).filter((img: any): img is string => typeof img === 'string' && img.trim() !== '')
+            ).filter((img: any): img is string => typeof img === 'string' && img.trim() !== '')
             }
             businessName={business.name}
           />
@@ -157,6 +171,13 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
             business={business}
             onClaimClick={() => onClaimClick(business)}
             onAdEnquiryClick={() => onAdEnquiryClick?.(business)}
+          />
+
+          {/* 3c. Verified Merchant Ad & Creative Suite (Only shown when business is claimed, accepted & verified) */}
+          <BusinessAdSuite
+            business={business}
+            onAdEnquiryClick={() => onAdEnquiryClick?.(business)}
+            onPromoteShopClick={handleOpenPromote}
           />
 
           {/* 4. Two Column Layout: Details & Contacts */}
@@ -177,11 +198,20 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
               <BusinessContact business={business} />
 
               {/* Opening Hours & Status */}
-              <BusinessOpeningHours hours={business.openingHours} />
+              <BusinessOpeningHours openingHours={business.openingHours} />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Promote Shop Ad Builder & Placement Modal */}
+      {isPromoteShopModalOpen && (
+        <PromoteShopModal
+          business={business}
+          isOpen={isPromoteShopModalOpen}
+          onClose={() => setIsPromoteShopModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -70,50 +70,6 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
             <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-sans">
               Claim exclusive top-of-page visibility before your competitors do. Instant brand authority, maximum estate recognition, and direct WhatsApp / phone orders or website clicks from every resident searching for local services.
             </p>
-
-            {/* Creative Services & Direct Contact Banner Pill */}
-            <div className="p-3 rounded-xl bg-white/5 border border-amber-400/30 text-xs text-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="flex items-center gap-2">
-                <Palette className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span className="font-semibold text-[11px] sm:text-xs">
-                  <strong>Need Ad Graphics & Copy?</strong> We write persuasive copy & design custom HD banners for your business.
-                </span>
-              </div>
-              <div className="flex items-center gap-3 text-[11px] font-bold text-amber-300 flex-shrink-0">
-                <a
-                  href="mailto:ads@kahawawestdirectory.co.ke"
-                  className="hover:underline flex items-center gap-1"
-                >
-                  <Mail className="w-3 h-3 text-amber-400" />
-                  <span>ads@kahawawestdirectory.co.ke</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Quick Specs Pill Badges */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 text-amber-200 border border-white/15">
-                <Ruler className="w-3 h-3 text-amber-400" />
-                <span>Specs: 1200 × 400 px (3:1) • 31.8 × 10.6 cm</span>
-              </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 text-stone-300 border border-white/15">
-                <FileImage className="w-3 h-3 text-emerald-400" />
-                <span>PNG / WebP • Max 1.5MB</span>
-              </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 text-sky-300 border border-white/15">
-                <ExternalLink className="w-3 h-3 text-sky-400" />
-                <span>Click Action: WhatsApp/Call or Website</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowBannerSpecs(!showBannerSpecs)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 border border-amber-400/40 transition active:scale-95"
-              >
-                <Info className="w-3 h-3 text-amber-300" />
-                <span>{showBannerSpecs ? 'Hide Ad Specs' : 'View Full Creative Dimensions'}</span>
-                <ChevronDown className={`w-3 h-3 transition-transform ${showBannerSpecs ? 'rotate-180' : ''}`} />
-              </button>
-            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-2.5 w-full md:w-auto flex-shrink-0">
@@ -134,57 +90,6 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
             </button>
           </div>
         </div>
-
-        {/* Detailed Creative Dimensions Drawer for Billboard */}
-        {showBannerSpecs && (
-          <div className="mt-5 pt-4 border-t border-white/20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-black/60 p-4 rounded-2xl backdrop-blur-md animate-in fade-in duration-200 border border-white/10">
-            <div className="space-y-1">
-              <div className="text-amber-300 font-bold flex items-center gap-1">
-                <Ruler className="w-3.5 h-3.5" />
-                <span>Recommended Resolution</span>
-              </div>
-              <p className="text-stone-300 text-[11px] leading-relaxed">
-                <strong>Desktop:</strong> 1200 × 400 px (3:1)<br />
-                <strong>Mobile:</strong> 800 × 400 px (2:1)
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <div className="text-amber-300 font-bold flex items-center gap-1">
-                <Maximize2 className="w-3.5 h-3.5" />
-                <span>Physical Print / CM Eqv</span>
-              </div>
-              <p className="text-stone-300 text-[11px] leading-relaxed">
-                <strong>96 DPI (Web):</strong> 31.75 cm × 10.58 cm<br />
-                <strong>300 DPI (HD):</strong> 10.16 cm × 3.38 cm
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <div className="text-amber-300 font-bold flex items-center gap-1">
-                <Type className="w-3.5 h-3.5" />
-                <span>Text & Copy Limits</span>
-              </div>
-              <p className="text-stone-300 text-[11px] leading-relaxed">
-                <strong>Headline:</strong> Max 45 characters<br />
-                <strong>Description:</strong> Max 110 characters<br />
-                <strong>CTA Button:</strong> Max 18 characters
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <div className="text-amber-300 font-bold flex items-center gap-1">
-                <FileImage className="w-3.5 h-3.5" />
-                <span>Asset Requirements</span>
-              </div>
-              <p className="text-stone-300 text-[11px] leading-relaxed">
-                <strong>Formats:</strong> JPG, PNG, WebP<br />
-                <strong>Max File Size:</strong> 1.5 MB (sRGB)<br />
-                <strong>Click Action:</strong> Direct WhatsApp/Call or Website
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 2. Special Resident Offers & Hot Deals Showcase (Monetization Slot #2) */}
@@ -199,7 +104,7 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                 <Tag className="w-4 h-4" />
               </span>
               <h3 className="text-base sm:text-lg font-black text-amber-950 tracking-tight">
-                Resident Special Offers & Promotions
+                Kahawa West Special Offers & Promotions
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-amber-200 text-amber-900 border border-amber-300">
                 Coming Soon

@@ -228,7 +228,7 @@ export const Hero: React.FC<HeroProps> = ({
                 title="Add your business to Kahawa West Directory"
               >
                 <PlusCircle className="w-4 h-4 text-emerald-300 stroke-[2.5]" />
-                <span>+ List Business</span>
+                <span>List Business</span>
               </button>
             )}
           </div>

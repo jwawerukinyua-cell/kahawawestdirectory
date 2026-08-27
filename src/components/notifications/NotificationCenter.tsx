@@ -107,31 +107,32 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="bg-[#4D0202] text-white px-5 py-4 flex items-center justify-between border-b border-[#630303] flex-shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center shadow-xs">
+        <div className="bg-[#4D0202] text-white px-4 sm:px-5 py-3.5 sm:py-4 flex items-center justify-between gap-3 border-b border-[#630303] flex-shrink-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-9 h-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center shadow-xs flex-shrink-0">
               <Bell className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-display font-bold text-base text-white">
-                  Community Alerts & Notices
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-display font-bold text-sm sm:text-base text-white">
+                  Community Alerts &amp; Notices
                 </h3>
                 {unreadCount > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-500 text-slate-950">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#25D366] text-slate-950 whitespace-nowrap inline-flex items-center flex-shrink-0 shadow-2xs">
                     {unreadCount} new
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-rose-200/90">
-                Live estate updates & personalized search alerts
+              <p className="text-[11px] text-rose-200/90 truncate">
+                Live estate updates &amp; personalized search alerts
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-[#630303] hover:bg-[#7D0404] text-stone-200 hover:text-white transition active:scale-95"
+            className="p-2 rounded-xl bg-[#630303] hover:bg-[#7D0404] text-stone-200 hover:text-white transition active:scale-95 flex-shrink-0 cursor-pointer"
+            title="Close alerts"
           >
             <X className="w-5 h-5" />
           </button>

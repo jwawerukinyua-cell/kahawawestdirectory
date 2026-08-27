@@ -1,12 +1,15 @@
 import React from 'react';
 import { Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { OpeningHours } from '../../types';
+import { DEFAULT_OPENING_HOURS } from '../../data/defaultOpeningHours';
 
 interface BusinessOpeningHoursProps {
-  openingHours: OpeningHours;
+  openingHours?: OpeningHours;
+  hours?: OpeningHours;
 }
 
-export const BusinessOpeningHours: React.FC<BusinessOpeningHoursProps> = ({ openingHours }) => {
+export const BusinessOpeningHours: React.FC<BusinessOpeningHoursProps> = ({ openingHours, hours }) => {
+  const effectiveHours = openingHours || hours || DEFAULT_OPENING_HOURS;
   const days: (keyof OpeningHours)[] = [
     'monday',
     'tuesday',
@@ -21,35 +24,43 @@ export const BusinessOpeningHours: React.FC<BusinessOpeningHoursProps> = ({ open
   const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const todayName = dayNames[new Date().getDay()] as keyof OpeningHours;
 
-  const todaySchedule = openingHours ? openingHours[todayName] : null;
-  const is24Hours = todaySchedule?.open === '00:00' && todaySchedule?.close === '23:59';
+  const todaySchedule = effectiveHours ? effectiveHours[todayName] : null;
+  const is24Hours =
+    (todaySchedule?.open === '00:00' && todaySchedule?.close === '23:59') ||
+    (todaySchedule?.open === '24 Hours');
   const isClosedToday = todaySchedule?.isClosed;
+
+  const hasHoursTimes = Boolean(todaySchedule?.open && todaySchedule?.close);
 
   return (
     <div id="business-hours-section" className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-emerald-600" />
-          <h3 className="font-bold text-slate-900 text-lg">Opening Hours</h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <Clock className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+          <h3 className="font-bold text-slate-900 text-lg truncate">Opening Hours</h3>
         </div>
         {is24Hours ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap flex-shrink-0">
             <CheckCircle2 className="w-3.5 h-3.5" /> 24/7 Open
           </span>
         ) : isClosedToday ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 whitespace-nowrap flex-shrink-0">
             <XCircle className="w-3.5 h-3.5" /> Closed Today
           </span>
+        ) : hasHoursTimes ? (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap flex-shrink-0">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Open Today ({todaySchedule?.open} – {todaySchedule?.close})
+          </span>
         ) : (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Open Today ({todaySchedule?.open} - {todaySchedule?.close})
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap flex-shrink-0">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Open Today
           </span>
         )}
       </div>
 
       <div className="divide-y divide-slate-100 text-sm">
         {days.map((day) => {
-          const schedule = openingHours ? openingHours[day] : null;
+          const schedule = effectiveHours ? effectiveHours[day] : null;
           const isToday = day === todayName;
           const formattedDay = day.charAt(0).toUpperCase() + day.slice(1);
 
@@ -63,7 +74,7 @@ export const BusinessOpeningHours: React.FC<BusinessOpeningHoursProps> = ({ open
               <div className="flex items-center gap-2">
                 <span>{formattedDay}</span>
                 {isToday && (
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-600 text-white whitespace-nowrap">
                     Today
                   </span>
                 )}
@@ -72,12 +83,14 @@ export const BusinessOpeningHours: React.FC<BusinessOpeningHoursProps> = ({ open
               <div>
                 {!schedule || schedule.isClosed ? (
                   <span className="text-slate-400 font-medium">Closed</span>
-                ) : schedule.open === '00:00' && schedule.close === '23:59' ? (
+                ) : (schedule.open === '00:00' && schedule.close === '23:59') || schedule.open === '24 Hours' ? (
                   <span className="text-emerald-600 font-semibold">24 Hours</span>
-                ) : (
+                ) : schedule.open && schedule.close ? (
                   <span className="font-medium text-slate-800">
                     {schedule.open} – {schedule.close}
                   </span>
+                ) : (
+                  <span className="text-emerald-700 font-medium">Open</span>
                 )}
               </div>
             </div>

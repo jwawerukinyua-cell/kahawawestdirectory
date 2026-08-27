@@ -16,7 +16,7 @@ import {
   UploadCloud,
 } from 'lucide-react';
 import { Business, EstateZone, BusinessApplication, OperationType } from '../../types';
-import { saveBusinessApplication, saveCustomizedBusiness } from '../../lib/supabase';
+import { saveBusinessApplication, saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
 import { DEFAULT_OPENING_HOURS } from '../../data/defaultOpeningHours';
 import { Button } from '../ui/Button';
 
@@ -155,7 +155,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
 
     try {
       const newId = `kw-custom-${Date.now()}`;
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const slug = generateBusinessSlug(name);
 
       const newBusinessRecord: Business = {
         id: newId,

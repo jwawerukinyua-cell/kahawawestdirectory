@@ -61,10 +61,10 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={onListBusinessClick}
-            className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] text-emerald-300 hover:text-emerald-200 transition flex items-center gap-1.5 font-bold"
+            className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] text-emerald-300 hover:text-emerald-200 transition flex items-center gap-1.5 font-bold cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>+ List Business</span>
+            <span>List Business</span>
           </button>
         </nav>
 

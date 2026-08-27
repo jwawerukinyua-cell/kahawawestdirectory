@@ -33,6 +33,7 @@ import {
   getStoredFeedback,
   syncStoryToSupabase,
   getSavedClaims,
+  generateBusinessSlug,
 } from './lib/supabase';
 
 // Layout & Components
@@ -164,11 +165,36 @@ export default function App() {
   // 4. Check URL hash on load for deep linking (e.g. #slug or ?id=)
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash) {
-        const found = businesses.find((b) => b.slug === hash || b.id === hash);
+      const rawHash = window.location.hash.replace('#', '');
+      if (rawHash) {
+        const hash = decodeURIComponent(rawHash).toLowerCase().trim();
+        // 1. Direct slug or ID match
+        let found = businesses.find((b) => b.slug?.toLowerCase() === hash || b.id?.toLowerCase() === hash);
+
+        // 2. Name-derived slug match
+        if (!found) {
+          found = businesses.find(
+            (b) => b.name && generateBusinessSlug(b.name) === hash
+          );
+        }
+
+        // 3. Fallback for seed business variants (e.g. #kahawa-west-furniture-crafts when renamed to Ukweli Furniture Crafts)
+        if (!found && (hash.includes('furniture-crafts') || hash.includes('furniture'))) {
+          found = businesses.find(
+            (b) =>
+              b.category === 'hardware-construction' &&
+              (b.subCategory?.toLowerCase().includes('furniture') ||
+                b.name.toLowerCase().includes('furniture') ||
+                b.name.toLowerCase().includes('ukweli'))
+          );
+        }
+
         if (found) {
           setSelectedBusinessForDetails(found);
+          // If the URL had an outdated hash or legacy alias, adapt to the current active slug
+          if (found.slug && rawHash !== found.slug) {
+            window.history.replaceState(null, '', `#${found.slug}`);
+          }
         }
       }
     };
@@ -272,6 +298,9 @@ export default function App() {
     );
     if (selectedBusinessForDetails?.id === updatedBusiness.id) {
       setSelectedBusinessForDetails(updatedBusiness);
+      if (updatedBusiness.slug) {
+        window.history.replaceState(null, '', `#${updatedBusiness.slug}`);
+      }
     }
     saveCustomizedBusiness(updatedBusiness);
   };
@@ -286,6 +315,9 @@ export default function App() {
     });
     if (selectedBusinessForDetails?.id === updatedBusiness.id) {
       setSelectedBusinessForDetails(updatedBusiness);
+      if (updatedBusiness.slug) {
+        window.history.replaceState(null, '', `#${updatedBusiness.slug}`);
+      }
     }
   };
 

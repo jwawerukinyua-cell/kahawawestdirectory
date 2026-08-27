@@ -21,7 +21,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Business, EstateZone, OperationType } from '../../types';
-import { saveCustomizedBusiness } from '../../lib/supabase';
+import { saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
 import { Button } from '../ui/Button';
 
 interface EditBusinessModalProps {
@@ -235,9 +235,11 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
     setIsSubmitting(true);
 
     const validPhotos = photos.map((p) => (p && p.trim() !== '' ? p : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'));
+    const newSlug = generateBusinessSlug(name.trim()) || business.slug;
 
     const updatedBusiness: Business = {
       ...business,
+      slug: newSlug,
       name: name.trim(),
       tagline: tagline.trim(),
       category,

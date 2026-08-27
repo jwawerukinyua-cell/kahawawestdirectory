@@ -23,7 +23,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { Business, BusinessClaim, EstateZone, OperationType } from '../../types';
-import { saveBusinessClaim, saveCustomizedBusiness } from '../../lib/supabase';
+import { saveBusinessClaim, saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
 import { Button } from '../ui/Button';
 
 interface ClaimBusinessModalProps {
@@ -211,8 +211,10 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
       };
 
       // 2. Prepare Updated Business Record
+      const newSlug = customName ? generateBusinessSlug(customName) : business.slug;
       const updatedBusinessRecord: Business = {
         ...business,
+        slug: newSlug,
         name: customName,
         tagline: customTagline,
         operationType: customOperationType,

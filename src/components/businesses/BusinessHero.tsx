@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Star, Phone, MessageSquare, ShieldCheck, Share2, Tag, Edit3 } from 'lucide-react';
+import { MapPin, Star, Phone, MessageSquare, ShieldCheck, Share2, Tag, Edit3, Megaphone } from 'lucide-react';
 import { Business } from '../../types';
 import { VerifiedBadge } from '../ui/VerifiedBadge';
 import { Button } from '../ui/Button';
@@ -10,6 +10,7 @@ interface BusinessHeroProps {
   onFeedbackClick: () => void;
   onShareClick: () => void;
   onEditClick?: () => void;
+  onPromoteShopClick?: () => void;
 }
 
 export const BusinessHero: React.FC<BusinessHeroProps> = ({
@@ -18,6 +19,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
   onFeedbackClick,
   onShareClick,
   onEditClick,
+  onPromoteShopClick,
 }) => {
   const whatsappUrl = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(
     `Hello ${business.name}, I found your business on KWEST Directory and would like to inquire about your services.`
@@ -74,17 +76,30 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
               <Share2 className="w-4 h-4" />
             </button>
             {business.isClaimed ? (
-              onEditClick && (
-                <button
-                  id="hero-edit-business-btn"
-                  onClick={onEditClick}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white transition shadow-sm border border-stone-600 cursor-pointer"
-                  title="Update hours, photos, Lipa na M-Pesa, contacts"
-                >
-                  <Edit3 className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Update Info</span>
-                </button>
-              )
+              <div className="flex items-center gap-2">
+                {onPromoteShopClick && (
+                  <button
+                    id="hero-promote-shop-btn"
+                    onClick={onPromoteShopClick}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 transition shadow-sm active:scale-95 cursor-pointer"
+                    title="Launch custom ad campaign or billboard slot"
+                  >
+                    <Megaphone className="w-3.5 h-3.5 text-stone-950" />
+                    <span>Promote Shop</span>
+                  </button>
+                )}
+                {onEditClick && (
+                  <button
+                    id="hero-edit-business-btn"
+                    onClick={onEditClick}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white transition shadow-sm border border-stone-600 cursor-pointer"
+                    title="Update hours, photos, Lipa na M-Pesa, contacts"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Update Info</span>
+                  </button>
+                )}
+              </div>
             ) : (
               <button
                 id="hero-claim-business-btn"

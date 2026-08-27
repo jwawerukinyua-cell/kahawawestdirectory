@@ -90,30 +90,45 @@ export const getSavedClaims = (): BusinessClaim[] => {
   }
 };
 
+export const generateBusinessSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+};
+
 export const saveCustomizedBusiness = async (business: Business): Promise<{ success: boolean; error?: string }> => {
   try {
+    const slug = business.slug || generateBusinessSlug(business.name);
+    const normalizedBusiness: Business = {
+      ...business,
+      slug,
+    };
+
     if (supabase && isSupabaseConfigured) {
       const { error } = await supabase.from('businesses').upsert([
         {
-          id: business.id,
-          name: business.name,
-          tagline: business.tagline,
-          category: business.category,
-          zone: business.zone,
-          landmark: business.landmark,
-          phone: business.phone,
-          whatsapp: business.whatsapp,
-          email: business.email,
+          id: normalizedBusiness.id,
+          slug: normalizedBusiness.slug,
+          name: normalizedBusiness.name,
+          tagline: normalizedBusiness.tagline,
+          category: normalizedBusiness.category,
+          zone: normalizedBusiness.zone,
+          landmark: normalizedBusiness.landmark,
+          phone: normalizedBusiness.phone,
+          whatsapp: normalizedBusiness.whatsapp,
+          email: normalizedBusiness.email,
           is_claimed: true,
-          rating: business.rating,
-          hero_image: business.heroImage,
-          gallery_images: business.galleryImages,
-          description: business.description,
-          services: business.services,
-          mpesa: business.mpesa,
-          social_links: business.socialLinks,
-          opening_hours: business.openingHours,
-          special_offer: business.specialOffer,
+          rating: normalizedBusiness.rating,
+          hero_image: normalizedBusiness.heroImage,
+          gallery_images: normalizedBusiness.galleryImages,
+          description: normalizedBusiness.description,
+          services: normalizedBusiness.services,
+          mpesa: normalizedBusiness.mpesa,
+          social_links: normalizedBusiness.socialLinks,
+          opening_hours: normalizedBusiness.openingHours,
+          special_offer: normalizedBusiness.specialOffer,
           updated_at: new Date().toISOString(),
         }
       ]);
@@ -122,14 +137,19 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
 
     // Local storage persistence
     const existing: Record<string, Business> = JSON.parse(localStorage.getItem(BUSINESSES_STORAGE_KEY) || '{}');
-    existing[business.id] = business;
+    existing[normalizedBusiness.id] = normalizedBusiness;
     localStorage.setItem(BUSINESSES_STORAGE_KEY, JSON.stringify(existing));
 
     return { success: true };
   } catch (err: any) {
     console.error('Error saving customized business:', err);
+    const slug = business.slug || generateBusinessSlug(business.name);
+    const normalizedBusiness: Business = {
+      ...business,
+      slug,
+    };
     const existing: Record<string, Business> = JSON.parse(localStorage.getItem(BUSINESSES_STORAGE_KEY) || '{}');
-    existing[business.id] = business;
+    existing[normalizedBusiness.id] = normalizedBusiness;
     localStorage.setItem(BUSINESSES_STORAGE_KEY, JSON.stringify(existing));
     return { success: true };
   }
@@ -146,7 +166,37 @@ export const getCustomizedBusinesses = (): Record<string, Business> => {
 export const getStoredBusinesses = (seedBusinesses: Business[]): Business[] => {
   try {
     const custom = getCustomizedBusinesses();
-    return seedBusinesses.map((b) => custom[b.id] || b);
+    const seedMap = new Map<string, Business>();
+
+    // 1. Process and merge seed businesses
+    const mergedSeeds = seedBusinesses.map((seed) => {
+      seedMap.set(seed.id, seed);
+      if (custom[seed.id]) {
+        const c = custom[seed.id];
+        // Ensure slug is synced with updated name if name changed
+        const currentSlug = c.slug || generateBusinessSlug(c.name || seed.name);
+        return {
+          ...seed,
+          ...c,
+          slug: currentSlug,
+        };
+      }
+      return seed;
+    });
+
+    // 2. Also retrieve new custom listed businesses not in seeds
+    const newCustomListings: Business[] = [];
+    Object.keys(custom).forEach((id) => {
+      if (!seedMap.has(id)) {
+        const item = custom[id];
+        newCustomListings.push({
+          ...item,
+          slug: item.slug || generateBusinessSlug(item.name),
+        });
+      }
+    });
+
+    return [...newCustomListings, ...mergedSeeds];
   } catch {
     return seedBusinesses;
   }
