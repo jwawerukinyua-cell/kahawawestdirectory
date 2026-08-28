@@ -144,6 +144,22 @@ export default function App() {
     };
   }, []);
 
+  // Automatic trigger: show install prompt & instructions when someone visits the site
+  useEffect(() => {
+    const isAppStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+
+    // Trigger prompt on each visit if not already launched in standalone mode
+    if (!isAppStandalone) {
+      const promptTimer = setTimeout(() => {
+        setIsInstallAppOpen(true);
+      }, 1200);
+
+      return () => clearTimeout(promptTimer);
+    }
+  }, []);
+
   // Track search queries and check for matching community notices
   useEffect(() => {
     if (searchQuery.trim().length >= 3 || selectedZone !== 'all' || selectedCategory !== 'all') {
@@ -491,7 +507,6 @@ export default function App() {
         onAboutClick={() => setIsAboutOpen(true)}
         onNoticeboardClick={scrollToNoticeboard}
         onEmergencyClick={() => setIsEmergencyOpen(true)}
-        onInstallClick={() => setIsInstallAppOpen(true)}
         onOpenNotifications={() => setIsNotificationCenterOpen(true)}
         unreadNotificationsCount={unreadNotificationsCount}
       />
@@ -625,7 +640,6 @@ export default function App() {
         onLegalClick={(tab) => setLegalTab(tab)}
         onAboutClick={() => setIsAboutOpen(true)}
         onListBusinessClick={() => setIsListBusinessOpen(true)}
-        onInstallClick={() => setIsInstallAppOpen(true)}
       />
 
       {/* 5. Mobile Fixed Bottom Navigation */}

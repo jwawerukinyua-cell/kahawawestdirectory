@@ -215,16 +215,18 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
           )}
         </div>
 
-        {/* Modal Footer */}
-        <div className="px-6 py-3.5 bg-black/40 border-t border-white/10 flex items-center justify-between text-xs text-stone-400">
-          <span>Official PWA Web App</span>
-          <button
-            id="install-modal-dismiss-btn"
-            onClick={onClose}
-            className="text-stone-300 hover:text-white font-medium transition"
-          >
-            Close
-          </button>
+        {/* Modal Footer with Cancel & Close */}
+        <div className="px-6 py-4 bg-black/40 border-t border-white/10 flex items-center justify-between gap-3 text-xs">
+          <span className="text-stone-400 text-[11px]">Official PWA • No App Store needed</span>
+          <div className="flex items-center gap-2">
+            <button
+              id="install-modal-cancel-btn"
+              onClick={onClose}
+              className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-stone-200 hover:text-white font-semibold transition active:scale-95"
+            >
+              Cancel / Not Now
+            </button>
+          </div>
         </div>
       </div>
     </div>
