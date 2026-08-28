@@ -7,6 +7,7 @@ interface HeaderProps {
   onAboutClick: () => void;
   onNoticeboardClick: () => void;
   onEmergencyClick: () => void;
+  onInstallClick?: () => void;
   onOpenNotifications?: () => void;
   unreadNotificationsCount?: number;
 }
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onAboutClick,
   onNoticeboardClick,
   onEmergencyClick,
+  onInstallClick,
   onOpenNotifications,
   unreadNotificationsCount = 0,
 }) => {
@@ -70,6 +72,23 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Header Action / Notification Area */}
         <div className="flex items-center gap-2">
+          {/* Install App Quick Action Button */}
+          {onInstallClick && (
+            <button
+              id="header-install-app-btn"
+              onClick={onInstallClick}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs shadow-md border border-emerald-500/40 active:scale-95 transition"
+              title="Install KWEST app to your home screen"
+            >
+              <img
+                src="/kwest-icon.png"
+                alt="KWEST"
+                className="w-4 h-4 rounded-full object-cover"
+              />
+              <span className="hidden sm:inline">Install App</span>
+            </button>
+          )}
+
           {/* Notification Bell */}
           {onOpenNotifications && (
             <button

@@ -206,8 +206,8 @@ export const Hero: React.FC<HeroProps> = ({
           </h1>
 
           {/* Description */}
-          <div className="font-sans text-black text-xs sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed font-semibold bg-white/90 px-4 py-2 rounded-xl border border-stone-200/80 shadow-sm">
-            Discover over <strong className="text-[#630303] font-bold">{businessCount}+ verified businesses</strong>, certified fundis, domestic services, 24/7 chemists, nyama choma spots, and local shops across Jacaranda, Kamae, Congo, Roundabout, Jubilee, Northern Bypass & Kware.
+          <div className="font-sans text-black text-xs sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed font-medium bg-white/90 px-4 py-2.5 rounded-xl border border-stone-200/80 shadow-sm">
+            <span className="font-bold text-[#630303]">Kahawa West, Finally Organized.</span> Find trusted businesses, discover hidden local gems, read community updates, and support businesses around you—all in one trusted place.
           </div>
 
           {/* Search Controls & Sleek Action Button */}

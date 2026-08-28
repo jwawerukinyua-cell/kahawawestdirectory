@@ -15,12 +15,14 @@ interface FooterProps {
   onLegalClick: (tab: 'guidelines' | 'community' | 'privacy' | 'terms') => void;
   onAboutClick: () => void;
   onListBusinessClick: () => void;
+  onInstallClick?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   onLegalClick,
   onAboutClick,
   onListBusinessClick,
+  onInstallClick,
 }) => {
   const [openSections, setOpenSections] = useState({
     merchants: true,
@@ -101,6 +103,22 @@ export const Footer: React.FC<FooterProps> = ({
                     Community Standards
                   </button>
                 </li>
+                {onInstallClick && (
+                  <li>
+                    <button
+                      id="footer-install-app-btn"
+                      onClick={onInstallClick}
+                      className="text-amber-300 hover:text-amber-200 transition text-left font-semibold flex items-center gap-1.5"
+                    >
+                      <img
+                        src="/kwest-icon.png"
+                        alt="KWEST"
+                        className="w-3.5 h-3.5 rounded-full object-cover"
+                      />
+                      <span>Install KWEST to Home Screen</span>
+                    </button>
+                  </li>
+                )}
               </ul>
             )}
           </div>

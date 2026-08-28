@@ -4,6 +4,7 @@ const PRECACHE_ASSETS = [
   '/index.html',
   '/manifest.json',
   '/kwest-icon.png',
+  '/kwest-logo.png',
   '/hero.jpg',
 ];
 

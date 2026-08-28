@@ -67,6 +67,7 @@ import { FloatingShareButton } from './components/ui/FloatingShareButton';
 import { NotificationCenter } from './components/notifications/NotificationCenter';
 import { NotificationToast } from './components/notifications/NotificationToast';
 import { AdminAnalyticsModal } from './components/admin/AdminAnalyticsModal';
+import { InstallAppModal } from './components/pwa/InstallAppModal';
 import { trackSearchQuery } from './lib/tracking';
 import {
   AppNotification,
@@ -109,6 +110,7 @@ export default function App() {
   const [isAdEnquiryOpen, setIsAdEnquiryOpen] = useState(false);
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
   const [isAdminAnalyticsOpen, setIsAdminAnalyticsOpen] = useState(false);
+  const [isInstallAppOpen, setIsInstallAppOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications());
   const [activeToastNotification, setActiveToastNotification] = useState<AppNotification | null>(null);
   const [legalTab, setLegalTab] = useState<'guidelines' | 'community' | 'privacy' | 'terms' | null>(null);
@@ -489,6 +491,7 @@ export default function App() {
         onAboutClick={() => setIsAboutOpen(true)}
         onNoticeboardClick={scrollToNoticeboard}
         onEmergencyClick={() => setIsEmergencyOpen(true)}
+        onInstallClick={() => setIsInstallAppOpen(true)}
         onOpenNotifications={() => setIsNotificationCenterOpen(true)}
         unreadNotificationsCount={unreadNotificationsCount}
       />
@@ -622,6 +625,7 @@ export default function App() {
         onLegalClick={(tab) => setLegalTab(tab)}
         onAboutClick={() => setIsAboutOpen(true)}
         onListBusinessClick={() => setIsListBusinessOpen(true)}
+        onInstallClick={() => setIsInstallAppOpen(true)}
       />
 
       {/* 5. Mobile Fixed Bottom Navigation */}
@@ -798,6 +802,12 @@ export default function App() {
           setIsAdminAnalyticsOpen(false);
           setSelectedBusinessForDetails(biz);
         }}
+      />
+
+      {/* PWA Home Screen Install App Modal with Official KWEST Logo */}
+      <InstallAppModal
+        isOpen={isInstallAppOpen}
+        onClose={() => setIsInstallAppOpen(false)}
       />
     </div>
   );
