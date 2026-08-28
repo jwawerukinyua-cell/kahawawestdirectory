@@ -211,7 +211,7 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
     const stats = allStats[business.id] || getBusinessStats(business.id);
     const totalLeads = stats.whatsappClicks + stats.phoneCalls;
 
-    return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (kwestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
+    return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (kahawawestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
   };
 
   const handleCopyPitch = (business: Business) => {
@@ -1321,14 +1321,14 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                                 </span>
                                 <span
                                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                    lead.score >= 50
+                                    (lead.leadScore ?? lead.score ?? 0) >= 50
                                       ? 'bg-rose-950 text-rose-300 border border-rose-800'
-                                      : lead.score >= 20
+                                      : (lead.leadScore ?? lead.score ?? 0) >= 20
                                       ? 'bg-amber-950 text-amber-300 border border-amber-800'
                                       : 'bg-stone-800 text-stone-400'
                                   }`}
                                 >
-                                  Lead Score: {lead.score} ({lead.priority.toUpperCase()})
+                                  Lead Score: {lead.leadScore ?? lead.score ?? 0} ({(lead.priority || 'standard').toUpperCase()})
                                 </span>
                               </div>
 

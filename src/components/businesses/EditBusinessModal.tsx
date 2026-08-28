@@ -63,6 +63,43 @@ const CATEGORIES = [
   'Fitness & Gyms',
 ];
 
+const formatScheduleString = (schedule: any, fallback = '8:00 AM - 8:00 PM'): string => {
+  if (!schedule) return fallback;
+  if (typeof schedule === 'string') return schedule;
+  if (typeof schedule === 'object') {
+    if (schedule.isClosed) return 'Closed';
+    if ((schedule.open === '00:00' && schedule.close === '23:59') || schedule.open === '24 Hours') {
+      return 'Open 24 Hours';
+    }
+    if (schedule.open && schedule.close) {
+      return `${schedule.open} - ${schedule.close}`;
+    }
+    if (schedule.open) return schedule.open;
+  }
+  return fallback;
+};
+
+const parseScheduleObject = (input: string): { open: string; close: string; isClosed?: boolean } => {
+  const str = input ? input.trim() : '';
+  if (!str) return { open: '08:00', close: '20:00', isClosed: false };
+  const lower = str.toLowerCase();
+  if (lower.includes('closed')) {
+    return { open: '00:00', close: '00:00', isClosed: true };
+  }
+  if (lower.includes('24')) {
+    return { open: '00:00', close: '23:59', isClosed: false };
+  }
+  if (str.includes('-')) {
+    const parts = str.split('-');
+    return {
+      open: parts[0]?.trim() || '08:00',
+      close: parts[1]?.trim() || '20:00',
+      isClosed: false,
+    };
+  }
+  return { open: str, close: '', isClosed: false };
+};
+
 export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
   business,
   isOpen,
@@ -142,15 +179,20 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
 
       setServices(business.services && business.services.length > 0 ? [...business.services] : ['Customer Support', 'Local Delivery']);
 
-      const hours = business.openingHours || {};
-      setMonday(hours.monday || '8:00 AM - 8:00 PM');
-      setTuesday(hours.tuesday || '8:00 AM - 8:00 PM');
-      setWednesday(hours.wednesday || '8:00 AM - 8:00 PM');
-      setThursday(hours.thursday || '8:00 AM - 8:00 PM');
-      setFriday(hours.friday || '8:00 AM - 8:00 PM');
-      setSaturday(hours.saturday || '8:00 AM - 8:00 PM');
-      setSunday(hours.sunday || '9:00 AM - 6:00 PM');
-      setIs247(hours.monday?.toLowerCase().includes('24 hours') || false);
+      const hours = (business.openingHours || {}) as any;
+      setMonday(formatScheduleString(hours.monday, '8:00 AM - 8:00 PM'));
+      setTuesday(formatScheduleString(hours.tuesday, '8:00 AM - 8:00 PM'));
+      setWednesday(formatScheduleString(hours.wednesday, '8:00 AM - 8:00 PM'));
+      setThursday(formatScheduleString(hours.thursday, '8:00 AM - 8:00 PM'));
+      setFriday(formatScheduleString(hours.friday, '8:00 AM - 8:00 PM'));
+      setSaturday(formatScheduleString(hours.saturday, '8:00 AM - 8:00 PM'));
+      setSunday(formatScheduleString(hours.sunday, '9:00 AM - 6:00 PM'));
+
+      const isMonday24 =
+        typeof hours.monday === 'string'
+          ? hours.monday.toLowerCase().includes('24')
+          : (hours.monday?.open === '00:00' && hours.monday?.close === '23:59') || hours.monday?.open === '24 Hours';
+      setIs247(Boolean(isMonday24));
 
       const existingPhotos = (business.galleryImages && business.galleryImages.length > 0)
         ? business.galleryImages.slice(0, 5)
@@ -256,22 +298,22 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
       services: services.length > 0 ? services : ['Local Service'],
       openingHours: is247
         ? {
-            monday: 'Open 24 Hours',
-            tuesday: 'Open 24 Hours',
-            wednesday: 'Open 24 Hours',
-            thursday: 'Open 24 Hours',
-            friday: 'Open 24 Hours',
-            saturday: 'Open 24 Hours',
-            sunday: 'Open 24 Hours',
+            monday: { open: '00:00', close: '23:59', isClosed: false },
+            tuesday: { open: '00:00', close: '23:59', isClosed: false },
+            wednesday: { open: '00:00', close: '23:59', isClosed: false },
+            thursday: { open: '00:00', close: '23:59', isClosed: false },
+            friday: { open: '00:00', close: '23:59', isClosed: false },
+            saturday: { open: '00:00', close: '23:59', isClosed: false },
+            sunday: { open: '00:00', close: '23:59', isClosed: false },
           }
         : {
-            monday,
-            tuesday,
-            wednesday,
-            thursday,
-            friday,
-            saturday,
-            sunday,
+            monday: parseScheduleObject(monday),
+            tuesday: parseScheduleObject(tuesday),
+            wednesday: parseScheduleObject(wednesday),
+            thursday: parseScheduleObject(thursday),
+            friday: parseScheduleObject(friday),
+            saturday: parseScheduleObject(saturday),
+            sunday: parseScheduleObject(sunday),
           },
       socialLinks: {
         facebook: facebook.trim() || undefined,

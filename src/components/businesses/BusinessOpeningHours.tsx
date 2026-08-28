@@ -24,11 +24,12 @@ export const BusinessOpeningHours: React.FC<BusinessOpeningHoursProps> = ({ open
   const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const todayName = dayNames[new Date().getDay()] as keyof OpeningHours;
 
-  const todaySchedule = effectiveHours ? effectiveHours[todayName] : null;
+  const todaySchedule: any = effectiveHours ? effectiveHours[todayName] : null;
   const is24Hours =
     (todaySchedule?.open === '00:00' && todaySchedule?.close === '23:59') ||
-    (todaySchedule?.open === '24 Hours');
-  const isClosedToday = todaySchedule?.isClosed;
+    (todaySchedule?.open === '24 Hours') ||
+    (typeof todaySchedule === 'string' && todaySchedule.toLowerCase().includes('24'));
+  const isClosedToday = todaySchedule?.isClosed || (typeof todaySchedule === 'string' && todaySchedule.toLowerCase().includes('closed'));
 
   const hasHoursTimes = Boolean(todaySchedule?.open && todaySchedule?.close);
 
@@ -62,7 +63,7 @@ export const BusinessOpeningHours: React.FC<BusinessOpeningHoursProps> = ({ open
         {days.map((day) => {
           const schedule = effectiveHours ? effectiveHours[day] : null;
           const isToday = day === todayName;
-          const formattedDay = day.charAt(0).toUpperCase() + day.slice(1);
+          const formattedDay = day ? day.charAt(0).toUpperCase() + day.slice(1) : '';
 
           return (
             <div
@@ -81,8 +82,10 @@ export const BusinessOpeningHours: React.FC<BusinessOpeningHoursProps> = ({ open
               </div>
 
               <div>
-                {!schedule || schedule.isClosed ? (
+                {!schedule || (typeof schedule === 'object' && schedule.isClosed) || (typeof schedule === 'string' && schedule.toLowerCase().includes('closed')) ? (
                   <span className="text-slate-400 font-medium">Closed</span>
+                ) : (typeof schedule === 'string') ? (
+                  <span className="font-medium text-slate-800">{schedule}</span>
                 ) : (schedule.open === '00:00' && schedule.close === '23:59') || schedule.open === '24 Hours' ? (
                   <span className="text-emerald-600 font-semibold">24 Hours</span>
                 ) : schedule.open && schedule.close ? (

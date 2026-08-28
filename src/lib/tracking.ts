@@ -173,6 +173,8 @@ export interface BusinessLeadScore {
   totalInteractions: number;
   conversionRate: number; // (whatsapp + phone) / views
   leadScore: number; // 0 to 100 scale
+  score: number; // Alias for leadScore
+  priority: 'high' | 'medium' | 'standard';
   recommendation: AdRecommendation;
   rationale: string;
 }
@@ -202,12 +204,16 @@ export function calculateLeadScore(
 
   // Normalized score 0-100
   const leadScore = Math.min(100, Math.round(total / 8 + conversionRate));
+  const priority: 'high' | 'medium' | 'standard' =
+    leadScore >= 50 ? 'high' : leadScore >= 20 ? 'medium' : 'standard';
 
   return {
     businessId: stats.businessId,
     totalInteractions: views + directLeads + stats.shares,
     conversionRate,
     leadScore,
+    score: leadScore,
+    priority,
     recommendation,
     rationale,
   };

@@ -53,7 +53,7 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
     const text = encodeURIComponent(
       `Hello KWEST Directory Team! I would like to enquire about advertising space for "${businessName || 'my business'}". Slot: ${adType}. Creative Services (Copy & Graphics): ${needCreativeServices ? 'YES' : 'NO'}. Phone: ${phone || 'N/A'}`
     );
-    window.open(`https://wa.me/254700000000?text=${text}`, '_blank');
+    window.open(`https://wa.me/254764405842?text=${text}`, '_blank');
   };
 
   return (
@@ -134,7 +134,7 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <a
-                    href="https://wa.me/254700000000?text=Hello%20KWEST%20Directory%20Ad%20Team"
+                    href="https://wa.me/254764405842?text=Hello%20KWEST%20Directory%20Ad%20Team"
                     target="_blank"
                     rel="noreferrer"
                     className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-xs"

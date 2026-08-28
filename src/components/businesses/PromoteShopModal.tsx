@@ -521,7 +521,7 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
                     <div className="flex items-center justify-between text-[10px] text-stone-400 pb-1 border-b border-white/10">
                       <span className="flex items-center gap-1">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        Live Directory Simulation • {selectedFormat.replace('_', ' ').toUpperCase()}
+                        Live Directory Simulation • {(selectedFormat || 'billboard').replace('_', ' ').toUpperCase()}
                       </span>
                       <span className="text-amber-300 font-bold">Target: {targetZone}</span>
                     </div>

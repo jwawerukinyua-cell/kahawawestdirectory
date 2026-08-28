@@ -15,7 +15,7 @@ export const FloatingShareButton: React.FC = () => {
     if (typeof window !== 'undefined') {
       return window.location.origin;
     }
-    return 'https://kwestdirectory.co.ke';
+    return 'https://kahawawestdirectory.co.ke';
   };
 
   // Close when clicking outside

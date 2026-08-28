@@ -16,6 +16,11 @@ import {
   Building,
   MapPin,
   ShieldCheck,
+  KeyRound,
+  Lock,
+  Unlock,
+  UserCheck,
+  Users,
 } from 'lucide-react';
 import { Business } from '../../types';
 import {
@@ -25,6 +30,7 @@ import {
   exportAnalyticsCSV,
   AdRecommendation,
 } from '../../lib/tracking';
+import { getAllMerchantRecords, grantMerchantSession, revokeMerchantSession, isMerchantSessionActive } from '../../lib/merchantAuth';
 
 interface AdminAnalyticsModalProps {
   isOpen: boolean;
@@ -39,13 +45,16 @@ export const AdminAnalyticsModal: React.FC<AdminAnalyticsModalProps> = ({
   businesses,
   onSelectBusiness,
 }) => {
+  const [activeTab, setActiveTab] = useState<'leads' | 'pins'>('leads');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'unclaimed' | 'billboard' | 'deals'>('all');
   const [selectedZone, setSelectedZone] = useState('all');
   const [copiedPitchId, setCopiedPitchId] = useState<string | null>(null);
+  const [copiedPinId, setCopiedPinId] = useState<string | null>(null);
   const [showPitchModalFor, setShowPitchModalFor] = useState<Business | null>(null);
 
   const allStats = useMemo(() => getAllBusinessAnalytics(), [isOpen]);
+  const merchantRecords = useMemo(() => getAllMerchantRecords(), [isOpen, activeTab]);
 
   // Aggregate Total Metrics
   const aggregateMetrics = useMemo(() => {
@@ -130,7 +139,7 @@ export const AdminAnalyticsModal: React.FC<AdminAnalyticsModalProps> = ({
     const lead = calculateLeadScore(stats, business.isClaimed);
     const totalLeads = stats.whatsappClicks + stats.phoneCalls;
 
-    return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (kwestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
+    return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (kahawawestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
   };
 
   const handleCopyPitch = (business: Business) => {
@@ -157,35 +166,66 @@ export const AdminAnalyticsModal: React.FC<AdminAnalyticsModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-[#4D0202] text-white px-5 sm:px-7 py-4 flex items-center justify-between border-b border-[#630303] flex-shrink-0">
+        <div className="bg-[#4D0202] text-white px-5 sm:px-7 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#630303] flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center shadow-md">
-              <TrendingUp className="w-5 h-5" />
+              {activeTab === 'leads' ? <TrendingUp className="w-5 h-5" /> : <KeyRound className="w-5 h-5" />}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-display font-black text-lg sm:text-xl text-white tracking-tight">
-                  KWEST Ad Sales & Business Intelligence
+                  {activeTab === 'leads' ? 'KWEST Ad Sales & Business Intelligence' : 'KWEST Merchant PINs & Security Registry'}
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/30 text-emerald-300 border border-emerald-500/40">
-                  Internal Tool
+                  Editorial Desk
                 </span>
               </div>
               <p className="text-xs text-rose-200/90">
-                Track merchant performance & prospect high-intent businesses for paid ad placements
+                {activeTab === 'leads'
+                  ? 'Track merchant performance & prospect high-intent businesses for paid ad placements'
+                  : 'Manage 4-digit merchant PINs, claimed roles, and owner contacts for listed businesses'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleDownloadCSV}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition shadow-sm active:scale-95 border border-emerald-500/40"
-              title="Download Full Leads CSV"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
+            {/* Tab switch buttons */}
+            <div className="bg-black/30 p-1 rounded-xl border border-white/10 flex items-center gap-1">
+              <button
+                onClick={() => setActiveTab('leads')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'leads'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>Sales Leads</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('pins')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'pins'
+                    ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Merchant PINs</span>
+              </button>
+            </div>
+
+            {activeTab === 'leads' && (
+              <button
+                onClick={handleDownloadCSV}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition shadow-sm active:scale-95 border border-emerald-500/40"
+                title="Download Full Leads CSV"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export CSV</span>
+              </button>
+            )}
+
             <button
               onClick={onClose}
               className="p-2 rounded-xl bg-[#630303] hover:bg-[#7D0404] text-stone-200 hover:text-white transition active:scale-95"
@@ -197,6 +237,174 @@ export const AdminAnalyticsModal: React.FC<AdminAnalyticsModalProps> = ({
 
         {/* Scrollable Content */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1">
+          {activeTab === 'pins' ? (
+            <div className="space-y-6">
+              {/* Merchant PIN Overview Banner */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="w-5 h-5 text-amber-600" />
+                    <h4 className="text-sm font-bold text-amber-950">
+                      Editorial Merchant Credentials & Authorization Registry
+                    </h4>
+                  </div>
+                  <p className="text-xs text-amber-900/80 leading-relaxed max-w-3xl">
+                    Every business listed or claimed in Kahawa West receives a 4-digit PIN for instant mobile merchant access. As Directory Admin, you can view all registered PINs, applicant contact information, and listings created on behalf of owners.
+                  </p>
+                </div>
+
+                <div className="px-3.5 py-2 rounded-xl bg-amber-600 text-white text-xs font-mono font-bold flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Master Admin PIN: 9999</span>
+                </div>
+              </div>
+
+              {/* Registered Merchant PINs Table */}
+              <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
+                <div className="p-4 border-b border-stone-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <h5 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <Users className="w-4 h-4 text-emerald-700" />
+                    <span>Registered Merchant Accounts ({businesses.filter((b) => b.isClaimed).length} Claimed / Active)</span>
+                  </h5>
+                  <div className="text-xs text-stone-500">
+                    Default Test PIN: <span className="font-mono font-bold text-slate-800">1234</span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-stone-100/90 text-stone-700 border-b border-stone-200 font-bold uppercase text-[10px] tracking-wider">
+                        <th className="py-3 px-4">Business & Zone</th>
+                        <th className="py-3 px-3">Applicant / Role</th>
+                        <th className="py-3 px-3">Owner Contact (If on Behalf)</th>
+                        <th className="py-3 px-3 text-center">4-Digit PIN</th>
+                        <th className="py-3 px-3 text-center">Device Session</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-200">
+                      {businesses
+                        .filter((b) => b.isClaimed || merchantRecords[b.id] || b.name.toLowerCase().includes('ukweli'))
+                        .map((b) => {
+                          const record = merchantRecords[b.id];
+                          const pin = record?.pin || (b.name.toLowerCase().includes('ukweli') ? '1234' : '1234');
+                          const applicant = record?.applicantName || b.claimedBy?.split('(')[0]?.trim() || 'Proprietor';
+                          const role = record?.role || b.claimedBy?.match(/\((.*?)\)/)?.[1] || 'Owner';
+                          const isBehalf = record?.isListingOnBehalf || role.includes('Behalf') || b.claimedBy?.includes('Behalf');
+                          const owner = record?.ownerName ? `${record.ownerName} (${record.ownerPhone || 'N/A'})` : isBehalf ? b.phone : 'Direct Owner';
+                          const isUnlocked = isMerchantSessionActive(b.id, b.name);
+
+                          return (
+                            <tr key={b.id} className="hover:bg-amber-50/40 transition">
+                              <td className="py-3 px-4">
+                                <div className="font-bold text-slate-900 text-xs sm:text-sm">{b.name}</div>
+                                <div className="text-[11px] text-stone-500 flex items-center gap-1 mt-0.5">
+                                  <MapPin className="w-3 h-3 text-stone-400" />
+                                  <span>{b.zone}</span>
+                                  <span>•</span>
+                                  <span>{b.phone}</span>
+                                </div>
+                              </td>
+
+                              <td className="py-3 px-3">
+                                <div className="font-semibold text-slate-800">{applicant}</div>
+                                <span className="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-700 mt-0.5">
+                                  {role}
+                                </span>
+                              </td>
+
+                              <td className="py-3 px-3">
+                                {isBehalf ? (
+                                  <div className="text-amber-800 font-semibold text-[11px] bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                                    <div className="font-bold">{record?.ownerName || 'Owner'}</div>
+                                    <div className="text-[10px] font-mono">{record?.ownerPhone || b.phone}</div>
+                                  </div>
+                                ) : (
+                                  <span className="text-stone-400 text-[11px]">Same as applicant</span>
+                                )}
+                              </td>
+
+                              <td className="py-3 px-3 text-center">
+                                <span className="font-mono text-sm font-black px-2.5 py-1 rounded-lg bg-stone-900 text-amber-300 tracking-wider">
+                                  {pin}
+                                </span>
+                              </td>
+
+                              <td className="py-3 px-3 text-center">
+                                {isUnlocked ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                    <Unlock className="w-3 h-3 text-emerald-600" />
+                                    Active
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-medium">
+                                    <Lock className="w-3 h-3 text-stone-400" />
+                                    Locked
+                                  </span>
+                                )}
+                              </td>
+
+                              <td className="py-3 px-4 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(`Your KWEST Merchant PIN for ${b.name} is: ${pin}. Log in at kahawawestdirectory.co.ke`);
+                                      setCopiedPinId(b.id);
+                                      setTimeout(() => setCopiedPinId(null), 3000);
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold transition"
+                                    title="Copy PIN credentials to WhatsApp"
+                                  >
+                                    {copiedPinId === b.id ? 'Copied!' : 'Copy PIN'}
+                                  </button>
+
+                                  {isUnlocked ? (
+                                    <button
+                                      onClick={() => {
+                                        revokeMerchantSession(b.id);
+                                        window.location.reload();
+                                      }}
+                                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-semibold transition"
+                                    >
+                                      Lock
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        grantMerchantSession(b.id);
+                                        window.location.reload();
+                                      }}
+                                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold transition"
+                                    >
+                                      Unlock
+                                    </button>
+                                  )}
+
+                                  {onSelectBusiness && (
+                                    <button
+                                      onClick={() => {
+                                        onSelectBusiness(b);
+                                        onClose();
+                                      }}
+                                      className="p-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-600 transition"
+                                      title="Open listing in directory"
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
           {/* Top Aggregate KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {/* Total Views */}
@@ -504,8 +712,10 @@ export const AdminAnalyticsModal: React.FC<AdminAnalyticsModalProps> = ({
               </table>
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
+  </div>
+</div>
   );
 };

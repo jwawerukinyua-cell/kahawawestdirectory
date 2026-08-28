@@ -32,7 +32,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
         })
         .catch(() => {});
     } else {
-      navigator.clipboard.writeText(`${story.title} - Read more on kwestdirectory.co.ke: ${window.location.href}`);
+      navigator.clipboard.writeText(`${story.title} - Read more on kahawawestdirectory.co.ke: ${window.location.href}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     }

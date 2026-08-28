@@ -21,9 +21,12 @@ import {
   Upload,
   UploadCloud,
   Tag,
+  KeyRound,
+  UserCheck,
 } from 'lucide-react';
 import { Business, BusinessClaim, EstateZone, OperationType } from '../../types';
 import { saveBusinessClaim, saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
+import { registerMerchantAccount } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
 
 interface ClaimBusinessModalProps {
@@ -47,7 +50,11 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState(business.phone || '');
   const [email, setEmail] = useState(business.email || '');
-  const [businessRole, setBusinessRole] = useState<'Owner' | 'Manager' | 'Authorized Representative' | 'Partner'>('Owner');
+  const [businessRole, setBusinessRole] = useState<'Owner' | 'Manager' | 'Authorized Representative' | 'Partner' | 'Agent / Listing on Behalf of Owner'>('Owner');
+  const [isListingOnBehalf, setIsListingOnBehalf] = useState(false);
+  const [ownerFullName, setOwnerFullName] = useState('');
+  const [ownerPhoneNumber, setOwnerPhoneNumber] = useState('');
+  const [merchantPin, setMerchantPin] = useState('1234');
   const [notes, setNotes] = useState('');
 
   // Business customization state (5 Photos, contacts, Lipa na M-Pesa, etc.)
@@ -198,19 +205,35 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
 
     try {
       // 1. Prepare Claim record matching Supabase schema
+      const effectiveRole = isListingOnBehalf ? 'Listing on Behalf of Owner' : businessRole;
       const claimRecord: BusinessClaim = {
         business_id: business.id,
         business_name: customName || business.name,
         full_name: fullName,
         phone_number: phoneNumber,
         email: email,
-        business_role: businessRole,
+        business_role: effectiveRole,
         status: 'verified', // Instant verification for active editing & live preview
-        notes: notes,
+        notes: isListingOnBehalf
+          ? `[On Behalf of Owner: ${ownerFullName} (${ownerPhoneNumber})] ${notes}`
+          : notes,
         created_at: new Date().toISOString(),
       };
 
-      // 2. Prepare Updated Business Record
+      // 2. Register Merchant Account PIN & Device Session
+      registerMerchantAccount({
+        businessId: business.id,
+        businessName: customName || business.name,
+        pin: merchantPin || '1234',
+        phone: phoneNumber,
+        applicantName: fullName,
+        role: effectiveRole,
+        isListingOnBehalf,
+        ownerName: isListingOnBehalf ? ownerFullName : undefined,
+        ownerPhone: isListingOnBehalf ? ownerPhoneNumber : undefined,
+      });
+
+      // 3. Prepare Updated Business Record
       const newSlug = customName ? generateBusinessSlug(customName) : business.slug;
       const updatedBusinessRecord: Business = {
         ...business,
@@ -225,8 +248,11 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         landmark: customLandmark,
         description: customDescription,
         services: servicesList,
+        isVerified: true,
         isClaimed: true,
-        claimedBy: `${fullName} (${businessRole})`,
+        claimedBy: isListingOnBehalf
+          ? `${fullName} (On Behalf of ${ownerFullName || 'Owner'})`
+          : `${fullName} (${businessRole})`,
         claimedAt: new Date().toISOString().split('T')[0],
         heroImage: photos[0] || business.heroImage,
         galleryImages: photos,
@@ -234,7 +260,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
           ? {
               type: mpesaType,
               number: mpesaNumber,
-              accountName: mpesaAccountName || customName.toUpperCase(),
+              accountName: mpesaAccountName || (customName || business.name || '').toUpperCase(),
               accountNumber: mpesaAccNumber || undefined,
             }
           : undefined,
@@ -394,16 +420,69 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                       <Briefcase className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <select
                         value={businessRole}
-                        onChange={(e) => setBusinessRole(e.target.value as any)}
+                        onChange={(e) => {
+                          const val = e.target.value as any;
+                          setBusinessRole(val);
+                          if (val === 'Agent / Listing on Behalf of Owner') {
+                            setIsListingOnBehalf(true);
+                          }
+                        }}
                         className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm bg-white"
                       >
                         <option value="Owner">Owner / Proprietor</option>
                         <option value="Manager">General Manager</option>
                         <option value="Authorized Representative">Authorized Representative</option>
                         <option value="Partner">Business Partner</option>
+                        <option value="Agent / Listing on Behalf of Owner">Agent / Listing on Behalf of Owner</option>
                       </select>
                     </div>
                   </div>
+                </div>
+
+                {/* Listing on Behalf of Owner Toggle & Fields */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isListingOnBehalf}
+                      onChange={(e) => setIsListingOnBehalf(e.target.checked)}
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                    />
+                    <span className="text-xs font-bold text-slate-800">
+                      I am claiming / managing this listing on behalf of the business owner
+                    </span>
+                  </label>
+
+                  {isListingOnBehalf && (
+                    <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fadeIn">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Owner's Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          required={isListingOnBehalf}
+                          value={ownerFullName}
+                          onChange={(e) => setOwnerFullName(e.target.value)}
+                          placeholder="e.g. Mama Mary Wanjiku"
+                          className="w-full p-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Owner's Phone / WhatsApp *
+                        </label>
+                        <input
+                          type="tel"
+                          required={isListingOnBehalf}
+                          value={ownerPhoneNumber}
+                          onChange={(e) => setOwnerPhoneNumber(e.target.value)}
+                          placeholder="0712 345 678"
+                          className="w-full p-2 rounded-lg border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -439,6 +518,30 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                         className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
                       />
                     </div>
+                  </div>
+                </div>
+
+                {/* 4-Digit Security PIN Setup */}
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-slate-900">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
+                    <label className="text-xs font-bold uppercase tracking-wider text-amber-900">
+                      Create 4-Digit Merchant Security PIN *
+                    </label>
+                  </div>
+                  <p className="text-[11px] text-amber-800 mb-2.5">
+                    Use this 4-digit code to securely log in from any phone or device to view private resident analytics, update contact info, and manage ads without needing complex passwords.
+                  </p>
+                  <div className="max-w-xs">
+                    <input
+                      type="password"
+                      maxLength={6}
+                      required
+                      value={merchantPin}
+                      onChange={(e) => setMerchantPin(e.target.value)}
+                      placeholder="e.g. 1234"
+                      className="w-full p-2.5 rounded-xl border border-amber-300 bg-white font-mono text-center tracking-[0.3em] text-lg font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-900"
+                    />
                   </div>
                 </div>
 

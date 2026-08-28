@@ -209,6 +209,7 @@ export interface BusinessApplication {
   applicantName: string;
   applicantPhone: string;
   applicantRole: string;
+  notes?: string;
   created_at: string;
 }
 

@@ -27,7 +27,7 @@ export const SEED_COMMUNITY_UPDATES: CommunityUpdate[] = [
     content: 'Annual inter-estate youth championship featuring 8 local teams from Congo Stage, Jacaranda, Bima, and Soweto. Scouting coaches in attendance. Free entry for all estate residents with refreshments by local vendors.',
     author: 'Kahawa West Youth Sports Council',
     authorPhone: '+254722890123',
-    authorEmail: 'sports@kwestdirectory.co.ke',
+    authorEmail: 'sports@kahawawestdirectory.co.ke',
     date: 'Saturday',
     status: 'published',
     badge: 'Event',

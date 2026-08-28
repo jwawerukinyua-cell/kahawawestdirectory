@@ -14,10 +14,13 @@ import {
   Loader2,
   Upload,
   UploadCloud,
+  Briefcase,
+  KeyRound,
 } from 'lucide-react';
 import { Business, EstateZone, BusinessApplication, OperationType } from '../../types';
 import { saveBusinessApplication, saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
 import { DEFAULT_OPENING_HOURS } from '../../data/defaultOpeningHours';
+import { registerMerchantAccount } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
 
 interface ListYourBusinessModalProps {
@@ -37,6 +40,11 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   // Form State
   const [applicantName, setApplicantName] = useState('');
   const [applicantRole, setApplicantRole] = useState('Owner');
+  const [isListingOnBehalf, setIsListingOnBehalf] = useState(false);
+  const [ownerFullName, setOwnerFullName] = useState('');
+  const [ownerPhoneNumber, setOwnerPhoneNumber] = useState('');
+  const [merchantPin, setMerchantPin] = useState('1234');
+
   const [name, setName] = useState('');
   const [tagline, setTagline] = useState('');
   const [operationType, setOperationType] = useState<OperationType>('physical_shop');
@@ -156,6 +164,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
     try {
       const newId = `kw-custom-${Date.now()}`;
       const slug = generateBusinessSlug(name);
+      const effectiveRole = isListingOnBehalf ? 'Listing on Behalf of Owner' : applicantRole;
 
       const newBusinessRecord: Business = {
         id: newId,
@@ -172,7 +181,9 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         email: email || undefined,
         isVerified: true,
         isClaimed: true,
-        claimedBy: `${applicantName || 'Proprietor'} (${applicantRole})`,
+        claimedBy: isListingOnBehalf
+          ? `${applicantName || 'Agent'} (On Behalf of ${ownerFullName || 'Owner'})`
+          : `${applicantName || 'Proprietor'} (${applicantRole})`,
         claimedAt: new Date().toISOString().split('T')[0],
         rating: 5.0,
         reviewCount: 1,
@@ -188,12 +199,25 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
           ? {
               type: mpesaType,
               number: mpesaNumber,
-              accountName: mpesaAccountName || name.toUpperCase(),
+              accountName: mpesaAccountName || (name || '').toUpperCase(),
             }
           : undefined,
         openingHours: DEFAULT_OPENING_HOURS,
         createdAt: new Date().toISOString(),
       };
+
+      // Register Merchant PIN and grant active session
+      registerMerchantAccount({
+        businessId: newId,
+        businessName: name,
+        pin: merchantPin || '1234',
+        phone: phone,
+        applicantName: applicantName || 'Proprietor',
+        role: effectiveRole,
+        isListingOnBehalf,
+        ownerName: isListingOnBehalf ? ownerFullName : undefined,
+        ownerPhone: isListingOnBehalf ? ownerPhoneNumber : undefined,
+      });
 
       const application: BusinessApplication = {
         name,
@@ -212,7 +236,10 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         galleryImages: photos,
         applicantName,
         applicantPhone: phone,
-        applicantRole,
+        applicantRole: effectiveRole,
+        notes: isListingOnBehalf
+          ? `[Listed on Behalf of Owner: ${ownerFullName} (${ownerPhoneNumber})]`
+          : undefined,
         created_at: new Date().toISOString(),
       };
 
@@ -318,15 +345,96 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Your Role in Business
                 </label>
-                <select
-                  value={applicantRole}
-                  onChange={(e) => setApplicantRole(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white text-xs sm:text-sm"
-                >
-                  <option value="Owner">Owner / Proprietor</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Representative">Authorized Representative</option>
-                </select>
+                <div className="relative">
+                  <Briefcase className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <select
+                    value={applicantRole}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setApplicantRole(val);
+                      if (val === 'Agent / Listing on Behalf of Owner') {
+                        setIsListingOnBehalf(true);
+                      }
+                    }}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white text-xs sm:text-sm"
+                  >
+                    <option value="Owner">Owner / Proprietor</option>
+                    <option value="Manager">General Manager</option>
+                    <option value="Authorized Representative">Authorized Representative</option>
+                    <option value="Partner">Business Partner</option>
+                    <option value="Agent / Listing on Behalf of Owner">Agent / Listing on Behalf of Owner</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Listing on Behalf of Owner Toggle & Fields */}
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isListingOnBehalf}
+                  onChange={(e) => setIsListingOnBehalf(e.target.checked)}
+                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                />
+                <span className="text-xs font-bold text-slate-800">
+                  I am listing / managing this business on behalf of the owner
+                </span>
+              </label>
+
+              {isListingOnBehalf && (
+                <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fadeIn">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Owner's Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required={isListingOnBehalf}
+                      value={ownerFullName}
+                      onChange={(e) => setOwnerFullName(e.target.value)}
+                      placeholder="e.g. Mama Mary Wanjiku"
+                      className="w-full p-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Owner's Phone / WhatsApp *
+                    </label>
+                    <input
+                      type="tel"
+                      required={isListingOnBehalf}
+                      value={ownerPhoneNumber}
+                      onChange={(e) => setOwnerPhoneNumber(e.target.value)}
+                      placeholder="0712 345 678"
+                      className="w-full p-2 rounded-lg border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 4-Digit Security PIN Setup */}
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-slate-900">
+              <div className="flex items-center gap-2 mb-1.5">
+                <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
+                <label className="text-xs font-bold uppercase tracking-wider text-amber-900">
+                  Create 4-Digit Merchant Security PIN *
+                </label>
+              </div>
+              <p className="text-[11px] text-amber-800 mb-2.5">
+                Use this 4-digit code to log in anytime to view private customer engagement analytics, update your catalog, and manage ads.
+              </p>
+              <div className="max-w-xs">
+                <input
+                  type="password"
+                  maxLength={6}
+                  required
+                  value={merchantPin}
+                  onChange={(e) => setMerchantPin(e.target.value)}
+                  placeholder="e.g. 1234"
+                  className="w-full p-2.5 rounded-xl border border-amber-300 bg-white font-mono text-center tracking-[0.3em] text-lg font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-900"
+                />
               </div>
             </div>
 
