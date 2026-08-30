@@ -19,6 +19,8 @@ import {
   ExternalLink,
   Flame,
   Target,
+  CreditCard,
+  Calendar,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 
@@ -27,18 +29,31 @@ interface AdEnquiryModalProps {
   onClose: () => void;
 }
 
+const ENQUIRY_PACKAGES = [
+  { id: '7_days', name: '7-Day Flash Boost', duration: '7 Days', price: 700, rate: 'KSh 100/day' },
+  { id: '15_days', name: '15-Day Growth Sprint', duration: '15 Days', price: 1350, rate: 'KSh 90/day', isPopular: true },
+  { id: '30_days', name: '30-Day Prime Leader', duration: '30 Days', price: 2500, rate: 'KSh 83/day' },
+];
+
+const CREATIVE_DESIGN_FEE_KSH = 500;
+
 export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose }) => {
   const [businessName, setBusinessName] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [selectedDuration, setSelectedDuration] = useState<'7_days' | '15_days' | '30_days'>('15_days');
   const [adType, setAdType] = useState<'homepage-banner' | 'resident-deal' | 'category-top' | 'editorial-spotlight'>('homepage-banner');
-  const [needCreativeServices, setNeedCreativeServices] = useState(true);
+  const [needCreativeServices, setNeedCreativeServices] = useState(false);
   const [clickAction, setClickAction] = useState<'whatsapp' | 'website' | 'call'>('whatsapp');
   const [notes, setNotes] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   if (!isOpen) return null;
+
+  const currentPkg = ENQUIRY_PACKAGES.find((p) => p.id === selectedDuration) || ENQUIRY_PACKAGES[1];
+  const creativeFee = needCreativeServices ? CREATIVE_DESIGN_FEE_KSH : 0;
+  const totalPayableKsh = currentPkg.price + creativeFee;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +66,18 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
 
   const handleWhatsAppDirect = () => {
     const text = encodeURIComponent(
-      `Hello KWEST Directory Team! I would like to enquire about advertising space for "${businessName || 'my business'}". Slot: ${adType}. Creative Services (Copy & Graphics): ${needCreativeServices ? 'YES' : 'NO'}. Phone: ${phone || 'N/A'}`
+      `*🚀 KWEST DIRECTORY AD CAMPAIGN BOOKING (KWEST MEDIA)*\n\n` +
+      `*Business:* ${businessName || 'My Business'}\n` +
+      `*Contact Person:* ${contactPerson || 'Owner'}\n` +
+      `*Phone:* ${phone}\n` +
+      `*Ad Placement Slot:* ${adType}\n` +
+      `*Package Duration:* ${currentPkg.name} (${currentPkg.duration}) — KSh ${currentPkg.price}\n` +
+      `*Ad Creation & Copywriting Add-on:* ${needCreativeServices ? `YES (+KSh ${CREATIVE_DESIGN_FEE_KSH})` : 'NO (Merchant provides graphics)'}\n` +
+      `*TOTAL AMOUNT DUE (Upfront):* KSh ${totalPayableKsh.toLocaleString()}\n\n` +
+      `*💳 Lipa na M-Pesa:* Paybill: 247247 | Acc: 537409 | Name: Ukweli Products\n\n` +
+      `*CTA Action:* ${clickAction}\n` +
+      `*Notes/Goals:* ${notes || 'Standard promotion'}\n\n` +
+      `All ads are payable upfront. Please confirm availability and send M-Pesa receipt confirmation.`
     );
     window.open(`https://wa.me/254764405842?text=${text}`, '_blank');
   };
@@ -73,7 +99,7 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
             </div>
             <div>
               <span className="text-xs uppercase tracking-wider font-semibold text-rose-200">
-                Monetization & Advertising Guide
+                Monetization &amp; Advertising Guide
               </span>
               <h2 className="text-lg sm:text-xl font-bold text-white">
                 Advertise on Kahawa West Directory
@@ -91,28 +117,59 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
         {/* Content */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
           {submitted ? (
-            <div className="text-center py-8 space-y-4">
+            <div className="text-center py-6 space-y-4">
               <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Enquiry Received!</h3>
+              <h3 className="text-xl font-bold text-slate-900">Campaign Booking Received!</h3>
               <p className="text-sm text-slate-600 max-w-md mx-auto">
-                Thank you for your interest in advertising on Kahawa West Directory. Our team will review your booking and reach out via WhatsApp / Call to discuss campaign launch dates, banner formats, and custom copywriting.
+                Thank you for choosing to advertise on Kahawa West Directory. Please review your itemized package total below. All ads are activated upon upfront payment verification.
               </p>
 
-              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 max-w-md mx-auto text-left text-xs text-amber-950 space-y-1.5">
-                <div className="font-bold text-amber-900 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Direct Ad Desk Contacts:</span>
+              {/* Order Summary & Paybill Box */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 max-w-md mx-auto text-left text-xs text-slate-800 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Business:</span>
+                  <strong>{businessName}</strong>
                 </div>
-                <p><strong>Official Email:</strong> ads@kahawawestdirectory.co.ke</p>
-                <p><strong>WhatsApp / Call:</strong> +254 700 000 000</p>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Campaign Duration:</span>
+                  <strong className="text-amber-800">{currentPkg.name} ({currentPkg.duration})</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Placement Slot Fee:</span>
+                  <span className="font-mono font-bold">KSh {currentPkg.price.toLocaleString()}</span>
+                </div>
+                {needCreativeServices && (
+                  <div className="flex justify-between text-amber-700">
+                    <span>Ad Creative &amp; Copywriting:</span>
+                    <span className="font-mono font-bold">+KSh {CREATIVE_DESIGN_FEE_KSH.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-sm">
+                  <span className="font-bold text-slate-900">Total Due (Upfront):</span>
+                  <strong className="text-emerald-700 font-mono text-base">KSh {totalPayableKsh.toLocaleString()}</strong>
+                </div>
+
+                {/* Lipa na M-Pesa */}
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-950 space-y-1 mt-2">
+                  <div className="font-bold flex items-center gap-1.5 text-emerald-900">
+                    <CreditCard className="w-4 h-4 text-emerald-700" />
+                    <span>Lipa na M-Pesa (KWEST MEDIA)</span>
+                  </div>
+                  <p><strong>PAYBILL:</strong> <span className="font-mono font-bold text-emerald-900">247247</span></p>
+                  <p><strong>ACCOUNT NO:</strong> <span className="font-mono font-bold text-emerald-900">537409</span></p>
+                  <p><strong>ACCOUNT NAME:</strong> Ukweli Products</p>
+                  <p className="text-[10px] text-emerald-800 font-medium pt-0.5">
+                    * Note: All ad placements and creative services are payable upfront prior to activation.
+                  </p>
+                </div>
               </div>
 
-              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Button variant="primary" onClick={handleWhatsAppDirect} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                   <MessageSquare className="w-4 h-4 mr-1.5" />
-                  Chat on WhatsApp Directly
+                  Send Booking via WhatsApp
                 </Button>
                 <Button variant="secondary" onClick={() => { setSubmitted(false); onClose(); }}>
                   Close Window
@@ -126,10 +183,10 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
                 <div className="space-y-0.5">
                   <span className="font-bold text-amber-950 flex items-center gap-1.5">
                     <Flame className="w-4 h-4 text-amber-600" />
-                    <span>Direct Booking & Creative Consultations</span>
+                    <span>Direct Booking &amp; Creative Consultations</span>
                   </span>
                   <p className="text-amber-900 text-[11px]">
-                    Questions or ready to lock in your campaign immediately? Reach our advertising team:
+                    Questions or ready to lock in your campaign immediately? Reach our advertising desk:
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -157,7 +214,7 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
                     <Target className="w-4 h-4 text-amber-500" />
-                    <span>Monetization Placements & Creative Specifications</span>
+                    <span>Monetization Placements &amp; Creative Specifications</span>
                   </h3>
                   <span className="text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md">
                     2026 Creative Guidelines
@@ -247,9 +304,49 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
 
               {/* Booking / Enquiry Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                  Pre-Book Your Ad Slot (Coming Soon)
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                    Select Campaign Duration &amp; Book Ad
+                  </h3>
+                  <span className="text-[10px] font-bold text-rose-800 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
+                    All Ads Payable Upfront
+                  </span>
+                </div>
+
+                {/* Campaign Duration Selector (7, 15, 30 Days) */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Campaign Duration Package <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {ENQUIRY_PACKAGES.map((pkg) => {
+                      const isSelected = selectedDuration === pkg.id;
+                      return (
+                        <button
+                          key={pkg.id}
+                          type="button"
+                          onClick={() => setSelectedDuration(pkg.id as any)}
+                          className={`p-2.5 rounded-xl border text-center transition cursor-pointer relative ${
+                            isSelected
+                              ? 'bg-amber-50 border-amber-500 text-amber-950 shadow-xs'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                          }`}
+                        >
+                          {pkg.isPopular && (
+                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full text-[8px] font-black uppercase bg-amber-500 text-stone-950 whitespace-nowrap">
+                              Popular
+                            </span>
+                          )}
+                          <div className="text-[11px] font-bold">{pkg.name}</div>
+                          <div className="text-sm font-black text-amber-700 font-mono my-0.5">
+                            KSh {pkg.price.toLocaleString()}
+                          </div>
+                          <div className="text-[9px] text-slate-500">{pkg.rate}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -261,7 +358,7 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
                       required
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
-                      placeholder="e.g. Jacaranda Grill & Butchery"
+                      placeholder="e.g. Jacaranda Grill &amp; Butchery"
                       className="w-full p-2 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                     />
                   </div>
@@ -342,22 +439,67 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
                   </div>
                 </div>
 
-                {/* Creative Copywriting & Graphic Design Service Checkbox */}
-                <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/90 flex items-start gap-3 cursor-pointer" onClick={() => setNeedCreativeServices(!needCreativeServices)}>
+                {/* Separate Ad Creation & Copywriting Option */}
+                <div
+                  className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition ${
+                    needCreativeServices
+                      ? 'bg-amber-50 border-amber-400 text-amber-950'
+                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                  }`}
+                  onClick={() => setNeedCreativeServices(!needCreativeServices)}
+                >
                   <input
                     type="checkbox"
                     checked={needCreativeServices}
                     onChange={(e) => setNeedCreativeServices(e.target.checked)}
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
                   />
-                  <div className="text-xs space-y-0.5">
-                    <span className="font-bold text-amber-950 flex items-center gap-1.5">
-                      <Palette className="w-3.5 h-3.5 text-amber-700" />
-                      <span>Include Professional Ad Design & Copywriting (+ Creative Package)</span>
-                    </span>
-                    <p className="text-amber-900/80 text-[11px] leading-relaxed">
-                      Need custom high-converting visuals and persuasive ad copy? Our creative team will design your banner graphics and craft catchy promotional copy for your campaign.
+                  <div className="text-xs space-y-0.5 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                        <Palette className="w-3.5 h-3.5 text-amber-700" />
+                        <span>Create Ad For Me (Custom HD Graphics &amp; Copywriting)</span>
+                      </span>
+                      <span className="font-mono font-bold text-amber-800 text-[11px] bg-amber-100 px-2 py-0.5 rounded border border-amber-300 whitespace-nowrap">
+                        +KSh {CREATIVE_DESIGN_FEE_KSH} (Separate Fee)
+                      </span>
+                    </div>
+                    <p className="text-slate-600 text-[11px] leading-relaxed">
+                      Our in-house design team will professionally craft persuasive promotional copy and design a high-converting HD banner tailored to your business.
                     </p>
+                  </div>
+                </div>
+
+                {/* Itemized Calculation & Official Payment Account */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                  <div className="flex justify-between items-center text-slate-700">
+                    <span>Ad Placement Fee ({currentPkg.name}):</span>
+                    <span className="font-mono font-bold text-slate-900">KSh {currentPkg.price.toLocaleString()}</span>
+                  </div>
+                  {needCreativeServices && (
+                    <div className="flex justify-between items-center text-amber-800">
+                      <span>Ad Creation &amp; Design Service:</span>
+                      <span className="font-mono font-bold">+KSh {CREATIVE_DESIGN_FEE_KSH.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="pt-1.5 border-t border-slate-200 flex justify-between items-center text-sm">
+                    <span className="font-bold text-slate-900">Total Amount (Payable Upfront):</span>
+                    <strong className="text-emerald-700 font-mono text-base">KSh {totalPayableKsh.toLocaleString()}</strong>
+                  </div>
+
+                  {/* Lipa na M-Pesa Receiving Account */}
+                  <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-300 text-[11px] text-emerald-950 space-y-0.5">
+                    <div className="font-bold flex items-center justify-between text-emerald-900">
+                      <span className="flex items-center gap-1.5">
+                        <CreditCard className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Lipa na M-Pesa Receiving Account (KWEST MEDIA)</span>
+                      </span>
+                      <span className="text-[9px] font-black uppercase bg-emerald-200 text-emerald-900 px-1.5 py-0.2 rounded">
+                        Payable Upfront
+                      </span>
+                    </div>
+                    <p><strong>PAYBILL:</strong> <span className="font-mono font-bold">247247</span> • <strong>ACC NO:</strong> <span className="font-mono font-bold">537409</span></p>
+                    <p><strong>ACC NAME:</strong> Ukweli Products</p>
                   </div>
                 </div>
 
@@ -376,14 +518,14 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
 
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <p className="text-[11px] text-slate-500">
-                    No payment is required today. We will confirm dates & creative materials prior to launch.
+                    All ads are payable upfront to PAYBILL 247247, ACC 537409 (Ukweli Products).
                   </p>
                   <div className="flex gap-2 w-full sm:w-auto">
                     <Button type="button" variant="secondary" onClick={onClose} className="w-full sm:w-auto">
                       Cancel
                     </Button>
                     <Button type="submit" variant="primary" className="w-full sm:w-auto bg-[#630303] hover:bg-[#450505] text-white">
-                      Submit Pre-Booking
+                      Book &amp; Pay KSh {totalPayableKsh.toLocaleString()} Upfront
                     </Button>
                   </div>
                 </div>
@@ -395,3 +537,4 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
     </div>
   );
 };
+

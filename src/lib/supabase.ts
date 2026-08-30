@@ -202,6 +202,73 @@ export const getStoredBusinesses = (seedBusinesses: Business[]): Business[] => {
   }
 };
 
+// Initial sample seed feedback for realistic neighborhood reviews
+const DEFAULT_INITIAL_FEEDBACK: CommunityFeedback[] = [
+  {
+    id: 'fb-seed-01',
+    businessId: 'kw-biz-01',
+    businessName: 'Mama Njeri Nyama Choma & Grill',
+    authorName: 'Peter Mwangi (Congo Resident)',
+    serviceOrProduct: '1kg Mbuzi Choma & Mukimo Platter',
+    experience: 'Better',
+    rating: 5,
+    tags: ['Verified Resident', 'Better'],
+    comment: 'Super fast roast and the mbuzi choma was tender and hot. The mukimo was fresh without too much oil. Great place for weekend family lunch.',
+    businessResponse: {
+      respondedBy: 'Mama Njeri (Proprietor)',
+      responseDate: '2026-08-25',
+      message: 'Asante sana Peter! We always source fresh meat every morning from local suppliers. Welcome back anytime with family!'
+    },
+    created_at: '2026-08-24T14:20:00Z',
+  },
+  {
+    id: 'fb-seed-02',
+    businessId: 'kw-biz-01',
+    businessName: 'Mama Njeri Nyama Choma & Grill',
+    authorName: 'Grace Wanjiku',
+    serviceOrProduct: 'Kuku Kienyeji Wet Fry & Ugali',
+    experience: 'Good',
+    rating: 4,
+    tags: ['Verified Resident', 'Good'],
+    comment: 'Good chicken taste and the soup was rich. Delivery to Jacaranda took 35 mins which was okay, but packaging was very neat.',
+    businessResponse: {
+      respondedBy: 'Maina (Kitchen Supervisor)',
+      responseDate: '2026-08-28',
+      message: 'Thank you Grace for the review. We are currently testing new thermal rider bags to make Jacaranda deliveries even faster!'
+    },
+    created_at: '2026-08-27T18:45:00Z',
+  },
+  {
+    id: 'fb-seed-03',
+    businessId: 'kw-biz-03',
+    businessName: 'Ukweli Modern Furniture & Upholstery Works',
+    authorName: 'Dennis Ochieng',
+    serviceOrProduct: 'Custom 6-Seater L-Shape Sofa & Coffee Table',
+    experience: 'Better',
+    rating: 5,
+    tags: ['Verified Resident', 'Better'],
+    comment: 'Solid hardwood mahogany frame with heavy fabric that doesn’t fray. Finished and delivered right on time to my apartment near Soweto.',
+    businessResponse: {
+      respondedBy: 'Fundi Kanyi (Master Craftsman)',
+      responseDate: '2026-08-22',
+      message: 'Thank you Dennis! We take pride in real treated wood construction that lasts decades. Enjoy your living room set!'
+    },
+    created_at: '2026-08-20T11:15:00Z',
+  },
+  {
+    id: 'fb-seed-04',
+    businessId: 'kw-biz-02',
+    businessName: 'St. Francis 24/7 Chemist & Diagnostic Clinic',
+    authorName: 'Mama Stacy',
+    serviceOrProduct: 'Prescription Antibiotics & Child Blood Pressure Check',
+    experience: 'Better',
+    rating: 5,
+    tags: ['Verified Resident', 'Better'],
+    comment: 'Opened promptly at 11 PM during an emergency. The pharmacist explained the dosage clearly and was very patient with my sick daughter.',
+    created_at: '2026-08-28T23:10:00Z',
+  }
+];
+
 export const saveCommunityFeedback = async (feedback: CommunityFeedback): Promise<boolean> => {
   try {
     if (supabase && isSupabaseConfigured) {
@@ -210,6 +277,30 @@ export const saveCommunityFeedback = async (feedback: CommunityFeedback): Promis
     const existing: CommunityFeedback[] = JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY) || '[]');
     existing.unshift(feedback);
     localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(existing));
+    window.dispatchEvent(new CustomEvent('kwest_feedback_updated', { detail: existing }));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const saveFeedbackBusinessReply = async (
+  feedbackId: string,
+  reply: { respondedBy: string; responseDate: string; message: string }
+): Promise<boolean> => {
+  try {
+    const list = getStoredFeedback();
+    const updated = list.map((item) => {
+      if (item.id === feedbackId) {
+        return {
+          ...item,
+          businessResponse: reply,
+        };
+      }
+      return item;
+    });
+    localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('kwest_feedback_updated', { detail: updated }));
     return true;
   } catch {
     return false;
@@ -218,13 +309,17 @@ export const saveCommunityFeedback = async (feedback: CommunityFeedback): Promis
 
 export const getStoredFeedback = (businessId?: string): CommunityFeedback[] => {
   try {
-    const list: CommunityFeedback[] = JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY) || '[]');
+    let list: CommunityFeedback[] = JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY) || 'null');
+    if (!list || !Array.isArray(list) || list.length === 0) {
+      list = DEFAULT_INITIAL_FEEDBACK;
+      localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(DEFAULT_INITIAL_FEEDBACK));
+    }
     if (businessId) {
       return list.filter((f) => f.businessId === businessId);
     }
     return list;
   } catch {
-    return [];
+    return DEFAULT_INITIAL_FEEDBACK;
   }
 };
 

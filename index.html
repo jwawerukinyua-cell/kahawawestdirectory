@@ -4,39 +4,58 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <title>Kahawa West Directory | kahawawestdirectory.co.ke</title>
-    <meta name="description" content="Kahawa West, Finally Organized. Find trusted businesses, discover hidden local gems, read community updates, and support businesses around you—all in one trusted place." />
+    <meta name="description" content="Find trusted Kahawa West businesses, domestic specialists, verified local contacts, emergency hotlines, and estate updates in one community directory." />
     <link rel="canonical" href="https://kahawawestdirectory.co.ke" />
     <meta name="theme-color" content="#3B0202" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="KWEST" />
+    
+    <!-- Preload Critical Above-The-Fold Assets for LCP Performance -->
+    <link rel="preload" as="image" href="/hero.webp" type="image/webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="/kwest-logo.webp" type="image/webp" />
+
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/kwest-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/kwest-icon.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/kwest-icon.png" />
-    <link rel="apple-touch-icon" href="/kwest-icon.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/kwest-icon.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/kwest-icon.png" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/kwest-icon.png" />
-    <link rel="shortcut icon" href="/kwest-icon.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/kwest-logo.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/kwest-logo.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/kwest-logo.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/kwest-logo.png" />
+    <link rel="apple-touch-icon" href="/kwest-logo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kwest-logo.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/kwest-logo.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/kwest-logo.png" />
+    <link rel="shortcut icon" href="/kwest-logo.png" />
+    
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://kahawawestdirectory.co.ke" />
     <meta property="og:image" content="/kwest-logo.png" />
     <meta property="og:title" content="Kahawa West Directory | kahawawestdirectory.co.ke" />
-    <meta property="og:description" content="Kahawa West, Finally Organized. Find trusted businesses, discover hidden local gems, read community updates, and support businesses around you—all in one trusted place." />
+    <meta property="og:description" content="Find trusted Kahawa West businesses, domestic specialists, verified local contacts, emergency hotlines, and estate updates in one community directory." />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Kahawa West Directory | kahawawestdirectory.co.ke" />
-    <meta name="twitter:description" content="Kahawa West, Finally Organized. Find trusted businesses, discover hidden local gems, read community updates, and support businesses around you—all in one trusted place." />
+    <meta name="twitter:description" content="Find trusted Kahawa West businesses, domestic specialists, verified local contacts, emergency hotlines, and estate updates in one community directory." />
     <meta name="twitter:image" content="/kwest-logo.png" />
+    
+    <!-- Optimized Font Loading -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    
     <script>
-      if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+      // Non-blocking Service Worker registration
+      if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch((err) => {
-            console.log('ServiceWorker registration error:', err);
-          });
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+              navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW registration error:', err));
+            });
+          } else {
+            setTimeout(() => {
+              navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW registration error:', err));
+            }, 1000);
+          }
         });
       }
     </script>

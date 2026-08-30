@@ -66,7 +66,6 @@ import { AdEnquiryModal } from './components/home/AdEnquiryModal';
 import { FloatingShareButton } from './components/ui/FloatingShareButton';
 import { NotificationCenter } from './components/notifications/NotificationCenter';
 import { NotificationToast } from './components/notifications/NotificationToast';
-import { AdminAnalyticsModal } from './components/admin/AdminAnalyticsModal';
 import { InstallAppModal } from './components/pwa/InstallAppModal';
 import { trackSearchQuery } from './lib/tracking';
 import {
@@ -109,7 +108,6 @@ export default function App() {
   const [isMobileZoneOpen, setIsMobileZoneOpen] = useState(false);
   const [isAdEnquiryOpen, setIsAdEnquiryOpen] = useState(false);
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
-  const [isAdminAnalyticsOpen, setIsAdminAnalyticsOpen] = useState(false);
   const [isInstallAppOpen, setIsInstallAppOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications());
   const [activeToastNotification, setActiveToastNotification] = useState<AppNotification | null>(null);
@@ -144,7 +142,17 @@ export default function App() {
     };
   }, []);
 
-  // Automatic trigger: show install prompt & instructions when someone visits the site
+  // Catch beforeinstallprompt globally as soon as App loads
+  useEffect(() => {
+    const handlePrompt = (e: Event) => {
+      e.preventDefault();
+      (window as any).__kwestInstallPrompt = e;
+    };
+    window.addEventListener('beforeinstallprompt', handlePrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handlePrompt);
+  }, []);
+
+  // Automatic trigger: show install prompt modal when someone visits the site
   useEffect(() => {
     const isAppStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -154,7 +162,7 @@ export default function App() {
     if (!isAppStandalone) {
       const promptTimer = setTimeout(() => {
         setIsInstallAppOpen(true);
-      }, 1200);
+      }, 2200);
 
       return () => clearTimeout(promptTimer);
     }
@@ -805,17 +813,6 @@ export default function App() {
         notification={activeToastNotification}
         onOpenCenter={() => setIsNotificationCenterOpen(true)}
         onDismiss={() => setActiveToastNotification(null)}
-      />
-
-      {/* Internal Admin Business Intelligence & Ad Placement Lead Tracker */}
-      <AdminAnalyticsModal
-        isOpen={isAdminAnalyticsOpen}
-        onClose={() => setIsAdminAnalyticsOpen(false)}
-        businesses={businesses}
-        onSelectBusiness={(biz) => {
-          setIsAdminAnalyticsOpen(false);
-          setSelectedBusinessForDetails(biz);
-        }}
       />
 
       {/* PWA Home Screen Install App Modal with Official KWEST Logo */}

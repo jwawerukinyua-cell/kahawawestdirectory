@@ -316,69 +316,72 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   return (
     <div
       id="claim-business-modal"
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
     >
       <div
-        className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[92vh] flex flex-col"
+        className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[94vh] flex flex-col min-w-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-[#630303] text-white p-5 sm:p-6 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-              <ShieldCheck className="w-6 h-6" />
+        <div className="bg-[#630303] text-white p-4 sm:p-5 flex items-center justify-between flex-shrink-0 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <span className="text-xs uppercase tracking-wider font-semibold text-rose-200">
+            <div className="min-w-0">
+              <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-rose-200 block truncate">
                 Claim & Edit Business Listing
               </span>
-              <h2 className="text-lg sm:text-xl font-bold text-white">
+              <h2 className="text-base sm:text-lg font-bold text-white truncate">
                 Claim {business.name}
               </h2>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#4D0202] hover:bg-[#3B0202] text-stone-200 hover:text-white transition"
+            className="p-1.5 sm:p-2 rounded-xl bg-[#4D0202] hover:bg-[#3B0202] text-stone-200 hover:text-white transition shrink-0 ml-2"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tab Selector */}
-        <div className="flex border-b border-stone-200 bg-stone-50 px-6 pt-3 flex-shrink-0">
+        {/* Tab Selector (Equal 2 Columns, No Horizontal Scroll / Overflow) */}
+        <div className="grid grid-cols-2 border-b border-stone-200 bg-stone-50 px-2 sm:px-6 pt-2 flex-shrink-0">
           <button
+            type="button"
             onClick={() => setActiveTab('claimant')}
-            className={`pb-3 px-4 text-xs sm:text-sm font-semibold border-b-2 transition flex items-center gap-2 ${
+            className={`pb-2.5 pt-1 px-2 text-xs sm:text-sm font-semibold border-b-2 transition flex items-center justify-center gap-1.5 sm:gap-2 text-center truncate ${
               activeTab === 'claimant'
-                ? 'border-[#630303] text-[#630303]'
+                ? 'border-[#630303] text-[#630303] bg-white rounded-t-lg'
                 : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
-            <User className="w-4 h-4" />
-            1. Claimant Identity (Supabase Claims)
+            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">1. Claimant Info</span>
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('customize')}
-            className={`pb-3 px-4 text-xs sm:text-sm font-semibold border-b-2 transition flex items-center gap-2 ${
+            className={`pb-2.5 pt-1 px-2 text-xs sm:text-sm font-semibold border-b-2 transition flex items-center justify-center gap-1.5 sm:gap-2 text-center truncate ${
               activeTab === 'customize'
-                ? 'border-[#630303] text-[#630303]'
+                ? 'border-[#630303] text-[#630303] bg-white rounded-t-lg'
                 : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
-            <Building className="w-4 h-4" />
-            2. Customize Details & 5 Photos
+            <Building className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">2. Photos & Details</span>
           </button>
         </div>
 
         {/* Form Body */}
         {successMode ? (
-          <div className="p-8 sm:p-12 text-center my-auto">
+          <div className="p-6 sm:p-12 text-center my-auto min-w-0">
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 animate-bounce">
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Claim & Updates Saved!</h3>
-            <p className="text-slate-600 text-sm max-w-md mx-auto mb-4">
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Claim & Updates Saved!</h3>
+            <p className="text-slate-600 text-xs sm:text-sm max-w-md mx-auto mb-4">
               Your claim record has been recorded and <strong>{customName}</strong> is now verified with your customized contacts, 5 photos, and Lipa na M-Pesa details.
             </p>
             <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
@@ -386,38 +389,38 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmitClaim} className="overflow-y-auto p-6 space-y-6 flex-1">
+          <form onSubmit={handleSubmitClaim} className="overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-5 flex-1 min-w-0 max-w-full">
             {activeTab === 'claimant' ? (
-              <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs sm:text-sm">
+              <div className="space-y-4 min-w-0">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs sm:text-sm leading-relaxed">
                   <span className="font-bold block mb-1">Verify your relationship to this business:</span>
-                  Fill in your details below. Once submitted, your claim record is inserted directly into the <strong>claims</strong> database table and you gain management control.
+                  Fill in your details below. Once submitted, your claim record is recorded and you gain verified management control over this listing.
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 min-w-0">
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                       Full Legal Name *
                     </label>
                     <div className="relative">
-                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
                       <input
                         type="text"
                         required
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="e.g. John Mwangi Kinyua"
-                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                       />
                     </div>
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                       Your Business Role *
                     </label>
                     <div className="relative">
-                      <Briefcase className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                      <Briefcase className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
                       <select
                         value={businessRole}
                         onChange={(e) => {
@@ -427,7 +430,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                             setIsListingOnBehalf(true);
                           }
                         }}
-                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm bg-white"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm bg-white"
                       >
                         <option value="Owner">Owner / Proprietor</option>
                         <option value="Manager">General Manager</option>
@@ -440,13 +443,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                 </div>
 
                 {/* Listing on Behalf of Owner Toggle & Fields */}
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 min-w-0">
                   <label className="flex items-center gap-2.5 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={isListingOnBehalf}
                       onChange={(e) => setIsListingOnBehalf(e.target.checked)}
-                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 shrink-0"
                     />
                     <span className="text-xs font-bold text-slate-800">
                       I am claiming / managing this listing on behalf of the business owner
@@ -454,8 +457,8 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   </label>
 
                   {isListingOnBehalf && (
-                    <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fadeIn">
-                      <div>
+                    <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fadeIn min-w-0">
+                      <div className="min-w-0">
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Owner's Full Name *
                         </label>
@@ -468,7 +471,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                           className="w-full p-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                         />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Owner's Phone / WhatsApp *
                         </label>
@@ -485,44 +488,44 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 min-w-0">
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                       Verification Phone Number *
                     </label>
                     <div className="relative">
-                      <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                      <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
                       <input
                         type="tel"
                         required
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="+2547..."
-                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-mono"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm font-mono"
                       />
                     </div>
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                       Official Contact Email *
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
                       <input
                         type="email"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="owner@gmail.com"
-                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* 4-Digit Security PIN Setup */}
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-slate-900">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-slate-900 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5">
                     <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
                     <label className="text-xs font-bold uppercase tracking-wider text-amber-900">
@@ -530,7 +533,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                     </label>
                   </div>
                   <p className="text-[11px] text-amber-800 mb-2.5">
-                    Use this 4-digit code to securely log in from any phone or device to view private resident analytics, update contact info, and manage ads without needing complex passwords.
+                    Use this 4-digit code to securely log in from any phone or device to update contact info, photos, and manage deals.
                   </p>
                   <div className="max-w-xs">
                     <input
@@ -545,7 +548,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   </div>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Verification Notes / M-Pesa Till Ownership Proof (Optional)
                   </label>
@@ -554,7 +557,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="e.g. Registered owner of Till 584920, shop located opposite Congo Stage Shell."
-                    className="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+                    className="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                   />
                 </div>
 
@@ -562,33 +565,33 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveTab('customize')}
-                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold transition flex items-center justify-center gap-2"
+                    className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 active:scale-[0.99] shadow-sm"
                   >
                     <span>Proceed to Customize 5 Photos & Contacts</span>
-                    <ArrowRight className="w-4 h-4 text-amber-400" />
+                    <ArrowRight className="w-4 h-4 text-amber-400 shrink-0" />
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-5 min-w-0">
                 {/* 5 Photos Section */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-200">
-                    <div>
+                <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3.5 pb-3 border-b border-slate-200 min-w-0">
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <Camera className="w-4 h-4 text-emerald-600" />
-                        <h4 className="font-bold text-slate-900 text-sm">
-                          5 Business Photos (Primary Hero + 4 Gallery Images)
+                        <Camera className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <h4 className="font-bold text-slate-900 text-xs sm:text-sm truncate">
+                          5 Business Photos (Hero + Gallery)
                         </h4>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Upload directly from your smartphone camera or device gallery. Photo #1 is shown on directory cards.
+                        Upload directly from your smartphone camera or gallery. Photo #1 is the primary cover image.
                       </p>
                     </div>
 
-                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition shadow-sm self-start sm:self-auto">
-                      <UploadCloud className="w-3.5 h-3.5" />
-                      <span>Upload from Device</span>
+                    <label className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs cursor-pointer transition shadow-sm shrink-0">
+                      <UploadCloud className="w-4 h-4" />
+                      <span>Upload All from Device</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -599,28 +602,45 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                     </label>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                  {/* Responsive photo cards: 2 columns on mobile, 5 on desktop */}
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 min-w-0">
                     {photos.map((photoUrl, idx) => {
                       const displayPhoto =
                         photoUrl && photoUrl.trim() !== ''
                           ? photoUrl
                           : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
                       return (
-                      <div key={idx} className="space-y-1.5 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
-                        <div className="relative h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
-                          <img
-                            src={displayPhoto}
-                            alt={`Photo ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                          <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
-                            {idx === 0 ? '★ Primary' : `#${idx + 1}`}
-                          </span>
+                        <div
+                          key={idx}
+                          className={`space-y-1.5 bg-white p-2 rounded-xl border border-slate-200 shadow-xs min-w-0 flex flex-col ${
+                            idx === 0 ? 'col-span-2 sm:col-span-1' : 'col-span-1'
+                          }`}
+                        >
+                          <div className="relative h-24 sm:h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group w-full">
+                            <img
+                              src={displayPhoto}
+                              alt={`Photo ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                            <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white shadow-xs' : 'bg-black/70 text-white'}`}>
+                              {idx === 0 ? '★ Primary' : `#${idx + 1}`}
+                            </span>
 
-                          <label className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 cursor-pointer transition-opacity duration-200">
-                            <Upload className="w-4 h-4" />
-                            <span className="text-[10px] font-bold">Replace</span>
+                            <label className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 cursor-pointer transition-opacity duration-200">
+                              <Upload className="w-4 h-4" />
+                              <span className="text-[10px] font-bold">Replace</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleSingleSlotUpload(idx, e)}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+
+                          <label className="block w-full text-center py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[10px] cursor-pointer transition border border-slate-300">
+                            <span>Choose File</span>
                             <input
                               type="file"
                               accept="image/*"
@@ -628,39 +648,28 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                               className="hidden"
                             />
                           </label>
-                        </div>
 
-                        <label className="block w-full text-center py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[10px] cursor-pointer transition border border-slate-300">
-                          <span>Choose File</span>
                           <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleSingleSlotUpload(idx, e)}
-                            className="hidden"
+                            type="text"
+                            value={photoUrl.startsWith('data:') ? '[Device Photo Loaded]' : photoUrl}
+                            onChange={(e) => {
+                              if (!e.target.value.includes('[Device Photo Loaded]')) {
+                                handlePhotoChange(idx, e.target.value);
+                              }
+                            }}
+                            placeholder="Image URL"
+                            className="w-full p-1 text-[10px] font-mono text-slate-600 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 truncate"
+                            title={photoUrl.startsWith('data:') ? 'Image uploaded from device' : photoUrl}
                           />
-                        </label>
-
-                        <input
-                          type="text"
-                          value={photoUrl.startsWith('data:') ? '[Device Photo Loaded]' : photoUrl}
-                          onChange={(e) => {
-                            if (!e.target.value.includes('[Device Photo Loaded]')) {
-                              handlePhotoChange(idx, e.target.value);
-                            }
-                          }}
-                          placeholder={`URL or paste link`}
-                          className="w-full p-1 text-[10px] font-mono text-slate-600 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 truncate"
-                          title={photoUrl.startsWith('data:') ? 'Image uploaded from device' : photoUrl}
-                        />
-                      </div>
-                    );
-                  })}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Core Business Information */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 min-w-0">
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                       Business Display Name
                     </label>
@@ -668,18 +677,18 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                       type="text"
                       value={customName}
                       onChange={(e) => setCustomName(e.target.value)}
-                      className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-medium"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm font-medium"
                     />
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                       Operating Model / Setup
                     </label>
                     <select
                       value={customOperationType}
                       onChange={(e) => setCustomOperationType(e.target.value as OperationType)}
-                      className="w-full p-2 rounded-xl border border-emerald-300 bg-emerald-50/50 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-semibold text-emerald-950"
+                      className="w-full p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/50 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm font-semibold text-emerald-950"
                     >
                       <option value="physical_shop">🏢 Physical Store / Commercial Shop / Office</option>
                       <option value="home_based">🏠 Home-Based (Operates from Home / Residential Base)</option>
@@ -689,8 +698,8 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 min-w-0">
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                       {customOperationType === 'physical_shop' 
                         ? 'Estate Zone in Kahawa West' 
@@ -699,7 +708,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                     <select
                       value={customZone}
                       onChange={(e) => setCustomZone(e.target.value as EstateZone)}
-                      className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm bg-white"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm bg-white"
                     >
                       {zones.map((z) => (
                         <option key={z} value={z}>
@@ -714,7 +723,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                     )}
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                       Tagline / One-line Slogan
                     </label>
@@ -722,20 +731,20 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                       type="text"
                       value={customTagline}
                       onChange={(e) => setCustomTagline(e.target.value)}
-                      className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                     />
                   </div>
                 </div>
 
                 {/* Lipa na M-Pesa Integration */}
-                <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 min-w-0">
                   <div className="flex items-center gap-2 mb-3">
-                    <CreditCard className="w-4 h-4 text-emerald-700" />
-                    <h4 className="font-bold text-emerald-950 text-sm">Lipa na M-Pesa Payment Details</h4>
+                    <CreditCard className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <h4 className="font-bold text-emerald-950 text-xs sm:text-sm">Lipa na M-Pesa Payment Details</h4>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 min-w-0">
+                    <div className="min-w-0">
                       <label className="block text-[11px] font-bold text-emerald-900 mb-1">M-Pesa Type</label>
                       <select
                         value={mpesaType}
@@ -749,7 +758,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                       </select>
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[11px] font-bold text-emerald-900 mb-1">Till / Paybill Number</label>
                       <input
                         type="text"
@@ -760,7 +769,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                       />
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[11px] font-bold text-emerald-900 mb-1">Registered Account Name</label>
                       <input
                         type="text"
@@ -773,22 +782,22 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   </div>
                 </div>
 
-                {/* WhatsApp & Call */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                {/* WhatsApp & Landmark */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 min-w-0">
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Direct WhatsApp Number (No spaces)
+                      Direct WhatsApp Number (e.g. 2547...)
                     </label>
                     <input
                       type="text"
                       value={customWhatsapp}
                       onChange={(e) => setCustomWhatsapp(e.target.value)}
                       placeholder="254712345678"
-                      className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-mono"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm font-mono"
                     />
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                       Exact Landmark / Building Spot
                     </label>
@@ -797,13 +806,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                       value={customLandmark}
                       onChange={(e) => setCustomLandmark(e.target.value)}
                       placeholder="e.g. Opposite Congo Shell, 1st Floor Shop 4"
-                      className="w-full p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                     />
                   </div>
                 </div>
 
                 {/* Description */}
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Detailed Business Description
                   </label>
@@ -811,12 +820,12 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                     rows={3}
                     value={customDescription}
                     onChange={(e) => setCustomDescription(e.target.value)}
-                    className="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+                    className="w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                   />
                 </div>
 
                 {/* Services List Tagging */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 min-w-0">
                   <div>
                     <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-0.5">
                       Services & Key Specialties
@@ -826,7 +835,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 min-w-0">
                     <input
                       type="text"
                       value={newServiceInput}
@@ -837,13 +846,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                           handleAddService();
                         }
                       }}
-                      placeholder="Type service (e.g. Free Estate Delivery, 24hr Emergency) & click Add"
-                      className="flex-1 p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs bg-white"
+                      placeholder="Type service & click Add"
+                      className="flex-1 min-w-0 p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs bg-white"
                     />
                     <button
                       type="button"
                       onClick={handleAddService}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs flex-shrink-0"
+                      className="px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs shrink-0"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Add</span>
@@ -851,8 +860,8 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   </div>
 
                   {/* Quick Suggested Tags */}
-                  <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
-                    <span className="text-slate-400 font-medium">Quick suggestions:</span>
+                  <div className="flex items-center gap-1.5 flex-wrap text-[11px] min-w-0">
+                    <span className="text-slate-400 font-medium">Suggestions:</span>
                     {['Free Estate Delivery', 'M-Pesa Accepted', 'Walk-ins Welcome', 'Open Late', 'Custom Orders', 'Bulk Discounts'].map((s) => (
                       <button
                         key={s}
@@ -876,11 +885,11 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                           key={sIdx}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 text-xs font-semibold border border-emerald-200"
                         >
-                          <span>{svc}</span>
+                          <span className="truncate max-w-[200px]">{svc}</span>
                           <button
                             type="button"
                             onClick={() => handleRemoveService(sIdx)}
-                            className="text-emerald-700 hover:text-rose-600 p-0.5 rounded-full hover:bg-rose-50 transition"
+                            className="text-emerald-700 hover:text-rose-600 p-0.5 rounded-full hover:bg-rose-50 transition shrink-0"
                             title="Remove service"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -889,13 +898,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[11px] text-slate-400 italic">No custom services added yet. Type above and click "Add".</p>
+                    <p className="text-[11px] text-slate-400 italic">No custom services added yet.</p>
                   )}
                 </div>
 
                 {/* Website & Social Links */}
-                <div className="space-y-2">
-                  <div>
+                <div className="space-y-2.5 min-w-0">
+                  <div className="min-w-0">
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">
                       🌐 Official Website / Landing Page (Optional)
                     </label>
@@ -908,8 +917,8 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 min-w-0">
+                    <div className="min-w-0">
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">
                         🎵 TikTok (@handle or link)
                       </label>
@@ -917,11 +926,11 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                         type="text"
                         value={tiktok}
                         onChange={(e) => setTiktok(e.target.value)}
-                        placeholder="@username or tiktok.com/..."
+                        placeholder="@username"
                         className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
                       />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">
                         📸 Instagram (@handle or link)
                       </label>
@@ -929,11 +938,11 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                         type="text"
                         value={instagram}
                         onChange={(e) => setInstagram(e.target.value)}
-                        placeholder="@username or instagram.com/..."
+                        placeholder="@username"
                         className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
                       />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">
                         📘 Facebook Page URL
                       </label>
@@ -941,42 +950,42 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                         type="text"
                         value={facebook}
                         onChange={(e) => setFacebook(e.target.value)}
-                        placeholder="facebook.com/yourpage"
+                        placeholder="facebook.com/page"
                         className="w-full p-2 text-xs rounded-lg border border-slate-300 font-medium"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Special Resident Offer / Promotion (Optional) - Monetization Feature */}
-                <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200/90 space-y-2.5">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <Tag className="w-4 h-4 text-amber-700" />
-                      <label className="text-xs font-bold text-amber-950 uppercase tracking-wider">
+                {/* Special Resident Offer / Promotion (Optional) */}
+                <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border border-amber-200/90 space-y-2.5 min-w-0">
+                  <div className="flex items-center justify-between flex-wrap gap-2 min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Tag className="w-4 h-4 text-amber-700 shrink-0" />
+                      <label className="text-xs font-bold text-amber-950 uppercase tracking-wider truncate">
                         Special Resident Offer / Promotion (Optional)
                       </label>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-200 text-amber-900 border border-amber-300">
-                      Coming Soon • Premium Spotlight Deal
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-200 text-amber-900 border border-amber-300 shrink-0">
+                      Spotlight Deal
                     </span>
                   </div>
                   <p className="text-[11px] text-amber-900 leading-relaxed">
-                    Once the platform goes fully live, businesses can subscribe to activate this exclusive estate discount banner. Pre-draft your offer below so it is ready for activation upon launch!
+                    Pre-draft an exclusive discount or resident deal for your listing:
                   </p>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <input
                       type="text"
                       value={offerTitle}
                       onChange={(e) => setOfferTitle(e.target.value)}
-                      placeholder="Offer title: e.g. 10% Off Weekend Car Wash or Free Delivery on 50kg Rice"
+                      placeholder="Offer title: e.g. 10% Off Weekend Car Wash"
                       className="w-full p-2 text-xs rounded-lg border border-amber-300 bg-white font-medium focus:ring-1 focus:ring-amber-500 focus:outline-none"
                     />
                     <input
                       type="text"
                       value={offerDescription}
                       onChange={(e) => setOfferDescription(e.target.value)}
-                      placeholder="Offer details: e.g. Mention KWEST Directory when ordering via WhatsApp or calling."
+                      placeholder="Offer details: e.g. Mention KWEST Directory when ordering."
                       className="w-full p-2 text-xs rounded-lg border border-amber-300 bg-white font-medium focus:ring-1 focus:ring-amber-500 focus:outline-none"
                     />
                   </div>
@@ -984,37 +993,45 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
               </div>
             )}
 
-            {/* Modal Actions */}
-            <div className="pt-4 border-t border-slate-200 flex items-center justify-between gap-3">
+            {/* Modal Actions Footer: Responsive stacking on mobile, side-by-side on desktop */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 min-w-0">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition text-center border border-slate-200 sm:border-transparent cursor-pointer"
               >
                 Cancel
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto min-w-0">
                 {activeTab === 'customize' && (
                   <button
                     type="button"
                     onClick={() => setActiveTab('claimant')}
-                    className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition"
+                    className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition text-center cursor-pointer"
                   >
-                    Back to Claimant Info
+                    ← Back to Claimant Info
                   </button>
                 )}
 
-                <Button
+                <button
                   id="submit-claim-button"
                   type="submit"
-                  variant="primary"
-                  size="md"
                   disabled={isSubmitting}
-                  icon={isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
-                  {isSubmitting ? 'Saving Claim to Supabase...' : 'Confirm Claim & Save Listing'}
-                </Button>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                      <span>Saving Claim...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4 shrink-0" />
+                      <span>Confirm Claim & Save Listing</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </form>

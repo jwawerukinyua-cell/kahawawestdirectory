@@ -65,10 +65,10 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
     <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x touch-pan-x font-sans">
       <button
         onClick={() => onSelectCategory('all')}
-        className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 flex-shrink-0 active:scale-95 ${
+        className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ease-out flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
           selectedCategory === 'all'
-            ? 'bg-[#24140E] text-white shadow-xs'
-            : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
+            ? 'bg-gradient-to-b from-[#3B0202] to-[#200101] text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.35),0_1px_2px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.25)] -translate-y-0.5'
+            : 'bg-white text-stone-700 hover:text-stone-900 hover:bg-stone-50 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:translate-y-0'
         }`}
       >
         <LayoutGrid className="w-3.5 h-3.5" />
@@ -83,10 +83,10 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
           <button
             key={cat.id}
             onClick={() => onSelectCategory(cat.id)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 flex-shrink-0 active:scale-95 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ease-out flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
               isSelected
-                ? 'bg-emerald-700 text-white font-bold shadow-xs'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-200'
+                ? 'bg-gradient-to-b from-emerald-600 to-emerald-800 text-white font-bold shadow-[0_4px_12px_rgba(5,150,105,0.4),0_1px_2px_rgba(0,0,0,0.3),inset_0_1px_1.5px_rgba(255,255,255,0.35)] -translate-y-0.5'
+                : 'bg-white text-stone-700 hover:text-stone-900 hover:bg-stone-50 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:translate-y-0'
             }`}
           >
             {getCategoryIcon(cat.icon)}

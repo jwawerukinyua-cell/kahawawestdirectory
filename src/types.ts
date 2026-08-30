@@ -123,16 +123,24 @@ export interface Category {
   count?: number;
 }
 
+export interface BusinessFeedbackResponse {
+  respondedBy: string;
+  responseDate: string;
+  message: string;
+}
+
 export interface CommunityFeedback {
   id: string;
   businessId: string;
   businessName: string;
   authorName: string;
+  serviceOrProduct?: string; // Service, product, or experience transacted e.g. "Laundry 10kg", "5-Seater Sofa Set", "Brake Pad Replacement"
   phoneOrEmail?: string;
   experience: 'Better' | 'Good' | 'Improve' | 'Bad' | 'Great' | 'Fair' | 'Poor';
   rating: number;
   tags?: string[];
   comment: string;
+  businessResponse?: BusinessFeedbackResponse;
   created_at: string;
 }
 

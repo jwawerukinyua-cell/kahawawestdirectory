@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Smartphone, CheckCircle2, Share, PlusSquare, ArrowUpRight, Sparkles } from 'lucide-react';
-import { BrandLogo } from '../ui/BrandLogo';
+import { Download, X, CheckCircle2, Share, PlusSquare, Sparkles, MoreVertical, Copy, Check, ExternalLink } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+declare global {
+  interface Window {
+    __kwestInstallPrompt?: BeforeInstallPromptEvent | null;
+  }
 }
 
 interface InstallAppModalProps {
@@ -13,50 +18,95 @@ interface InstallAppModalProps {
 }
 
 export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClose }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(
+    typeof window !== 'undefined' ? window.__kwestInstallPrompt || null : null
+  );
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [installSuccess, setInstallSuccess] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
-    // Check if iOS
+    // Detect iOS
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIosDevice);
 
-    // Check if already installed / standalone
+    // Detect if already installed / running in standalone mode
     const isAppStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as unknown as { standalone?: boolean }).standalone === true;
     setIsStandalone(isAppStandalone);
 
-    // Listen for beforeinstallprompt event
+    // Catch install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      window.__kwestInstallPrompt = promptEvent;
+      setDeferredPrompt(promptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      setInstallSuccess(true);
+      setDeferredPrompt(null);
+      window.__kwestInstallPrompt = null;
+      setTimeout(() => {
+        onClose();
+      }, 1500);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    if (window.__kwestInstallPrompt) {
+      setDeferredPrompt(window.__kwestInstallPrompt);
+    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [onClose]);
 
   if (!isOpen) return null;
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setInstallSuccess(true);
-        setTimeout(() => {
-          onClose();
-        }, 2000);
+    setIsInstalling(true);
+
+    const activePrompt = deferredPrompt || window.__kwestInstallPrompt;
+
+    if (activePrompt) {
+      try {
+        await activePrompt.prompt();
+        const { outcome } = await activePrompt.userChoice;
+        if (outcome === 'accepted') {
+          setInstallSuccess(true);
+          setTimeout(() => {
+            onClose();
+          }, 1500);
+        }
+      } catch (err) {
+        console.error('Installation prompt error:', err);
+        setShowInstructions(true);
+      } finally {
+        setDeferredPrompt(null);
+        window.__kwestInstallPrompt = null;
+        setIsInstalling(false);
       }
-      setDeferredPrompt(null);
+      return;
     }
+
+    // Fallback: If native prompt isn't fired (e.g. Chrome mobile, Safari, Samsung Internet, or iframe)
+    setIsInstalling(false);
+    setShowInstructions(true);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard?.writeText(window.location.origin || 'https://kahawawestdirectory.co.ke');
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   return (
@@ -67,166 +117,137 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
     >
       <div
         id="install-app-modal-container"
-        className="bg-[#2D0202] text-white w-full max-w-md rounded-2xl border border-emerald-500/40 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        className="bg-[#180101] text-white w-full max-w-sm rounded-3xl border border-emerald-500/30 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="bg-gradient-to-r from-[#4A0202] to-[#630303] px-5 py-4 flex items-center justify-between border-b border-emerald-500/30">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-emerald-400" />
-            <span className="font-display font-bold text-sm text-white tracking-wide uppercase">
-              Install KWEST App
-            </span>
+        {/* Modal Top Bar */}
+        <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+            <Sparkles className="w-4 h-4" />
+            <span>KWEST Web App</span>
           </div>
           <button
             id="install-modal-close-btn"
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-black/30 hover:bg-black/50 text-stone-300 hover:text-white transition"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition"
+            aria-label="Close modal"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6 space-y-6">
-          {/* App Icon / Logo Showcase */}
-          <div className="flex flex-col items-center text-center space-y-3">
-            <div className="relative group">
-              {/* Glowing ring around logo */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-amber-500 rounded-3xl blur-md opacity-75 group-hover:opacity-100 transition duration-300" />
-              
-              <div className="relative w-24 h-24 rounded-2xl bg-[#4A0202] border-2 border-emerald-400/80 shadow-xl overflow-hidden flex items-center justify-center p-1.5">
+        {/* Official Logo & App Identity */}
+        <div className="px-6 pt-2 pb-3 text-center flex flex-col items-center">
+          <div className="relative my-2">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-black border-2 border-amber-400/60 shadow-xl overflow-hidden flex items-center justify-center p-1">
+              <picture>
+                <source srcSet="/kwest-logo.webp" type="image/webp" />
                 <img
-                  src="/kwest-icon.png"
-                  alt="Kahawa West Directory Logo"
-                  className="w-full h-full object-cover rounded-xl"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/kwest-logo.png';
-                  }}
+                  src="/kwest-logo.png"
+                  alt="Official KWEST Logo"
+                  className="w-full h-full object-contain"
+                  width="112"
+                  height="112"
+                  decoding="async"
                 />
-              </div>
-
-              {/* Verified badge pill */}
-              <span className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-md border border-emerald-400 whitespace-nowrap">
-                Official KWEST Logo
-              </span>
+              </picture>
             </div>
-
-            <div className="pt-2">
-              <h3 className="text-xl font-bold font-display text-white tracking-tight">
-                Kahawa West Directory
-              </h3>
-              <p className="text-xs text-stone-300 mt-1 max-w-xs leading-relaxed">
-                Save directly to your phone’s Home Screen for fast 1-tap access to 50+ verified businesses, fundis, and emergency services.
-              </p>
-            </div>
+            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-emerald-700 text-emerald-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-400/50 shadow-sm whitespace-nowrap">
+              Official App
+            </span>
           </div>
 
-          {/* Home Screen Preview Badge */}
-          <div className="bg-black/40 rounded-xl p-3 border border-white/10 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#4A0202] border border-emerald-500/50 p-1 flex-shrink-0 flex items-center justify-center">
-              <img
-                src="/kwest-icon.png"
-                alt="KWEST Home Screen Icon"
-                className="w-full h-full object-cover rounded-lg"
-              />
-            </div>
-            <div className="text-left flex-1 min-w-0">
-              <div className="text-xs font-bold text-emerald-300 truncate">KWEST App Icon</div>
-              <div className="text-[11px] text-stone-400">Displays on Home Screen & App Drawer</div>
-            </div>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-          </div>
-
-          {/* Action / Instructions according to Platform */}
-          {installSuccess ? (
-            <div className="bg-emerald-950/80 border border-emerald-500 text-emerald-200 p-4 rounded-xl text-center space-y-1">
-              <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-400" />
-              <p className="text-sm font-bold">KWEST is installed!</p>
-              <p className="text-xs text-stone-300">The Kwest logo is now on your Home Screen.</p>
-            </div>
-          ) : isStandalone ? (
-            <div className="bg-emerald-950/60 border border-emerald-500/40 p-4 rounded-xl text-center space-y-1">
-              <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-400" />
-              <p className="text-xs font-bold text-emerald-200">Already Running as Installed App</p>
-              <p className="text-[11px] text-stone-400">You are accessing Kahawa West Directory with the official Kwest logo.</p>
-            </div>
-          ) : deferredPrompt ? (
-            <div className="space-y-3">
-              <button
-                id="install-native-prompt-btn"
-                onClick={handleInstallClick}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-sm shadow-lg shadow-emerald-950/60 flex items-center justify-center gap-2 active:scale-95 transition"
-              >
-                <Download className="w-4 h-4" />
-                <span>Add KWEST to Home Screen</span>
-              </button>
-              <p className="text-[11px] text-center text-stone-400">
-                1-click install • Instant offline directory loading
-              </p>
-            </div>
-          ) : isIOS ? (
-            <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-3">
-              <div className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Smartphone className="w-4 h-4" />
-                <span>How to Install on iPhone / iPad (Safari)</span>
-              </div>
-              <ol className="space-y-2.5 text-xs text-stone-300">
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                    1
-                  </span>
-                  <span>
-                    Tap the <strong>Share</strong> button <Share className="w-3.5 h-3.5 inline text-sky-300 mx-1" /> at the bottom or top of Safari.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                    2
-                  </span>
-                  <span>
-                    Scroll down and select <strong>'Add to Home Screen'</strong> <PlusSquare className="w-3.5 h-3.5 inline text-emerald-300 mx-1" />.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                    3
-                  </span>
-                  <span>
-                    Tap <strong>'Add'</strong> in the top right. The <strong>KWEST Logo</strong> will appear on your home screen!
-                  </span>
-                </li>
-              </ol>
-            </div>
-          ) : (
-            <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-2.5">
-              <div className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
-                <Smartphone className="w-4 h-4" />
-                <span>Installation Instructions (Android / Chrome / Desktop)</span>
-              </div>
-              <p className="text-xs text-stone-300 leading-relaxed">
-                Tap the browser menu <strong className="text-white">(⋮ 3 dots)</strong> at the top right and select <strong className="text-emerald-300">'Install app'</strong> or <strong className="text-emerald-300">'Add to Home Screen'</strong>.
-              </p>
-              <div className="text-[11px] text-stone-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>The Kwest logo will be used automatically as the icon.</span>
-              </div>
-            </div>
-          )}
+          <h3 className="text-lg sm:text-xl font-bold font-display text-white mt-3">
+            Kahawa West Directory
+          </h3>
+          <p className="text-xs text-stone-300 mt-1 max-w-[240px] leading-relaxed">
+            Install to your home screen for quick, 1-tap access to all verified local businesses & contacts.
+          </p>
         </div>
 
-        {/* Modal Footer with Cancel & Close */}
-        <div className="px-6 py-4 bg-black/40 border-t border-white/10 flex items-center justify-between gap-3 text-xs">
-          <span className="text-stone-400 text-[11px]">Official PWA • No App Store needed</span>
-          <div className="flex items-center gap-2">
-            <button
-              id="install-modal-cancel-btn"
-              onClick={onClose}
-              className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-stone-200 hover:text-white font-semibold transition active:scale-95"
-            >
-              Cancel / Not Now
-            </button>
-          </div>
+        {/* Main Action Area */}
+        <div className="px-6 pb-6 space-y-3">
+          {installSuccess ? (
+            <div className="bg-emerald-950/80 border border-emerald-500 text-emerald-200 p-4 rounded-2xl text-center space-y-1 animate-in zoom-in-95">
+              <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-400" />
+              <p className="text-sm font-bold">KWEST Installed Successfully!</p>
+              <p className="text-xs text-stone-300">Open it anytime directly from your phone's home screen.</p>
+            </div>
+          ) : isStandalone ? (
+            <div className="bg-emerald-950/60 border border-emerald-500/40 p-4 rounded-2xl text-center space-y-1">
+              <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-400" />
+              <p className="text-xs font-bold text-emerald-200">App Already Installed</p>
+              <p className="text-[11px] text-stone-400">You are browsing via the installed KWEST app.</p>
+            </div>
+          ) : showInstructions ? (
+            <div className="bg-white/10 rounded-2xl p-3.5 border border-amber-400/30 text-left text-xs text-stone-200 space-y-2.5 animate-in fade-in duration-200">
+              <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs uppercase tracking-wide">
+                <span>How to Add to Home Screen:</span>
+              </div>
+
+              {isIOS ? (
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-start gap-2 bg-black/40 p-2 rounded-xl border border-white/10">
+                    <Share className="w-4 h-4 text-sky-400 mt-0.5 shrink-0" />
+                    <span><strong>1.</strong> Tap the <strong>Share button</strong> in Safari (at bottom of screen).</span>
+                  </div>
+                  <div className="flex items-start gap-2 bg-black/40 p-2 rounded-xl border border-white/10">
+                    <PlusSquare className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong>2.</strong> Scroll down and select <strong>'Add to Home Screen'</strong>.</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-start gap-2 bg-black/40 p-2 rounded-xl border border-white/10">
+                    <MoreVertical className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                    <span><strong>1.</strong> Tap the <strong>three dots (⋮)</strong> menu in your browser's top-right corner.</span>
+                  </div>
+                  <div className="flex items-start gap-2 bg-black/40 p-2 rounded-xl border border-white/10">
+                    <Download className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong>2.</strong> Tap <strong>'Install app'</strong> or <strong>'Add to Home screen'</strong>.</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-1 flex items-center gap-2">
+                <button
+                  onClick={handleCopyLink}
+                  className="flex-1 py-2 px-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-stone-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition active:scale-95"
+                >
+                  {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedLink ? 'Link Copied!' : 'Copy Web Link'}</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition active:scale-95"
+                >
+                  Got It
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Primary Direct Install Button */}
+              <button
+                id="install-this-app-btn"
+                onClick={handleInstallClick}
+                disabled={isInstalling}
+                className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold text-sm shadow-lg shadow-emerald-950/70 flex items-center justify-center gap-2.5 transition duration-150 disabled:opacity-75 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>{isInstalling ? 'Opening Installer...' : 'Install This App'}</span>
+              </button>
+
+              {/* Cancel Button */}
+              <button
+                id="install-modal-cancel-btn"
+                onClick={onClose}
+                className="w-full py-2.5 rounded-xl text-stone-400 hover:text-white text-xs font-medium transition active:scale-95"
+              >
+                Cancel / Not Now
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -50,6 +50,9 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           referrerPolicy="no-referrer"
           loading="lazy"
+          decoding="async"
+          width="400"
+          height="192"
         />
 
         {/* Top Badges Overlay */}

@@ -38,8 +38,10 @@ export interface BusinessAdCampaign {
   targetZone: string;
   imageUrl: string;
   requestCustomDesign: boolean;
-  packageDuration: '7_days' | '30_days' | '90_days';
-  priceKsh: number;
+  packageDuration: '7_days' | '15_days' | '30_days';
+  placementPriceKsh: number;
+  creativeFeeKsh: number;
+  totalPriceKsh: number;
   status: 'active' | 'in_review' | 'scheduled';
   createdAt: string;
 }
@@ -105,28 +107,31 @@ const PACKAGES = [
     duration: '7 Days',
     price: 700,
     dailyRate: 'KSh 100/day',
-    desc: 'Perfect for weekend flash sales, quick clearance & immediate exposure',
+    desc: 'Ideal for weekend promos, testing the directory build, clearance offers & rapid local reach',
     isPopular: false,
+  },
+  {
+    id: '15_days' as const,
+    name: '15-Day Growth Sprint',
+    duration: '15 Days (2 Weeks)',
+    price: 1350,
+    dailyRate: 'KSh 90/day',
+    desc: 'Mid-term continuous exposure across peak estate buying cycles with targeted resident engagement',
+    isPopular: true,
   },
   {
     id: '30_days' as const,
     name: '30-Day Prime Leader',
-    duration: '30 Days',
+    duration: '30 Days (Full Month)',
     price: 2500,
     dailyRate: 'KSh 83/day',
-    desc: 'Full month high-impact visibility + Free custom HD graphic design & copywriting',
-    isPopular: true,
-  },
-  {
-    id: '90_days' as const,
-    name: '90-Day Authority Partner',
-    duration: '90 Days (3 Months)',
-    price: 6000,
-    dailyRate: 'KSh 66/day',
-    desc: 'Continuous #1 presence, rotating offers, estate WhatsApp group spotlights & VIP support',
+    desc: 'Maximum monthly dominance, top directory priority ranking & persistent neighborhood brand trust',
     isPopular: false,
   },
 ];
+
+// Optional creative graphic design and persuasive copywriting service fee
+export const AD_CREATION_FEE_KSH = 500;
 
 export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
   business,
@@ -149,8 +154,8 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
     return 'Kahawa West Resident Special';
   });
   const [targetZone, setTargetZone] = useState<string>('All Kahawa West');
-  const [selectedPackage, setSelectedPackage] = useState<'7_days' | '30_days' | '90_days'>('30_days');
-  const [requestCustomDesign, setRequestCustomDesign] = useState(true);
+  const [selectedPackage, setSelectedPackage] = useState<'7_days' | '15_days' | '30_days'>('15_days');
+  const [requestCustomDesign, setRequestCustomDesign] = useState(false);
   const [adImage, setAdImage] = useState<string>(() => {
     return business.heroImage || (business.galleryImages && business.galleryImages[0]) || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80';
   });
@@ -160,6 +165,8 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
   if (!isOpen) return null;
 
   const currentPkg = PACKAGES.find((p) => p.id === selectedPackage) || PACKAGES[1];
+  const creativeFee = requestCustomDesign ? AD_CREATION_FEE_KSH : 0;
+  const totalAmountKsh = currentPkg.price + creativeFee;
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -188,7 +195,9 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
       imageUrl: adImage,
       requestCustomDesign,
       packageDuration: selectedPackage,
-      priceKsh: currentPkg.price,
+      placementPriceKsh: currentPkg.price,
+      creativeFeeKsh: creativeFee,
+      totalPriceKsh: totalAmountKsh,
       status: 'active',
       createdAt: new Date().toISOString(),
     };
@@ -207,23 +216,25 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
     // Format WhatsApp prefill message for instant activation
     const formatName = AD_FORMATS.find((f) => f.id === selectedFormat)?.title || selectedFormat;
     const waText = encodeURIComponent(
-      `*🚀 KWEST AD CAMPAIGN BOOKING*\n\n` +
+      `*🚀 KWEST AD CAMPAIGN BOOKING (KWEST MEDIA)*\n\n` +
       `*Business:* ${business.name} (${business.zone})\n` +
       `*Ad Format:* ${formatName}\n` +
-      `*Duration:* ${currentPkg.name} (${currentPkg.duration}) - KSh ${currentPkg.price}\n` +
+      `*Campaign Duration:* ${currentPkg.name} (${currentPkg.duration}) — KSh ${currentPkg.price}\n` +
+      `*Ad Creation & Copywriting Service:* ${requestCustomDesign ? `YES (+KSh ${AD_CREATION_FEE_KSH})` : 'NO (Merchant provides graphics)'}\n` +
+      `*TOTAL AMOUNT PAYABLE (Upfront):* KSh ${totalAmountKsh.toLocaleString()}\n\n` +
+      `*💳 Payment Details:* Paybill: 247247 | Acc No: 537409 | Acc Name: Ukweli Products\n\n` +
       `*Headline:* "${headline.trim()}"\n` +
       `*Description:* "${description.trim()}"\n` +
       `*Badge:* "${badgeText.trim()}"\n` +
       `*CTA Action:* ${ctaText}\n` +
-      `*Target Estate Zone:* ${targetZone}\n` +
-      `*Custom HD Graphic Requested:* ${requestCustomDesign ? 'YES (Free for verified merchants)' : 'NO (Using uploaded asset)'}\n\n` +
-      `Please review and activate my ad placement on Kahawa West Directory!`
+      `*Target Estate Zone:* ${targetZone}\n\n` +
+      `I understand that all ads are payable upfront. Please verify my payment and activate the campaign.`
     );
 
     setIsSuccess(true);
 
     setTimeout(() => {
-      window.open(`https://wa.me/254712345678?text=${waText}`, '_blank', 'noopener,noreferrer');
+      window.open(`https://wa.me/254764405842?text=${waText}`, '_blank', 'noopener,noreferrer');
     }, 1200);
   };
 
@@ -277,18 +288,36 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
               <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
                 Opening WhatsApp now with your ad copy and creative specs to finalize your live directory placement with the KWEST desk.
               </p>
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-left space-y-2 text-xs">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-left space-y-2.5 text-xs">
                 <div className="flex justify-between text-stone-300">
                   <span>Merchant:</span>
                   <strong className="text-white">{business.name}</strong>
                 </div>
                 <div className="flex justify-between text-stone-300">
-                  <span>Selected Package:</span>
+                  <span>Campaign Package:</span>
                   <strong className="text-amber-300">{currentPkg.name} ({currentPkg.duration})</strong>
                 </div>
                 <div className="flex justify-between text-stone-300">
-                  <span>Total Amount:</span>
-                  <strong className="text-emerald-400 font-mono text-sm">KSh {currentPkg.price.toLocaleString()}</strong>
+                  <span>Directory Placement:</span>
+                  <span className="text-stone-200 font-mono">KSh {currentPkg.price.toLocaleString()}</span>
+                </div>
+                {requestCustomDesign && (
+                  <div className="flex justify-between text-amber-300">
+                    <span>Ad Creation &amp; Copywriting:</span>
+                    <span className="font-mono">+KSh {AD_CREATION_FEE_KSH.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-white/10 flex justify-between items-center">
+                  <span className="font-bold text-white text-xs">Total Amount (Upfront):</span>
+                  <strong className="text-emerald-400 font-mono text-base">KSh {totalAmountKsh.toLocaleString()}</strong>
+                </div>
+                <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-[11px] text-emerald-200 space-y-1">
+                  <div className="font-bold text-white flex items-center gap-1.5">
+                    <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Lipa na M-Pesa (KWEST MEDIA)</span>
+                  </div>
+                  <p><strong>PAYBILL:</strong> 247247 • <strong>ACCOUNT NO:</strong> 537409</p>
+                  <p><strong>ACCOUNT NAME:</strong> Ukweli Products</p>
                 </div>
               </div>
               <div className="pt-2 flex justify-center gap-3">
@@ -480,13 +509,13 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
                       />
                     </div>
 
-                    {/* Free KWEST Creative Design Offer */}
+                    {/* Custom KWEST Creative Design & Copywriting Add-on */}
                     <div
                       onClick={() => setRequestCustomDesign(!requestCustomDesign)}
                       className={`p-3 rounded-xl border transition flex items-start gap-2.5 cursor-pointer ${
                         requestCustomDesign
-                          ? 'bg-amber-400/15 border-amber-400/50 text-amber-200'
-                          : 'bg-black/40 border-white/10 text-stone-400'
+                          ? 'bg-amber-400/15 border-amber-400/60 text-amber-200'
+                          : 'bg-black/40 border-white/10 text-stone-400 hover:border-white/20'
                       }`}
                     >
                       <div className="pt-0.5">
@@ -498,11 +527,16 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
                         />
                       </div>
                       <div className="space-y-0.5 text-xs">
-                        <strong className="text-white block font-bold">
-                          Free Custom HD Graphic &amp; Copywriting Design
-                        </strong>
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-white block font-bold">
+                            Create Ad For Me (HD Graphics &amp; Copywriting)
+                          </strong>
+                          <span className="px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 font-mono font-bold text-[10px] whitespace-nowrap border border-amber-400/30">
+                            +KSh {AD_CREATION_FEE_KSH} (Separate Fee)
+                          </span>
+                        </div>
                         <p className="text-[11px] text-stone-300 leading-relaxed">
-                          Our in-house KWEST creative studio will polish your copy and create a 1200×400 HD banner tailored to {business.name} at no extra cost.
+                          Don&apos;t have ready artwork? Our KWEST creative team will professionally craft persuasive promotional copy and design a high-converting HD banner graphic for your shop.
                         </p>
                       </div>
                     </div>
@@ -574,7 +608,7 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
                             {badgeText || 'Special Deal'}
                           </span>
                           <span className="text-[10px] text-amber-300 font-bold flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> Ends in 7 Days
+                            <Clock className="w-3 h-3" /> Active Campaign
                           </span>
                         </div>
                         <h5 className="font-bold text-sm text-white">{headline}</h5>
@@ -629,10 +663,15 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
 
                   {/* Step 4: Choose Package Duration */}
                   <div className="space-y-2 pt-2">
-                    <h4 className="font-bold text-amber-300 uppercase tracking-wider text-xs flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>Step 4: Campaign Package</span>
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-amber-300 uppercase tracking-wider text-xs flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>Step 4: Campaign Duration</span>
+                      </h4>
+                      <span className="text-[10px] text-amber-200 font-bold bg-amber-500/20 px-2 py-0.5 rounded border border-amber-400/30">
+                        Payable Upfront
+                      </span>
+                    </div>
 
                     <div className="grid grid-cols-3 gap-2">
                       {PACKAGES.map((pkg) => {
@@ -664,17 +703,50 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Lipa na M-Pesa Info Box */}
-                  <div className="p-3 rounded-xl bg-white/5 border border-emerald-500/30 text-stone-300 text-[11px] flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      <span>
-                        <strong>Lipa na M-Pesa Buy Goods:</strong> 984521 (KWEST Media)
-                      </span>
+                  {/* Pricing Breakdown & Lipa na M-Pesa Info Box */}
+                  <div className="p-3.5 rounded-xl bg-white/5 border border-emerald-500/40 text-stone-300 text-xs space-y-2.5">
+                    {/* Itemized Calculation */}
+                    <div className="space-y-1 text-[11px]">
+                      <div className="flex justify-between items-center text-stone-300">
+                        <span>Directory Placement ({currentPkg.duration}):</span>
+                        <span className="font-mono text-white">KSh {currentPkg.price.toLocaleString()}</span>
+                      </div>
+                      {requestCustomDesign ? (
+                        <div className="flex justify-between items-center text-amber-300">
+                          <span>Ad Creative &amp; Copywriting Fee:</span>
+                          <span className="font-mono font-bold">+KSh {AD_CREATION_FEE_KSH.toLocaleString()}</span>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center text-stone-400 text-[10px]">
+                          <span>Ad Creative &amp; Copywriting:</span>
+                          <span>Own Artwork Provided (KSh 0)</span>
+                        </div>
+                      )}
+                      <div className="pt-1.5 border-t border-white/10 flex justify-between items-center">
+                        <span className="font-bold text-white text-xs">Total Amount Due (Upfront):</span>
+                        <span className="font-mono font-bold text-base text-emerald-400">
+                          KSh {totalAmountKsh.toLocaleString()}
+                        </span>
+                      </div>
                     </div>
-                    <span className="font-mono font-bold text-emerald-300 whitespace-nowrap">
-                      Total: KSh {currentPkg.price.toLocaleString()}
-                    </span>
+
+                    {/* Official Paybill Instructions */}
+                    <div className="p-2.5 rounded-lg bg-emerald-950/70 border border-emerald-500/50 text-[11px] text-emerald-100 space-y-1 font-sans">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-emerald-300 flex items-center gap-1.5">
+                          <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Lipa na M-Pesa (KWEST MEDIA)</span>
+                        </span>
+                        <span className="text-[9px] font-black uppercase bg-emerald-500/30 text-emerald-200 px-1.5 py-0.5 rounded border border-emerald-400/40">
+                          All Ads Paid Upfront
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1 text-[11px] pt-0.5">
+                        <p><strong>PAYBILL:</strong> <span className="font-mono text-amber-300 font-bold">247247</span></p>
+                        <p><strong>ACC NO:</strong> <span className="font-mono text-amber-300 font-bold">537409</span></p>
+                      </div>
+                      <p className="text-[10px] text-stone-300"><strong>ACC NAME:</strong> Ukweli Products</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -686,9 +758,10 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
         {!isSuccess && (
           <div className="bg-[#240101] px-5 sm:px-6 py-3.5 border-t border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
             <div className="text-xs text-stone-300">
-              Selected: <strong className="text-amber-300">{currentPkg.name}</strong> •{' '}
-              <span className="text-emerald-400 font-bold font-mono">
-                KSh {currentPkg.price.toLocaleString()} ({currentPkg.dailyRate})
+              Selected: <strong className="text-amber-300">{currentPkg.name}</strong>
+              {requestCustomDesign && <span className="text-amber-200"> + Creative Ad Design</span>} •{' '}
+              <span className="text-emerald-400 font-bold font-mono text-sm">
+                Total KSh {totalAmountKsh.toLocaleString()} (Upfront)
               </span>
             </div>
 
@@ -707,7 +780,7 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
                 className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-stone-950 font-black text-xs transition shadow-lg flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer"
               >
                 <Megaphone className="w-3.5 h-3.5 text-stone-950" />
-                <span>Launch &amp; Activate Ad</span>
+                <span>Book &amp; Pay KSh {totalAmountKsh.toLocaleString()} Upfront</span>
                 <ArrowRight className="w-3.5 h-3.5 text-stone-950" />
               </button>
             </div>

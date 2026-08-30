@@ -159,16 +159,24 @@ export const Hero: React.FC<HeroProps> = ({
       id="home-hero-banner"
       className="relative bg-[#3B0202] text-white rounded-3xl overflow-hidden shadow-2xl mb-8 border border-[#630303]"
     >
-      {/* Background Image: Directly displays /hero.jpg (Kahawa West Bypass Roundabout) with high optical clarity */}
+      {/* Background Image: Optimized WebP + JPG fallback with high LCP priority */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         {!heroImgError ? (
-          <img
-            src="/hero.jpg"
-            alt="Kahawa West Bypass Roundabout Landmark"
-            className="w-full h-full object-cover object-center opacity-95 transition-all duration-300 transform scale-100 filter brightness-105 contrast-105"
-            referrerPolicy="no-referrer"
-            onError={() => setHeroImgError(true)}
-          />
+          <picture>
+            <source srcSet="/hero.webp" type="image/webp" />
+            <img
+              src="/hero.jpg"
+              alt="Kahawa West Bypass Roundabout Landmark"
+              className="w-full h-full object-cover object-center opacity-95 transition-all duration-300 transform scale-100 filter brightness-105 contrast-105"
+              referrerPolicy="no-referrer"
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
+              width="1200"
+              height="600"
+              onError={() => setHeroImgError(true)}
+            />
+          </picture>
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#630303] via-[#3B0202] to-[#0D6E44]" />
         )}
@@ -191,12 +199,6 @@ export const Hero: React.FC<HeroProps> = ({
       <div className="relative z-10 p-5 sm:p-8 lg:p-10">
         {/* Top Header & Search Area */}
         <div className="max-w-3xl mx-auto text-center mb-8 sm:mb-10">
-          {/* Brand Directory Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-sans font-semibold bg-[#1F0101]/90 text-emerald-300 border border-emerald-500/40 mb-4 shadow-lg backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Official Kahawa West Business Directory</span>
-          </div>
-
           {/* Main Title */}
           <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-black sm:text-black mb-3 sm:mb-4 leading-tight drop-shadow-sm bg-white/95 px-4 py-2 rounded-2xl inline-block border border-stone-300/80 shadow-md">
             Find Verified Local Businesses in{' '}
@@ -206,8 +208,16 @@ export const Hero: React.FC<HeroProps> = ({
           </h1>
 
           {/* Description */}
-          <div className="font-sans text-black text-xs sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed font-medium bg-white/90 px-4 py-2.5 rounded-xl border border-stone-200/80 shadow-sm">
+          <div className="font-sans text-black text-xs sm:text-base mb-3 sm:mb-4 max-w-2xl mx-auto leading-relaxed font-medium bg-white/90 px-4 py-2.5 rounded-xl border border-stone-200/80 shadow-sm">
             <span className="font-bold text-[#630303]">Kahawa West, Finally Organized.</span> Find trusted businesses, discover hidden local gems, read community updates, and support businesses around you—all in one trusted place.
+          </div>
+
+          {/* Brand Directory Badge positioned between description and search bar */}
+          <div className="mb-4 sm:mb-5">
+            <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-sans font-semibold bg-[#1F0101]/90 text-emerald-300 border border-emerald-500/40 shadow-lg backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Official Kahawa West Business Directory</span>
+            </div>
           </div>
 
           {/* Search Controls & Sleek Action Button */}
@@ -303,18 +313,18 @@ export const Hero: React.FC<HeroProps> = ({
                   key={cat.id}
                   id={`cat-card-${cat.id}`}
                   onClick={() => onSelectCategory(isSelected ? 'all' : cat.id)}
-                  className={`group relative rounded-xl p-2.5 sm:p-3 border transition-all duration-200 cursor-pointer justify-between active:scale-[0.98] ${
+                  className={`group relative rounded-xl p-2.5 sm:p-3 transition-all duration-200 ease-out cursor-pointer justify-between ${
                     !isPinned ? 'hidden lg:flex flex-col' : 'flex flex-col'
                   } ${
                     isSelected
-                      ? 'bg-[#630303]/95 border-rose-400 text-white shadow-xl ring-2 ring-rose-400/50 backdrop-blur-md'
+                      ? 'bg-gradient-to-b from-[#800707] to-[#450202] text-white shadow-[0_8px_20px_rgba(0,0,0,0.7),0_2px_6px_rgba(225,29,72,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.4),inset_0_-2px_4px_rgba(0,0,0,0.5)] -translate-y-0.5'
                       : isPinned
-                      ? 'bg-black/55 hover:bg-[#630303]/90 text-white border-amber-400/40 hover:border-amber-400 shadow-sm hover:shadow-xl backdrop-blur-md ring-1 ring-amber-400/20'
-                      : 'bg-black/40 hover:bg-[#630303]/85 text-white border-white/20 hover:border-white/40 shadow-sm hover:shadow-xl backdrop-blur-md'
+                      ? 'bg-gradient-to-b from-stone-900/95 via-stone-900/90 to-black text-white shadow-[0_5px_14px_rgba(0,0,0,0.65),0_1px_3px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(251,191,36,0.45),inset_0_-2px_3px_rgba(0,0,0,0.6)] hover:bg-gradient-to-b hover:from-[#750505] hover:to-[#380101] hover:shadow-[0_10px_24px_rgba(0,0,0,0.8),0_2px_6px_rgba(251,191,36,0.3),inset_0_1px_1.5px_rgba(251,191,36,0.65)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_2px_6px_rgba(0,0,0,0.7),inset_0_1px_2px_rgba(0,0,0,0.5)]'
+                      : 'bg-gradient-to-b from-stone-900/90 via-stone-900/80 to-black text-white shadow-[0_4px_12px_rgba(0,0,0,0.6),0_1px_3px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-2px_3px_rgba(0,0,0,0.6)] hover:bg-gradient-to-b hover:from-[#750505] hover:to-[#380101] hover:shadow-[0_10px_22px_rgba(0,0,0,0.75),0_2px_5px_rgba(0,0,0,0.8),inset_0_1px_1.5px_rgba(255,255,255,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_2px_6px_rgba(0,0,0,0.7),inset_0_1px_2px_rgba(0,0,0,0.5)]'
                   }`}
                 >
                   {isPinned && !isSelected && (
-                    <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide bg-amber-400 text-stone-950 flex items-center gap-0.5 shadow-xs">
+                    <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-extrabold uppercase tracking-wide bg-amber-400 text-stone-950 flex items-center gap-0.5 shadow-xs">
                       <Star className="w-2.5 h-2.5 fill-stone-950" />
                       <span>Top</span>
                     </span>
@@ -322,11 +332,11 @@ export const Hero: React.FC<HeroProps> = ({
 
                   <div className="flex items-start gap-2 sm:gap-2.5">
                     <div
-                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br ${cat.color} text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform border border-white/25`}
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br ${cat.color} text-white flex items-center justify-center flex-shrink-0 shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] group-hover:scale-105 transition-transform`}
                     >
                       {getCategoryIcon(cat.icon)}
                     </div>
-                    <div className="min-w-0 flex-1 pr-3">
+                    <div className="min-w-0 flex-1">
                       <h3
                         className={`font-display font-bold text-[11px] sm:text-xs leading-snug truncate transition-colors duration-150 ${
                           isSelected
@@ -360,7 +370,7 @@ export const Hero: React.FC<HeroProps> = ({
                 type="button"
                 id="toggle-more-categories-drawer"
                 onClick={() => setIsMoreCategoriesOpen(!isMoreCategoriesOpen)}
-                className="w-full py-2.5 px-3.5 rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 text-stone-200 hover:text-white text-xs font-bold transition flex items-center justify-between backdrop-blur-md active:scale-[0.99]"
+                className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-b from-stone-900/90 to-black/95 hover:from-[#5E0505] hover:to-[#2B0101] text-stone-200 hover:text-white text-xs font-bold transition-all duration-200 ease-out flex items-center justify-between shadow-[0_4px_12px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.15)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.75),inset_0_1px_1px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 active:translate-y-0"
               >
                 <div className="flex items-center gap-2">
                   <Folder className="w-3.5 h-3.5 text-rose-400" />
@@ -410,15 +420,15 @@ export const Hero: React.FC<HeroProps> = ({
                               key={cat.id}
                               id={`mobile-extra-cat-${cat.id}`}
                               onClick={() => onSelectCategory(isSelected ? 'all' : cat.id)}
-                              className={`group rounded-xl p-2.5 border transition-all duration-200 cursor-pointer flex flex-col justify-between active:scale-[0.98] ${
+                              className={`group rounded-xl p-2.5 transition-all duration-200 ease-out cursor-pointer flex flex-col justify-between ${
                                 isSelected
-                                  ? 'bg-[#630303]/95 border-rose-400 text-white shadow-xl ring-2 ring-rose-400/50 backdrop-blur-md'
-                                  : 'bg-black/40 hover:bg-[#630303]/85 text-white border-white/20 hover:border-white/40 backdrop-blur-md'
+                                  ? 'bg-gradient-to-b from-[#800707] to-[#450202] text-white shadow-[0_6px_16px_rgba(0,0,0,0.7),0_2px_4px_rgba(225,29,72,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.35)] -translate-y-0.5'
+                                  : 'bg-gradient-to-b from-stone-900/90 to-black text-white shadow-[0_4px_10px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.18)] hover:bg-gradient-to-b hover:from-[#750505] hover:to-[#380101] hover:shadow-[0_8px_18px_rgba(0,0,0,0.75),inset_0_1px_1.5px_rgba(255,255,255,0.3)] hover:-translate-y-0.5 active:translate-y-0'
                               }`}
                             >
                               <div className="flex items-start gap-2">
                                 <div
-                                  className={`w-6 h-6 rounded-lg bg-gradient-to-br ${cat.color} text-white flex items-center justify-center flex-shrink-0 shadow-sm border border-white/20`}
+                                  className={`w-6 h-6 rounded-lg bg-gradient-to-br ${cat.color} text-white flex items-center justify-center flex-shrink-0 shadow-[0_2px_4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)]`}
                                 >
                                   {getCategoryIcon(cat.icon)}
                                 </div>
@@ -465,15 +475,15 @@ export const Hero: React.FC<HeroProps> = ({
                               key={cat.id}
                               id={`empty-cat-card-${cat.id}`}
                               onClick={() => onSelectCategory(isSelected ? 'all' : cat.id)}
-                              className={`group rounded-xl p-2 sm:p-2.5 border transition-all duration-200 cursor-pointer flex flex-col justify-between active:scale-[0.98] ${
+                              className={`group rounded-xl p-2 sm:p-2.5 transition-all duration-200 ease-out cursor-pointer flex flex-col justify-between ${
                                 isSelected
-                                  ? 'bg-[#630303]/95 border-rose-400 text-white shadow-xl ring-2 ring-rose-400/50 backdrop-blur-md'
-                                  : 'bg-black/25 hover:bg-[#630303]/70 text-stone-300 hover:text-white border-white/10 hover:border-white/30 backdrop-blur-sm'
+                                  ? 'bg-gradient-to-b from-[#800707] to-[#450202] text-white shadow-[0_6px_16px_rgba(0,0,0,0.7),inset_0_1px_1.5px_rgba(255,255,255,0.35)] -translate-y-0.5'
+                                  : 'bg-gradient-to-b from-stone-950/85 to-black/90 text-stone-300 hover:text-white shadow-[0_3px_8px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)] hover:bg-gradient-to-b hover:from-[#6B0404] hover:to-[#2B0101] hover:shadow-[0_6px_16px_rgba(0,0,0,0.7),inset_0_1px_1.5px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 active:translate-y-0'
                               }`}
                             >
                               <div className="flex items-start gap-2">
                                 <div
-                                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-br ${cat.color} opacity-80 text-white flex items-center justify-center flex-shrink-0 border border-white/20`}
+                                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-br ${cat.color} opacity-85 text-white flex items-center justify-center flex-shrink-0 shadow-[0_2px_4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)]`}
                                 >
                                   {getCategoryIcon(cat.icon)}
                                 </div>

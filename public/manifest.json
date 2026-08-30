@@ -7,33 +7,21 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#3B0202",
-  "theme_color": "#3B0202",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "categories": ["business", "shopping", "utilities", "lifestyle"],
   "lang": "en",
   "dir": "ltr",
   "icons": [
     {
-      "src": "/kwest-icon.png",
+      "src": "/kwest-logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/kwest-icon.png",
+      "src": "/kwest-logo.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/kwest-icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/kwest-icon.png",
-      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
@@ -42,6 +30,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/kwest-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

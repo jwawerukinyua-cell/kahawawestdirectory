@@ -35,12 +35,17 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         {/* About photo */}
         {!aboutImgError && (
           <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-[#3B0202]">
-            <img
-              src="/hero.jpg"
-              alt="Kahawa West Community"
-              className="w-full h-full object-cover"
-              onError={() => setAboutImgError(true)}
-            />
+            <picture>
+              <source srcSet="/hero.webp" type="image/webp" />
+              <img
+                src="/hero.jpg"
+                alt="Kahawa West Community"
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onError={() => setAboutImgError(true)}
+              />
+            </picture>
             <div className="absolute inset-0 bg-gradient-to-t from-[#FAF8F5] via-transparent to-transparent" />
           </div>
         )}

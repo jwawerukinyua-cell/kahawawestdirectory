@@ -27,7 +27,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-200 hover:text-emerald-300 active:scale-95 transition"
         >
           <Search className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px] font-medium tracking-tight">Explore</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider">EXPLORE</span>
         </button>
 
         {/* 2. Estates & Zones */}
@@ -37,7 +37,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-200 hover:text-emerald-300 active:scale-95 transition"
         >
           <MapPin className="w-5 h-5 mb-0.5 text-emerald-300" />
-          <span className="text-[10px] font-medium tracking-tight">Estates</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider">ESTATES</span>
         </button>
 
         {/* 3. List Business (Center Prominent Button in Coffee Green) */}
@@ -49,7 +49,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <div className="w-12 h-12 rounded-full bg-emerald-700 text-white flex items-center justify-center shadow-lg shadow-emerald-950/60 border-2 border-[#4A0202] active:scale-90 transition">
             <PlusCircle className="w-6 h-6 stroke-[2.5]" />
           </div>
-          <span className="text-[10px] font-bold text-emerald-300 tracking-tight mt-0.5">List Shop</span>
+          <span className="text-[9px] font-extrabold text-emerald-300 uppercase tracking-wider mt-0.5">LIST SHOP</span>
         </button>
 
         {/* 4. Community Hub */}
@@ -59,7 +59,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-200 hover:text-sky-300 active:scale-95 transition"
         >
           <Users className="w-5 h-5 mb-0.5 text-sky-300" />
-          <span className="text-[10px] font-medium tracking-tight">Community</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider">COMMUNITY</span>
         </button>
 
         {/* 5. Emergency */}
@@ -69,7 +69,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-stone-200 hover:text-red-300 active:scale-95 transition"
         >
           <PhoneCall className="w-5 h-5 mb-0.5 text-rose-400" />
-          <span className="text-[10px] font-medium tracking-tight">Hotlines</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider">HOTLINES</span>
         </button>
       </div>
     </div>

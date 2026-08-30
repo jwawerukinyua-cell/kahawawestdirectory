@@ -19,7 +19,7 @@ export const CommunityFeedbackModal: React.FC<CommunityFeedbackModalProps> = ({
   onFeedbackSubmitted,
 }) => {
   const [authorName, setAuthorName] = useState('');
-  const [phoneOrEmail, setPhoneOrEmail] = useState('');
+  const [serviceOrProduct, setServiceOrProduct] = useState('');
   const [experience, setExperience] = useState<ExperienceRating>('Better');
   const [rating, setRating] = useState<number>(5);
   const [comment, setComment] = useState('');
@@ -38,8 +38,8 @@ export const CommunityFeedbackModal: React.FC<CommunityFeedbackModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authorName || !comment) {
-      alert('Please enter your name and comments.');
+    if (!authorName.trim() || !comment.trim() || !serviceOrProduct.trim()) {
+      alert('Please enter your name, the service or product transacted, and your review comments.');
       return;
     }
 
@@ -49,12 +49,12 @@ export const CommunityFeedbackModal: React.FC<CommunityFeedbackModalProps> = ({
       id: `fb-${Date.now()}`,
       businessId: business.id,
       businessName: business.name,
-      authorName,
-      phoneOrEmail,
+      authorName: authorName.trim(),
+      serviceOrProduct: serviceOrProduct.trim(),
       experience,
       rating,
       tags: ['Verified Resident', experience],
-      comment,
+      comment: comment.trim(),
       created_at: new Date().toISOString(),
     };
 
@@ -148,28 +148,29 @@ export const CommunityFeedbackModal: React.FC<CommunityFeedbackModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Your Name *
+                  Your Name / Resident Tag *
                 </label>
                 <input
                   type="text"
                   required
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
-                  placeholder="e.g., Wangari or Mama Liam"
-                  className="w-full px-3.5 py-2 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm bg-white"
+                  placeholder="e.g., Wangari (Jacaranda) or Baba Stacy"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm bg-white"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Phone / Estate Zone (Optional)
+                  Service or Product Bought *
                 </label>
                 <input
                   type="text"
-                  value={phoneOrEmail}
-                  onChange={(e) => setPhoneOrEmail(e.target.value)}
-                  placeholder="e.g., Jacaranda Resident"
-                  className="w-full px-3.5 py-2 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm bg-white"
+                  required
+                  value={serviceOrProduct}
+                  onChange={(e) => setServiceOrProduct(e.target.value)}
+                  placeholder="e.g., Mbuzi Choma 1kg, 5-Seater Sofa, Haircut"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm bg-white"
                 />
               </div>
             </div>

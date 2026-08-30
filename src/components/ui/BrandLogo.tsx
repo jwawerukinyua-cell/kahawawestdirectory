@@ -26,34 +26,32 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
     <div className={`inline-flex items-center gap-3 select-none ${className}`}>
       {/* Brand Icon / Logo */}
       <div
-        className="relative rounded-2xl flex items-center justify-center overflow-hidden border border-emerald-500/40 shadow-md flex-shrink-0 bg-[#4A0202]"
+        className="relative rounded-2xl flex items-center justify-center overflow-hidden border border-emerald-500/40 shadow-md flex-shrink-0 bg-black"
         style={{
           width: `${iconDimensions.width}px`,
           height: `${iconDimensions.height}px`,
         }}
       >
-        {!imgError ? (
-          <img
-            src="/kwest-icon.png"
-            alt="Kahawa West Directory"
-            className="w-full h-full object-cover"
-            onError={() => {
-              setImgError(true);
-            }}
-          />
-        ) : (
+        <picture>
+          <source srcSet="/kwest-logo.webp" type="image/webp" />
           <img
             src="/kwest-logo.png"
             alt="Kahawa West Directory"
             className="w-full h-full object-contain"
+            width={iconDimensions.width}
+            height={iconDimensions.height}
+            decoding="async"
             onError={(e) => {
-              (e.target as HTMLElement).style.display = 'none';
+              if (!imgError) {
+                setImgError(true);
+                (e.target as HTMLImageElement).src = '/kwest-icon.png';
+              }
             }}
           />
-        )}
+        </picture>
       </div>
 
-      {/* Brand Text: Prominent 'Kahawa West' and 'Official Kahawa West Business Directory' */}
+      {/* Brand Text: Prominent 'Kahawa West' */}
       {showText && (
         <div className="flex flex-col justify-center leading-tight">
           <span
@@ -62,9 +60,6 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             }`}
           >
             Kahawa West
-          </span>
-          <span className="hidden lg:block text-[11px] sm:text-xs font-sans text-rose-200/90 font-medium tracking-tight">
-            Official Kahawa West Business Directory
           </span>
         </div>
       )}

@@ -1,6 +1,6 @@
 {
   "name": "Kahawa West Directory",
-  "description": "Kahawa West, Finally Organized. Find trusted businesses, discover hidden local gems, read community updates, and support businesses around you—all in one trusted place.",
+  "description": "Find trusted Kahawa West businesses, domestic specialists, verified local contacts, emergency hotlines, and estate updates in one community directory.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

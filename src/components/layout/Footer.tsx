@@ -53,10 +53,10 @@ export const Footer: React.FC<FooterProps> = ({
               id="footer-merchants-toggle-btn"
               type="button"
               onClick={() => toggleSection('merchants')}
-              className="w-full flex items-center justify-between text-left font-display font-bold text-white uppercase tracking-wider text-xs mb-3 text-emerald-300 group py-1"
+              className="w-full flex items-center justify-between text-left font-display font-black text-white uppercase tracking-wider text-xs mb-3 text-emerald-300 group py-1"
               aria-expanded={openSections.merchants}
             >
-              <span>Merchants & Community</span>
+              <span>MERCHANTS & COMMUNITY</span>
               <ChevronDown
                 className={`w-4 h-4 text-emerald-300/80 transition-transform duration-200 group-hover:text-emerald-200 ${
                   openSections.merchants ? 'rotate-180' : ''
@@ -111,10 +111,10 @@ export const Footer: React.FC<FooterProps> = ({
               id="footer-legal-toggle-btn"
               type="button"
               onClick={() => toggleSection('legal')}
-              className="w-full flex items-center justify-between text-left font-display font-bold text-white uppercase tracking-wider text-xs mb-3 text-emerald-300 group py-1"
+              className="w-full flex items-center justify-between text-left font-display font-black text-white uppercase tracking-wider text-xs mb-3 text-emerald-300 group py-1"
               aria-expanded={openSections.legal}
             >
-              <span>Legal & Terms</span>
+              <span>LEGAL & TERMS</span>
               <ChevronDown
                 className={`w-4 h-4 text-emerald-300/80 transition-transform duration-200 group-hover:text-emerald-200 ${
                   openSections.legal ? 'rotate-180' : ''
@@ -160,10 +160,10 @@ export const Footer: React.FC<FooterProps> = ({
               id="footer-contact-toggle-btn"
               type="button"
               onClick={() => toggleSection('contact')}
-              className="w-full flex items-center justify-between text-left font-display font-bold text-white uppercase tracking-wider text-xs mb-3 text-emerald-300 group py-1"
+              className="w-full flex items-center justify-between text-left font-display font-black text-white uppercase tracking-wider text-xs mb-3 text-emerald-300 group py-1"
               aria-expanded={openSections.contact}
             >
-              <span>Contact & Support</span>
+              <span>CONTACT & SUPPORT</span>
               <ChevronDown
                 className={`w-4 h-4 text-emerald-300/80 transition-transform duration-200 group-hover:text-emerald-200 ${
                   openSections.contact ? 'rotate-180' : ''

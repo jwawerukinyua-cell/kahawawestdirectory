@@ -160,16 +160,16 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
             <div
               key={cat.id}
               onClick={() => onSelectCategory(cat.id)}
-              className={`group relative bg-white hover:bg-[#630303] rounded-2xl p-3 sm:p-4 border transition-all duration-200 cursor-pointer justify-between active:scale-[0.98] ${
+              className={`group relative bg-white hover:bg-gradient-to-b hover:from-[#630303] hover:to-[#380101] rounded-2xl p-3 sm:p-4 transition-all duration-200 ease-out cursor-pointer justify-between ${
                 !isPinned ? 'hidden lg:flex flex-col' : 'flex flex-col'
               } ${
                 isPinned
-                  ? 'border-amber-400/80 shadow-sm hover:shadow-xl ring-1 ring-amber-400/30'
-                  : 'border-stone-200 hover:border-[#630303] shadow-xs hover:shadow-xl'
+                  ? 'shadow-[0_6px_16px_rgba(0,0,0,0.07),0_2px_4px_rgba(251,191,36,0.2),inset_0_1px_0_rgba(255,255,255,1),inset_0_-2px_0_rgba(251,191,36,0.4)] hover:shadow-[0_14px_30px_rgba(99,3,3,0.22),0_4px_8px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.3)] hover:-translate-y-1 active:translate-y-0 active:shadow-[0_2px_6px_rgba(0,0,0,0.1)]'
+                  : 'shadow-[0_6px_16px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,1),inset_0_-2px_0_rgba(0,0,0,0.06)] hover:shadow-[0_14px_30px_rgba(99,3,3,0.2),0_4px_8px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.3)] hover:-translate-y-1 active:translate-y-0 active:shadow-[0_2px_6px_rgba(0,0,0,0.1)]'
               }`}
             >
               {isPinned && (
-                <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-amber-400 text-stone-950 flex items-center gap-0.5 shadow-2xs group-hover:bg-amber-300">
+                <span className="absolute bottom-2.5 right-2.5 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wide bg-amber-400 text-stone-950 flex items-center gap-0.5 shadow-2xs group-hover:bg-amber-300">
                   <Star className="w-2.5 h-2.5 fill-stone-950" />
                   <span>Top</span>
                 </span>
@@ -177,7 +177,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
 
               <div>
                 <div
-                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${cat.color} text-white flex items-center justify-center mb-2.5 shadow-xs group-hover:scale-110 transition-transform border border-white/20`}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${cat.color} text-white flex items-center justify-center mb-2.5 shadow-[0_2px_6px_rgba(0,0,0,0.15),inset_0_1px_1px_rgba(255,255,255,0.4)] group-hover:scale-105 transition-transform`}
                 >
                   {getCategoryIcon(cat.icon)}
                 </div>
@@ -200,7 +200,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
           <button
             type="button"
             onClick={() => setIsMoreOpen(!isMoreOpen)}
-            className="w-full py-2.5 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 text-xs font-bold transition flex items-center justify-between active:scale-[0.99]"
+            className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-stone-50 text-stone-800 text-xs font-bold transition-all duration-200 ease-out flex items-center justify-between shadow-[0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.06)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 active:translate-y-0"
           >
             <div className="flex items-center gap-2">
               <Folder className="w-3.5 h-3.5 text-[#630303]" />
@@ -244,10 +244,10 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                         <div
                           key={cat.id}
                           onClick={() => onSelectCategory(cat.id)}
-                          className="bg-white hover:bg-stone-50 rounded-xl p-2.5 border border-stone-200 transition cursor-pointer flex items-start gap-2 shadow-2xs"
+                          className="bg-white hover:bg-stone-50 rounded-xl p-2.5 transition-all duration-200 ease-out cursor-pointer flex items-start gap-2 shadow-[0_4px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.06)] hover:shadow-[0_8px_18px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:translate-y-0"
                         >
                           <div
-                            className={`w-7 h-7 rounded-lg bg-gradient-to-br ${cat.color} text-white flex items-center justify-center flex-shrink-0`}
+                            className={`w-7 h-7 rounded-lg bg-gradient-to-br ${cat.color} text-white flex items-center justify-center flex-shrink-0 shadow-xs`}
                           >
                             {getCategoryIcon(cat.icon)}
                           </div>
@@ -277,7 +277,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                       <div
                         key={cat.id}
                         onClick={() => onSelectCategory(cat.id)}
-                        className="bg-stone-50 hover:bg-stone-100 rounded-xl p-2.5 border border-stone-200 transition cursor-pointer flex items-start gap-2"
+                        className="bg-stone-50 hover:bg-white rounded-xl p-2.5 transition-all duration-200 ease-out cursor-pointer flex items-start gap-2 shadow-[0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] hover:shadow-[0_6px_14px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 active:translate-y-0"
                       >
                         <div
                           className={`w-7 h-7 rounded-lg bg-gradient-to-br ${cat.color} opacity-80 text-white flex items-center justify-center flex-shrink-0`}

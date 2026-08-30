@@ -31,40 +31,40 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1.5 text-xs lg:text-sm font-sans font-semibold text-stone-200">
+        <nav className="hidden md:flex items-center gap-1.5 text-xs lg:text-xs font-sans font-bold uppercase tracking-wider text-stone-200">
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition"
           >
-            All Businesses
+            ALL BUSINESSES
           </button>
           <button
             onClick={onNoticeboardClick}
             className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-emerald-300"
           >
             <Users className="w-4 h-4" />
-            <span>Community</span>
+            <span>COMMUNITY</span>
           </button>
           <button
             onClick={onEmergencyClick}
             className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-sky-300"
           >
             <PhoneCall className="w-4 h-4" />
-            Emergency
+            <span>EMERGENCY</span>
           </button>
           <button
             onClick={onAboutClick}
             className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] transition flex items-center gap-1.5 text-stone-300"
           >
             <Info className="w-4 h-4" />
-            About KWEST
+            <span>ABOUT KWEST</span>
           </button>
           <button
             onClick={onListBusinessClick}
-            className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] text-emerald-300 hover:text-emerald-200 transition flex items-center gap-1.5 font-bold cursor-pointer"
+            className="px-3 py-2 rounded-xl hover:text-white hover:bg-[#4D0202] text-emerald-300 hover:text-emerald-200 transition flex items-center gap-1.5 font-extrabold cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>List Business</span>
+            <span>LIST BUSINESS</span>
           </button>
         </nav>
 
