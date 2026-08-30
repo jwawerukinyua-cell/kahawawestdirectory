@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Share2, Check, Copy, MessageCircle, Twitter, Facebook, X } from 'lucide-react';
+import { Share2, Check, Copy, MessageCircle, Twitter, Facebook, Instagram, Video, X } from 'lucide-react';
 
 export const FloatingShareButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -181,6 +181,46 @@ export const FloatingShareButton: React.FC = () => {
                   <Facebook className="w-3.5 h-3.5" />
                   <span>Facebook</span>
                 </button>
+              </div>
+
+              {/* Official KWEST Handles */}
+              <div className="pt-2.5 mt-2 border-t border-emerald-900/40">
+                <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <span>Official KWEST Socials</span>
+                  <span className="text-[9px] text-stone-400 font-normal">Follow Us</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <a
+                    href="https://www.facebook.com/share/14nA4K6CTk3/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 border border-blue-700/40 text-[10px] font-medium transition"
+                    title="KWEST Facebook Page"
+                  >
+                    <Facebook className="w-3 h-3" />
+                    <span>Page</span>
+                  </a>
+                  <a
+                    href="https://www.tiktok.com/@kwestdirectory"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-rose-950/30 hover:bg-rose-950/50 text-rose-300 border border-rose-700/40 text-[10px] font-medium transition"
+                    title="@kwestdirectory TikTok"
+                  >
+                    <Video className="w-3 h-3" />
+                    <span>TikTok</span>
+                  </a>
+                  <a
+                    href="https://www.instagram.com/kahawawestdirectory?utm_source=qr&igsi=NXlsa21pc2R4MWRq"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-pink-950/30 hover:bg-pink-950/50 text-pink-300 border border-pink-700/40 text-[10px] font-medium transition"
+                    title="@kahawawestdirectory Instagram"
+                  >
+                    <Instagram className="w-3 h-3" />
+                    <span>Insta</span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>

@@ -3,9 +3,9 @@ import {
   ShieldCheck,
   Mail,
   MessageCircle,
-  Twitter,
   Facebook,
   Instagram,
+  Video,
   Phone,
   ChevronDown,
 } from 'lucide-react';
@@ -210,43 +210,46 @@ export const Footer: React.FC<FooterProps> = ({
                 {/* Social Channels */}
                 <div className="pt-2 border-t border-[#630303]/70">
                   <span className="text-[11px] text-stone-400 font-semibold block mb-2">
-                    Connect on Socials:
+                    Follow KWEST Directory Socials:
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <a
                       id="footer-facebook-link"
-                      href="https://facebook.com"
+                      href="https://www.facebook.com/share/14nA4K6CTk3/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-stone-200 hover:text-white transition border border-white/10"
-                      title="Facebook Page"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-blue-600/30 text-stone-200 hover:text-white transition border border-white/10 text-xs"
+                      title="Follow KWEST on Facebook"
                       aria-label="Facebook Page"
                     >
-                      <Facebook className="w-3.5 h-3.5" />
+                      <Facebook className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Facebook</span>
                     </a>
 
                     <a
-                      id="footer-twitter-link"
-                      href="https://x.com"
+                      id="footer-tiktok-link"
+                      href="https://www.tiktok.com/@kwestdirectory"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-stone-200 hover:text-white transition border border-white/10"
-                      title="X (Twitter)"
-                      aria-label="X (Twitter)"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-slate-700/50 text-stone-200 hover:text-white transition border border-white/10 text-xs"
+                      title="Follow @kwestdirectory on TikTok"
+                      aria-label="TikTok Account"
                     >
-                      <Twitter className="w-3.5 h-3.5" />
+                      <Video className="w-3.5 h-3.5 text-rose-400" />
+                      <span>TikTok</span>
                     </a>
 
                     <a
                       id="footer-instagram-link"
-                      href="https://instagram.com"
+                      href="https://www.instagram.com/kwestdirectory?utm_source=qr&igsi=NXlsa21pc2R4MWRq"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-stone-200 hover:text-white transition border border-white/10"
-                      title="Instagram"
-                      aria-label="Instagram"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-pink-600/30 text-stone-200 hover:text-white transition border border-white/10 text-xs"
+                      title="Follow @kwestdirectory on Instagram"
+                      aria-label="Instagram Profile"
                     >
-                      <Instagram className="w-3.5 h-3.5" />
+                      <Instagram className="w-3.5 h-3.5 text-pink-400" />
+                      <span>Instagram</span>
                     </a>
                   </div>
                 </div>

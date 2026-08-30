@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, MapPin, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, MapPin, ShieldCheck, Facebook, Instagram, Video, ExternalLink } from 'lucide-react';
 import { BrandLogo } from '../ui/BrandLogo';
 
 interface AboutModalProps {
@@ -98,6 +98,53 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 <span>Mahiga Ridge & Kiamumbi Border</span>
               </div>
+            </div>
+          </div>
+
+          {/* Official Social Media Channels */}
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-slate-800 space-y-2">
+            <h5 className="font-display font-bold text-[#630303] text-xs uppercase tracking-wider">
+              Official KWEST Social Media Channels
+            </h5>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+              <a
+                href="https://www.facebook.com/share/14nA4K6CTk3/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between gap-1.5 p-2.5 rounded-xl bg-white border border-blue-200 hover:border-blue-400 text-blue-700 font-semibold text-xs transition shadow-xs"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Facebook className="w-4 h-4 text-blue-600" />
+                  <span>Facebook</span>
+                </div>
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
+
+              <a
+                href="https://www.tiktok.com/@kwestdirectory"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between gap-1.5 p-2.5 rounded-xl bg-white border border-slate-300 hover:border-slate-500 text-slate-900 font-semibold text-xs transition shadow-xs"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Video className="w-4 h-4 text-rose-500" />
+                  <span>TikTok</span>
+                </div>
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
+
+              <a
+                href="https://www.instagram.com/kahawawestdirectory?utm_source=qr&igsi=NXlsa21pc2R4MWRq"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between gap-1.5 p-2.5 rounded-xl bg-white border border-pink-200 hover:border-pink-400 text-pink-700 font-semibold text-xs transition shadow-xs"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Instagram className="w-4 h-4 text-pink-600" />
+                  <span>Instagram</span>
+                </div>
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
             </div>
           </div>
 
