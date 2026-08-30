@@ -38,8 +38,25 @@ import {
   Search,
   ExternalLink,
   Share2,
+  CreditCard,
+  Target,
+  Palette,
+  CheckSquare,
+  RefreshCw,
+  HelpCircle,
+  Send,
+  FastForward,
+  RotateCcw,
+  History,
 } from 'lucide-react';
-import { CommunityStory, CommunityUpdate, BusinessClaim, Business, UpdateType } from '../../../types';
+import { CommunityStory, CommunityUpdate, BusinessClaim, Business, UpdateType, BusinessAdCampaign, AdCampaignStatus } from '../../../types';
+import {
+  calculateAdExpiresAt,
+  getAdTimeRemaining,
+  isCampaignLiveAndActive,
+  syncAndCleanExpiredCampaigns,
+  getDurationInDays,
+} from '../../../lib/adExpiryUtils';
 import {
   getAllBusinessAnalytics,
   getBusinessStats,
@@ -102,12 +119,220 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   onOpenSubmitModal,
   onOpenSubmitUpdateModal,
 }) => {
-  const [activeMainTab, setActiveMainTab] = useState<'stories' | 'updates' | 'claims' | 'ad_sales' | 'supabase_guide'>('stories');
+  const [activeMainTab, setActiveMainTab] = useState<'stories' | 'updates' | 'claims' | 'ad_campaigns' | 'ad_sales' | 'supabase_guide'>('stories');
   const [storySubTab, setStorySubTab] = useState<'pending' | 'published'>('pending');
   const [updateSubTab, setUpdateSubTab] = useState<'pending' | 'published'>('pending');
   const [claimsSubTab, setClaimsSubTab] = useState<'pending_claims' | 'all_listings'>('pending_claims');
+  const [adCampaignsSubTab, setAdCampaignsSubTab] = useState<'pending' | 'active' | 'changes_requested' | 'expired' | 'all'>('pending');
   const [directorySearchQuery, setDirectorySearchQuery] = useState('');
   const [directoryZoneFilter, setDirectoryZoneFilter] = useState('all');
+
+  // Ad Campaigns Queue & Moderation State
+  const [adCampaigns, setAdCampaigns] = useState<BusinessAdCampaign[]>(() => {
+    try {
+      const saved = localStorage.getItem('kwest_business_ads');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const { updatedList } = syncAndCleanExpiredCampaigns(parsed);
+          return updatedList;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    // High quality seeded campaign samples for editorial testing
+    const sampleApprovedAt = new Date(Date.now() - 86400000 * 2).toISOString();
+    return [
+      {
+        id: 'kwest-ad-sample-1',
+        businessId: 'mama-njeri-choma',
+        businessName: "Mama Njeri Pork & Choma Grill",
+        format: 'homepage-billboard',
+        headline: "Weekend Nyama Choma Special: 20% Off Ribs Platter",
+        description: "Order fresh slow-roasted mbuzi and kuku choma directly from Congo Stage. Fast hot delivery across all Kahawa West zones.",
+        ctaText: "Order via WhatsApp",
+        badgeText: "Weekend Special",
+        targetZone: "Congo",
+        imageUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80",
+        requestCustomDesign: true,
+        packageDuration: '15_days',
+        placementPriceKsh: 1350,
+        creativeFeeKsh: 500,
+        totalPriceKsh: 1850,
+        status: 'in_review',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'kwest-ad-sample-2',
+        businessId: 'st-francis-chemist',
+        businessName: "St. Francis Chemist & Clinic",
+        format: 'resident-deal',
+        headline: "Free Blood Pressure & Blood Sugar Screening",
+        description: "Walk-in consultation available Monday to Saturday near Roundabout. Certified pharmacists and genuine prescription medicines.",
+        ctaText: "Book Screening",
+        badgeText: "Community Health",
+        targetZone: "Roundabout",
+        imageUrl: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80",
+        requestCustomDesign: false,
+        packageDuration: '7_days',
+        placementPriceKsh: 700,
+        creativeFeeKsh: 0,
+        totalPriceKsh: 700,
+        status: 'active',
+        createdAt: sampleApprovedAt,
+        approvedAt: sampleApprovedAt,
+        expiresAt: calculateAdExpiresAt(sampleApprovedAt, '7_days'),
+      },
+    ];
+  });
+
+  const [campaignSearchQuery, setCampaignSearchQuery] = useState('');
+  const [campaignZoneFilter, setCampaignZoneFilter] = useState('all');
+  const [editingCampaign, setEditingCampaign] = useState<BusinessAdCampaign | null>(null);
+  const [campaignForRejection, setCampaignForRejection] = useState<BusinessAdCampaign | null>(null);
+  const [campaignRejectionPreset, setCampaignRejectionPreset] = useState('payment');
+  const [campaignRejectionCustomNote, setCampaignRejectionCustomNote] = useState('');
+  const [campaignActionToast, setCampaignActionToast] = useState<string | null>(null);
+
+  // Sync adCampaigns to local storage
+  const saveCampaignsToStorage = (updatedList: BusinessAdCampaign[]) => {
+    setAdCampaigns(updatedList);
+    try {
+      localStorage.setItem('kwest_business_ads', JSON.stringify(updatedList));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Automatically check expiry on modal open / render
+  useEffect(() => {
+    if (isOpen) {
+      const { updatedList, hasChanges } = syncAndCleanExpiredCampaigns(adCampaigns);
+      if (hasChanges) {
+        saveCampaignsToStorage(updatedList);
+      }
+    }
+  }, [isOpen]);
+
+  const showToast = (msg: string) => {
+    setCampaignActionToast(msg);
+    setTimeout(() => setCampaignActionToast(null), 3500);
+  };
+
+  // Campaign Moderation Handlers
+  const handleApproveCampaign = (campaignId: string) => {
+    const target = adCampaigns.find((c) => c.id === campaignId);
+    const approvedAt = new Date().toISOString();
+    const duration = target?.packageDuration || '7_days';
+    const expiresAt = calculateAdExpiresAt(approvedAt, duration);
+    const durationDays = getDurationInDays(duration);
+
+    const updated = adCampaigns.map((c) =>
+      c.id === campaignId
+        ? {
+            ...c,
+            status: 'active' as AdCampaignStatus,
+            approvedAt,
+            expiresAt,
+          }
+        : c
+    );
+    saveCampaignsToStorage(updated);
+    showToast(`Campaign approved & activated for ${durationDays} days!`);
+  };
+
+  // Renewal / Extension Handler (e.g. +7, +15, +30 days)
+  const handleRenewCampaign = (campaignId: string, extensionDays: number = 7) => {
+    const target = adCampaigns.find((c) => c.id === campaignId);
+    if (!target) return;
+
+    const approvedAt = new Date().toISOString();
+    const durationStr = extensionDays === 30 ? '30_days' : extensionDays === 15 ? '15_days' : '7_days';
+    const expiresAt = calculateAdExpiresAt(approvedAt, durationStr);
+
+    const updated = adCampaigns.map((c) =>
+      c.id === campaignId
+        ? {
+            ...c,
+            status: 'active' as AdCampaignStatus,
+            approvedAt,
+            expiresAt,
+            packageDuration: durationStr as any,
+          }
+        : c
+    );
+    saveCampaignsToStorage(updated);
+    showToast(`Campaign renewed & extended +${extensionDays} days! Now live on directory.`);
+  };
+
+  // Fast-Forward Expiry (Simulation & Testing Tool)
+  const handleFastForwardExpiry = (campaignId: string) => {
+    const expiredTime = new Date(Date.now() - 60000).toISOString();
+    const pastStartTime = new Date(Date.now() - 35 * 86400000).toISOString();
+
+    const updated = adCampaigns.map((c) =>
+      c.id === campaignId
+        ? {
+            ...c,
+            status: 'expired' as AdCampaignStatus,
+            approvedAt: pastStartTime,
+            expiresAt: expiredTime,
+          }
+        : c
+    );
+    saveCampaignsToStorage(updated);
+    showToast('Simulation: Campaign marked expired. Ad space immediately reverted to original "Own this space" placeholder!');
+  };
+
+  const handleRequestCampaignChanges = (campaignId: string, feedback: string) => {
+    const target = adCampaigns.find((c) => c.id === campaignId);
+    const updated = adCampaigns.map((c) =>
+      c.id === campaignId
+        ? {
+            ...c,
+            status: 'changes_requested' as AdCampaignStatus,
+            feedbackReason: feedback,
+          }
+        : c
+    );
+    saveCampaignsToStorage(updated);
+    setCampaignForRejection(null);
+    setCampaignRejectionCustomNote('');
+    showToast('Revision request sent & campaign marked for changes.');
+
+    if (target) {
+      const waText = encodeURIComponent(
+        `*📢 KWEST EDITORIAL DESK — AD CAMPAIGN GUIDANCE*\n\n` +
+        `*Business:* ${target.businessName}\n` +
+        `*Ad Campaign:* "${target.headline}"\n\n` +
+        `Hello! Our Editorial Team reviewed your ad submission on the Kahawa West Directory.\n\n` +
+        `*Editorial Guidance / Action Required:*\n` +
+        `${feedback}\n\n` +
+        `*💳 Upfront Payment Reminder:* Paybill: 247247 | Acc No: 537409 (Ukweli Products)\n\n` +
+        `Please reply to this message with your updated copy, graphic, or M-Pesa receipt so our desk can activate your campaign live!`
+      );
+      window.open(`https://wa.me/254764405842?text=${waText}`, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleSaveEditedCampaign = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCampaign) return;
+
+    const updated = adCampaigns.map((c) => (c.id === editingCampaign.id ? editingCampaign : c));
+    saveCampaignsToStorage(updated);
+    setEditingCampaign(null);
+    showToast('Ad copy & design specifications updated!');
+  };
+
+  const handleDeleteCampaign = (campaignId: string) => {
+    if (confirm('Are you sure you want to delete this ad campaign record?')) {
+      const updated = adCampaigns.filter((c) => c.id !== campaignId);
+      saveCampaignsToStorage(updated);
+      showToast('Campaign record removed.');
+    }
+  };
 
   // Ad Sales & Intelligence state
   const [adSearchQuery, setAdSearchQuery] = useState('');
@@ -281,6 +506,35 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
 
   const pendingUpdates = updates.filter((u) => u.status === 'pending_review');
   const publishedUpdates = updates.filter((u) => u.status === 'published' || !u.status);
+
+  // Ad Campaign Moderation Lists
+  const pendingCampaigns = adCampaigns.filter((c) => c.status === 'in_review');
+  const activeCampaigns = adCampaigns.filter((c) => isCampaignLiveAndActive(c));
+  const changesCampaigns = adCampaigns.filter((c) => c.status === 'changes_requested' || c.status === 'rejected');
+  const expiredCampaigns = adCampaigns.filter((c) => c.status === 'expired' || (c.status === 'active' && !isCampaignLiveAndActive(c)));
+
+  const filteredCampaigns = useMemo(() => {
+    return adCampaigns.filter((c) => {
+      if (adCampaignsSubTab === 'pending' && c.status !== 'in_review') return false;
+      if (adCampaignsSubTab === 'active' && !isCampaignLiveAndActive(c)) return false;
+      if (adCampaignsSubTab === 'changes_requested' && c.status !== 'changes_requested' && c.status !== 'rejected') return false;
+      if (adCampaignsSubTab === 'expired' && c.status !== 'expired' && isCampaignLiveAndActive(c)) return false;
+
+      if (campaignZoneFilter !== 'all' && c.targetZone !== campaignZoneFilter) return false;
+
+      if (campaignSearchQuery.trim() !== '') {
+        const q = campaignSearchQuery.toLowerCase();
+        return (
+          c.businessName.toLowerCase().includes(q) ||
+          c.headline.toLowerCase().includes(q) ||
+          c.description.toLowerCase().includes(q) ||
+          c.targetZone.toLowerCase().includes(q) ||
+          c.format.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [adCampaigns, adCampaignsSubTab, campaignZoneFilter, campaignSearchQuery]);
 
   const handleCopySql = () => {
     const sqlCode = `-- Kahawa West Directory: Unified Database Schema for Supabase
@@ -660,7 +914,7 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                 }`}
               >
                 <Building className="w-3.5 h-3.5" />
-                <span>🏢 Claims & Directory</span>
+                <span>🏢 Claims &amp; Directory</span>
                 {claims.filter((c) => c.status === 'pending').length > 0 && (
                   <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-black text-[10px] font-black">
                     {claims.filter((c) => c.status === 'pending').length}
@@ -669,10 +923,27 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
               </button>
 
               <button
+                onClick={() => setActiveMainTab('ad_campaigns')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                  activeMainTab === 'ad_campaigns'
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'bg-stone-800 text-stone-300 hover:text-white'
+                }`}
+              >
+                <Target className="w-3.5 h-3.5 text-amber-300" />
+                <span>📢 Ad Campaigns &amp; Approvals</span>
+                {pendingCampaigns.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-amber-400 text-stone-950 text-[10px] font-black animate-pulse">
+                    {pendingCampaigns.length} review
+                  </span>
+                )}
+              </button>
+
+              <button
                 onClick={() => setActiveMainTab('ad_sales')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
                   activeMainTab === 'ad_sales'
-                    ? 'bg-amber-600 text-white shadow-sm'
+                    ? 'bg-amber-700/80 text-white shadow-sm'
                     : 'bg-stone-800 text-amber-300 hover:text-amber-100'
                 }`}
               >
@@ -1173,6 +1444,561 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                 </div>
               )}
 
+              {/* TAB: AD CAMPAIGNS & EDITORIAL APPROVAL DESK */}
+              {activeMainTab === 'ad_campaigns' && (
+                <div className="space-y-6 max-w-5xl">
+                  {/* Toast notification */}
+                  {campaignActionToast && (
+                    <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500 text-emerald-200 text-xs font-bold flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span>{campaignActionToast}</span>
+                      </div>
+                      <button onClick={() => setCampaignActionToast(null)} className="text-emerald-400 hover:text-white">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Header & Controls */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-800">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-display font-black text-lg text-white">
+                          Ad Campaigns &amp; Editorial Moderation Desk
+                        </h4>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                          Quality &amp; Payment Gateway
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-400">
+                        Review merchant ads, optimize copy &amp; graphics, verify upfront Lipa na M-Pesa payments, and activate campaigns live.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sampleAd: BusinessAdCampaign = {
+                            id: `kwest-ad-${Date.now()}`,
+                            businessId: 'quick-sample',
+                            businessName: 'Kahawa West Fresh Grocers',
+                            format: 'category-spotlight',
+                            headline: 'Farm Fresh Organic Spinach & Tomatoes Direct Delivery',
+                            description: 'Freshly harvested daily from Kiambu farms. Same-hour drop off at Jacaranda, Congo, and Kamiti estates.',
+                            ctaText: 'Order Groceries',
+                            badgeText: 'Farm Direct',
+                            targetZone: 'Jacaranda',
+                            imageUrl: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=800&auto=format&fit=crop&q=80',
+                            requestCustomDesign: true,
+                            packageDuration: '15_days',
+                            placementPriceKsh: 1350,
+                            creativeFeeKsh: 500,
+                            totalPriceKsh: 1850,
+                            status: 'in_review',
+                            createdAt: new Date().toISOString(),
+                          };
+                          const updated = [sampleAd, ...adCampaigns];
+                          saveCampaignsToStorage(updated);
+                          showToast('Sample merchant ad added to review queue!');
+                        }}
+                        className="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition border border-stone-700 cursor-pointer"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Add Test Campaign</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Summary KPI Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-amber-950/30 p-3.5 rounded-2xl border border-amber-500/40 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-amber-400 text-xs mb-1">
+                        <span className="font-semibold uppercase text-[10px]">Awaiting Editorial Check</span>
+                        <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
+                      </div>
+                      <span className="text-2xl font-display font-black text-amber-300">
+                        {pendingCampaigns.length}
+                      </span>
+                    </div>
+
+                    <div className="bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-500/40 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-emerald-400 text-xs mb-1">
+                        <span className="font-semibold uppercase text-[10px]">Active Live Ads</span>
+                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      </div>
+                      <span className="text-2xl font-display font-black text-emerald-300">
+                        {activeCampaigns.length}
+                      </span>
+                    </div>
+
+                    <div className="bg-rose-950/30 p-3.5 rounded-2xl border border-rose-500/40 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-rose-400 text-xs mb-1">
+                        <span className="font-semibold uppercase text-[10px]">Expired / Reverted</span>
+                        <RotateCcw className="w-4 h-4 text-rose-400" />
+                      </div>
+                      <span className="text-2xl font-display font-black text-rose-300">
+                        {expiredCampaigns.length}
+                      </span>
+                    </div>
+
+                    <div className="bg-[#181B20] p-3.5 rounded-2xl border border-stone-800 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-stone-400 text-xs mb-1">
+                        <span className="font-semibold uppercase text-[10px]">Total Booking Value</span>
+                        <CreditCard className="w-4 h-4 text-emerald-400" />
+                      </div>
+                      <span className="text-xl font-display font-black text-white font-mono">
+                        KSh {adCampaigns.reduce((acc, c) => acc + (c.totalPriceKsh || 0), 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Editorial Rule Notice Banner */}
+                  <div className="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/30 text-xs text-amber-200/90 flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-bold text-white">
+                        Editorial Standard: Mandatory Verification &amp; Auto-Revert Rules
+                      </p>
+                      <p className="text-stone-300 leading-relaxed">
+                        Every merchant ad is queued with status <code className="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded">in_review</code>. Once approved, campaigns run for their exact booked package duration (<strong>7, 15, or 30 days</strong>). The system automatically tracks time and intelligently reverts any expired ad space back to the default <span className="text-amber-300 font-semibold">&quot;Own this space&quot;</span> placeholder.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Sub Tabs & Filters */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+                    <div className="flex items-center gap-1.5 p-1 bg-[#121417] rounded-xl border border-stone-800 w-full sm:w-auto overflow-x-auto">
+                      <button
+                        onClick={() => setAdCampaignsSubTab('pending')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                          adCampaignsSubTab === 'pending'
+                            ? 'bg-amber-500 text-stone-950 shadow-sm'
+                            : 'text-stone-400 hover:text-stone-200'
+                        }`}
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>Pending Review ({pendingCampaigns.length})</span>
+                      </button>
+
+                      <button
+                        onClick={() => setAdCampaignsSubTab('active')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                          adCampaignsSubTab === 'active'
+                            ? 'bg-emerald-600 text-white shadow-sm'
+                            : 'text-stone-400 hover:text-stone-200'
+                        }`}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Live Active ({activeCampaigns.length})</span>
+                      </button>
+
+                      <button
+                        onClick={() => setAdCampaignsSubTab('changes_requested')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                          adCampaignsSubTab === 'changes_requested'
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-stone-400 hover:text-stone-200'
+                        }`}
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        <span>Needs Guidance ({changesCampaigns.length})</span>
+                      </button>
+
+                      <button
+                        onClick={() => setAdCampaignsSubTab('expired')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                          adCampaignsSubTab === 'expired'
+                            ? 'bg-rose-700 text-white shadow-sm'
+                            : 'text-stone-400 hover:text-stone-200'
+                        }`}
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Expired / Ended ({expiredCampaigns.length})</span>
+                      </button>
+
+                      <button
+                        onClick={() => setAdCampaignsSubTab('all')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+                          adCampaignsSubTab === 'all'
+                            ? 'bg-stone-700 text-white'
+                            : 'text-stone-400 hover:text-stone-200'
+                        }`}
+                      >
+                        All ({adCampaigns.length})
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="relative flex-1 sm:w-52">
+                        <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-stone-500" />
+                        <input
+                          type="text"
+                          value={campaignSearchQuery}
+                          onChange={(e) => setCampaignSearchQuery(e.target.value)}
+                          placeholder="Search merchant or ad..."
+                          className="w-full pl-8 pr-3 py-1.5 bg-[#121417] border border-stone-800 rounded-xl text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+
+                      <select
+                        value={campaignZoneFilter}
+                        onChange={(e) => setCampaignZoneFilter(e.target.value)}
+                        className="bg-[#121417] border border-stone-800 rounded-xl px-2.5 py-1.5 text-xs text-stone-300 focus:outline-none focus:border-amber-500"
+                      >
+                        <option value="all">All Zones</option>
+                        <option value="Congo">Congo</option>
+                        <option value="Roundabout">Roundabout</option>
+                        <option value="Kamiti">Kamiti Rd</option>
+                        <option value="Jacaranda">Jacaranda</option>
+                        <option value="Kiu Kenda">Kiu Kenda</option>
+                        <option value="Soweto">Soweto</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Campaigns List */}
+                  {filteredCampaigns.length === 0 ? (
+                    <div className="py-12 text-center bg-[#121417] rounded-2xl border border-stone-800 space-y-2">
+                      <Target className="w-8 h-8 text-stone-600 mx-auto" />
+                      <p className="text-sm font-bold text-stone-400">No campaigns found in this filter.</p>
+                      <p className="text-xs text-stone-600">
+                        When merchants create ads through the &apos;Promote Business&apos; modal, they will land here for verification.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {filteredCampaigns.map((campaign) => {
+                        const timeInfo = getAdTimeRemaining(campaign);
+                        const isPending = campaign.status === 'in_review';
+                        const isActive = isCampaignLiveAndActive(campaign);
+                        const isExpired = campaign.status === 'expired' || (!isPending && timeInfo.isExpired);
+                        const isChangesRequested = campaign.status === 'changes_requested';
+                        const isRejected = campaign.status === 'rejected';
+
+                        return (
+                          <div
+                            key={campaign.id}
+                            className={`p-4 rounded-2xl border transition-all ${
+                              isPending
+                                ? 'bg-[#181B20] border-amber-500/50 shadow-md shadow-amber-950/20'
+                                : isActive
+                                ? 'bg-[#14181E] border-emerald-500/30'
+                                : isExpired
+                                ? 'bg-[#181414] border-rose-900/40'
+                                : 'bg-[#141619] border-stone-800'
+                            }`}
+                          >
+                            <div className="flex flex-col lg:flex-row gap-4">
+                              {/* Left / Top: Ad Info & Merchant Specs */}
+                              <div className="flex-1 space-y-3">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <h5 className="font-display font-black text-white text-base">
+                                      {campaign.businessName}
+                                    </h5>
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-stone-800 text-stone-300 border border-stone-700">
+                                      📍 {campaign.targetZone}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-mono uppercase bg-stone-800 text-amber-300 border border-stone-700">
+                                      {campaign.format.replace('-', ' ')}
+                                    </span>
+                                  </div>
+
+                                  {/* Status badge */}
+                                  <div>
+                                    {isPending && (
+                                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/50">
+                                        <Clock className="w-3.5 h-3.5 animate-pulse" />
+                                        <span>Queued for Review</span>
+                                      </span>
+                                    )}
+                                    {isActive && (
+                                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/50">
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                        <span>Live Active ({timeInfo.label})</span>
+                                      </span>
+                                    )}
+                                    {isExpired && (
+                                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase bg-rose-500/20 text-rose-300 border border-rose-500/50">
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <span>Ended • Reverted to Own Space</span>
+                                      </span>
+                                    )}
+                                    {isChangesRequested && (
+                                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase bg-blue-500/20 text-blue-300 border border-blue-500/50">
+                                        <HelpCircle className="w-3.5 h-3.5" />
+                                        <span>Changes Requested</span>
+                                      </span>
+                                    )}
+                                    {isRejected && (
+                                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase bg-rose-500/20 text-rose-300 border border-rose-500/50">
+                                        <XCircle className="w-3.5 h-3.5" />
+                                        <span>Rejected</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Payment Breakdown and Duration status */}
+                                <div className="p-3 rounded-xl bg-black/40 border border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                                  <div>
+                                    <span className="text-stone-400 block text-[10px] uppercase font-bold">Package &amp; Duration</span>
+                                    <strong className="text-white">
+                                      {campaign.packageDuration.replace('_', ' ').toUpperCase()} (KSh {campaign.placementPriceKsh.toLocaleString()})
+                                    </strong>
+                                  </div>
+                                  <div>
+                                    <span className="text-stone-400 block text-[10px] uppercase font-bold">Copywriting &amp; Design</span>
+                                    {campaign.requestCustomDesign ? (
+                                      <span className="text-amber-300 font-bold inline-flex items-center gap-1">
+                                        <Palette className="w-3 h-3" />
+                                        <span>Requested (+KSh {campaign.creativeFeeKsh.toLocaleString()})</span>
+                                      </span>
+                                    ) : (
+                                      <span className="text-stone-300">Self-Provided Graphics</span>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <span className="text-stone-400 block text-[10px] uppercase font-bold">Upfront Lipa na M-Pesa</span>
+                                    <strong className="text-emerald-400 font-mono text-sm">
+                                      KSh {campaign.totalPriceKsh.toLocaleString()}
+                                    </strong>
+                                    <span className="text-[10px] text-stone-400 block">Acc: 537409 (Ukweli Products)</span>
+                                  </div>
+                                </div>
+
+                                {/* Active Countdown & Auto-Revert Progress */}
+                                {isActive && (
+                                  <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 space-y-2">
+                                    <div className="flex items-center justify-between text-xs">
+                                      <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                                        <Clock className="w-3.5 h-3.5" />
+                                        <span>Live Countdown: {timeInfo.label}</span>
+                                      </div>
+                                      <span className="text-[11px] text-stone-400">
+                                        Auto-reverts to &quot;Own this space&quot; on: <strong className="text-stone-200">{timeInfo.formattedExpiry}</strong>
+                                      </span>
+                                    </div>
+                                    <div className="w-full bg-stone-900 rounded-full h-1.5 overflow-hidden border border-emerald-500/20">
+                                      <div
+                                        className="bg-emerald-400 h-full rounded-full transition-all duration-500"
+                                        style={{ width: `${Math.min(100, Math.max(0, timeInfo.progressPercent))}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Expired Notice */}
+                                {isExpired && (
+                                  <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-500/30 text-xs text-rose-200 flex items-start justify-between gap-2">
+                                    <div className="flex items-start gap-2">
+                                      <RotateCcw className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                                      <div>
+                                        <strong className="text-white block font-bold">Campaign Expired &amp; Defaulted to Original Space</strong>
+                                        <span className="text-stone-400 text-[11px]">
+                                          Ended on {timeInfo.formattedExpiry}. The billboard placeholder is currently showing &quot;Own this space&quot;.
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Previous Editorial Feedback if any */}
+                                {campaign.feedbackReason && (
+                                  <div className="p-2.5 rounded-xl bg-blue-950/40 border border-blue-700/40 text-xs text-blue-200 flex items-start gap-2">
+                                    <MessageSquare className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                                    <div>
+                                      <strong className="text-white block text-[11px]">Editorial Desk Notes / Feedback:</strong>
+                                      <span>{campaign.feedbackReason}</span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Ad Live Visual Card Preview */}
+                                <div className="p-3 rounded-xl bg-stone-900 border border-stone-700 space-y-2">
+                                  <div className="flex items-center justify-between text-[11px] text-stone-400 border-b border-stone-800 pb-1.5">
+                                    <span className="font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
+                                      <Eye className="w-3 h-3" /> Visual Ad Layout Preview
+                                    </span>
+                                    <span>Target Zone: {campaign.targetZone}</span>
+                                  </div>
+
+                                  <div className="flex flex-col sm:flex-row gap-3 items-start">
+                                    {campaign.imageUrl && (
+                                      <img
+                                        src={campaign.imageUrl}
+                                        alt={campaign.headline}
+                                        className="w-full sm:w-28 h-20 object-cover rounded-lg border border-stone-700 shrink-0"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    )}
+                                    <div className="flex-1 space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="px-2 py-0.5 rounded-md bg-amber-400 text-stone-950 font-black text-[10px] uppercase">
+                                          {campaign.badgeText || 'Special'}
+                                        </span>
+                                        <h6 className="font-bold text-white text-xs sm:text-sm">
+                                          {campaign.headline}
+                                        </h6>
+                                      </div>
+                                      <p className="text-stone-300 text-xs line-clamp-2 leading-relaxed">
+                                        {campaign.description}
+                                      </p>
+                                      <div className="pt-1">
+                                        <span className="px-3 py-1 rounded-md bg-[#630303] text-white text-[11px] font-bold inline-flex items-center gap-1">
+                                          <span>{campaign.ctaText || 'Contact Merchant'}</span>
+                                          <ArrowRight className="w-3 h-3" />
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Right / Bottom: Editorial Action Controls */}
+                              <div className="lg:w-64 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-stone-800 pt-3 lg:pt-0 lg:pl-4 space-y-2 shrink-0">
+                                <div className="space-y-2">
+                                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">
+                                    Editorial Actions
+                                  </span>
+
+                                  {/* Approve / Activate Button (if pending or changes) */}
+                                  {!isActive && !isExpired && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleApproveCampaign(campaign.id)}
+                                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
+                                    >
+                                      <CheckCircle2 className="w-4 h-4" />
+                                      <span>Approve &amp; Activate Live</span>
+                                    </button>
+                                  )}
+
+                                  {/* Renewal Buttons (if expired or active) */}
+                                  {isExpired ? (
+                                    <div className="space-y-1.5">
+                                      <span className="text-[10px] uppercase font-bold text-amber-400 block">
+                                        Renew / Reactivate Slot:
+                                      </span>
+                                      <div className="grid grid-cols-3 gap-1">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRenewCampaign(campaign.id, 7)}
+                                          className="py-1.5 px-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px] rounded-lg transition text-center"
+                                        >
+                                          +7 Days
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRenewCampaign(campaign.id, 15)}
+                                          className="py-1.5 px-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px] rounded-lg transition text-center"
+                                        >
+                                          +15 Days
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRenewCampaign(campaign.id, 30)}
+                                          className="py-1.5 px-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px] rounded-lg transition text-center"
+                                        >
+                                          +30 Days
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : isActive ? (
+                                    <div className="space-y-1.5">
+                                      {/* Fast Forward Test Button (For testing automatic expiry & fallback) */}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleFastForwardExpiry(campaign.id)}
+                                        title="Simulate ad campaign expiry to verify billboard fallback to 'Own this space'"
+                                        className="w-full py-1.5 px-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-amber-300 font-bold text-[11px] flex items-center justify-center gap-1.5 transition border border-amber-500/30 cursor-pointer"
+                                      >
+                                        <FastForward className="w-3.5 h-3.5 text-amber-400" />
+                                        <span>Test Expiry &amp; Auto-Fallback</span>
+                                      </button>
+                                    </div>
+                                  ) : null}
+
+                                  {/* Edit & Polish Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingCampaign(campaign)}
+                                    className="w-full py-2 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-amber-300 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition border border-stone-700 cursor-pointer"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                    <span>Edit &amp; Improve Copy</span>
+                                  </button>
+
+                                  {/* WhatsApp Guidance / Renewal Pitch to Merchant */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const waText = isExpired
+                                        ? encodeURIComponent(
+                                            `*📢 KWEST EDITORIAL DESK — AD RENEWAL NOTICE*\n\n` +
+                                            `*Business:* ${campaign.businessName} (${campaign.targetZone})\n` +
+                                            `*Campaign:* "${campaign.headline}"\n\n` +
+                                            `Hello! Your booked ad placement on the Kahawa West Directory has reached its scheduled duration (${campaign.packageDuration.replace('_', ' ')}) and has ended.\n\n` +
+                                            `Would you like to renew your spot (7, 15, or 30 days) to keep getting customer leads from residents? Let us know so we can keep your banner active!`
+                                          )
+                                        : encodeURIComponent(
+                                            `*📢 KWEST EDITORIAL DESK — MERCHANT AD COACHING*\n\n` +
+                                            `*Business:* ${campaign.businessName} (${campaign.targetZone})\n` +
+                                            `*Campaign:* "${campaign.headline}"\n\n` +
+                                            `Hello! I am checking your ad copy for the Kahawa West Directory.\n\n` +
+                                            `• *Format:* ${campaign.format}\n` +
+                                            `• *Duration:* ${campaign.packageDuration}\n` +
+                                            `• *Total Payable (Upfront):* KSh ${campaign.totalPriceKsh.toLocaleString()} (Paybill 247247, Acc 537409)\n\n` +
+                                            `Do you have any updated photo artwork or specific WhatsApp promo number you'd like us to link? Let me know so we can finalize and activate your campaign!`
+                                          );
+                                      window.open(`https://wa.me/254764405842?text=${waText}`, '_blank', 'noopener,noreferrer');
+                                    }}
+                                    className={`w-full py-2 px-3 rounded-xl ${
+                                      isExpired
+                                        ? 'bg-amber-500 hover:bg-amber-400 text-stone-950'
+                                        : 'bg-[#25D366] hover:bg-[#1EBE5D] text-black'
+                                    } font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer`}
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                    <span>{isExpired ? 'WhatsApp Renewal Pitch' : 'WhatsApp Guidance'}</span>
+                                  </button>
+
+                                  {/* Request Changes / Reject */}
+                                  {!isChangesRequested && !isRejected && !isExpired && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setCampaignForRejection(campaign)}
+                                      className="w-full py-2 px-3 rounded-xl bg-red-950/60 hover:bg-red-900/80 text-red-300 font-bold text-xs flex items-center justify-center gap-1.5 transition border border-red-800/60 cursor-pointer"
+                                    >
+                                      <AlertCircle className="w-3.5 h-3.5 text-red-400" />
+                                      <span>Request Revisions</span>
+                                    </button>
+                                  )}
+                                </div>
+
+                                <div className="pt-2 border-t border-stone-800 flex justify-between items-center text-[10px] text-stone-500">
+                                  <span>ID: {campaign.id.slice(-8)}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteCampaign(campaign.id)}
+                                    className="text-stone-500 hover:text-red-400 transition cursor-pointer"
+                                    title="Delete Campaign Record"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* TAB 4: AD SALES & OUTREACH INTELLIGENCE (LOCKED FOR EDITOR ALONE) */}
               {activeMainTab === 'ad_sales' && (
                 <div className="space-y-6 max-w-5xl">
@@ -1543,6 +2369,228 @@ CREATE POLICY "Allow public read feedback" ON public.business_feedback FOR SELEC
           </div>
         )}
       </div>
+
+      {/* Ad Campaign Revision / Guidance Request Dialog */}
+      {campaignForRejection && (
+        <div className="fixed inset-0 z-60 bg-black/90 flex items-center justify-center p-4">
+          <div className="bg-[#181B20] text-white rounded-2xl max-w-lg w-full p-6 border border-stone-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-display font-bold text-lg text-amber-400 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-400" />
+                <span>Editorial Guidance &amp; Revision</span>
+              </h4>
+              <button
+                onClick={() => setCampaignForRejection(null)}
+                className="text-stone-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-stone-300">
+              Select feedback category to guide <strong>{campaignForRejection.businessName}</strong> on improving their ad or resolving payment before going live:
+            </p>
+
+            <select
+              value={campaignRejectionPreset}
+              onChange={(e) => setCampaignRejectionPreset(e.target.value)}
+              className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-xs text-white"
+            >
+              <option value="payment">💳 M-Pesa Upfront Payment Pending Verification (Paybill 247247, Acc 537409)</option>
+              <option value="photo">🖼️ Image Resolution / Format Needs Improvement</option>
+              <option value="copy">✍️ Headline &amp; Copy Clarity (Need more compelling offer details)</option>
+              <option value="terms">📋 Offer terms / Discount expiry date needs clarity</option>
+              <option value="custom">✏️ Custom Editorial Note</option>
+            </select>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-stone-400 uppercase">
+                Detailed Guidance for Merchant (will be prefilled to WhatsApp):
+              </label>
+              <textarea
+                value={
+                  campaignRejectionCustomNote ||
+                  (campaignRejectionPreset === 'payment'
+                    ? 'Please provide your M-Pesa transaction code or confirmation message for Paybill 247247 (Acc: 537409, Ukweli Products) so we can activate your live placement.'
+                    : campaignRejectionPreset === 'photo'
+                    ? 'Your ad artwork appears pixelated or unclear. Please share a clear 800x600 landscape photograph of your storefront, products, or flyer.'
+                    : campaignRejectionPreset === 'copy'
+                    ? 'We recommend clarifying the specific discount or resident offer in the headline to maximize customer inquiries.'
+                    : campaignRejectionPreset === 'terms'
+                    ? 'Please specify the exact dates or conditions for your promotional discount so customers are not confused.'
+                    : '')
+                }
+                onChange={(e) => setCampaignRejectionCustomNote(e.target.value)}
+                placeholder="Write specific suggestions or feedback for the merchant..."
+                className="w-full bg-[#121417] border border-stone-700 rounded-xl p-3 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCampaignForRejection(null)}
+                className="px-3.5 py-2 rounded-xl text-stone-400 text-xs hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const reasonText =
+                    campaignRejectionCustomNote.trim() ||
+                    (campaignRejectionPreset === 'payment'
+                      ? 'Please provide your M-Pesa transaction code for Paybill 247247 (Acc: 537409).'
+                      : campaignRejectionPreset === 'photo'
+                      ? 'Please send a high-resolution photo for your ad banner.'
+                      : 'Please review and update your ad copy specifications.');
+                  handleRequestCampaignChanges(campaignForRejection.id, reasonText);
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Send Guidance &amp; Request Changes</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ad Campaign Edit / Polish Dialog */}
+      {editingCampaign && (
+        <div className="fixed inset-0 z-60 bg-black/90 flex items-center justify-center p-4">
+          <div className="bg-[#181B20] text-white rounded-2xl max-w-xl w-full p-6 border border-stone-800 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-amber-400" />
+                <div>
+                  <h4 className="font-display font-bold text-base text-white">
+                    Editorial Polish: {editingCampaign.businessName}
+                  </h4>
+                  <p className="text-xs text-stone-400">
+                    Refine copy, fix typos, enhance conversion, or swap image URL.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingCampaign(null)}
+                className="text-stone-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditedCampaign} className="space-y-3.5 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-stone-300 block">Ad Headline (Catchy hook)</label>
+                <input
+                  type="text"
+                  value={editingCampaign.headline}
+                  onChange={(e) => setEditingCampaign({ ...editingCampaign, headline: e.target.value })}
+                  className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-stone-300 block">Description / Value Proposition</label>
+                <textarea
+                  value={editingCampaign.description}
+                  onChange={(e) => setEditingCampaign({ ...editingCampaign, description: e.target.value })}
+                  className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white leading-relaxed"
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-stone-300 block">Badge Text</label>
+                  <input
+                    type="text"
+                    value={editingCampaign.badgeText || ''}
+                    onChange={(e) => setEditingCampaign({ ...editingCampaign, badgeText: e.target.value })}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white"
+                    placeholder="e.g. 20% OFF, Limited Offer"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-stone-300 block">CTA Button Label</label>
+                  <input
+                    type="text"
+                    value={editingCampaign.ctaText || ''}
+                    onChange={(e) => setEditingCampaign({ ...editingCampaign, ctaText: e.target.value })}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white"
+                    placeholder="e.g. Order via WhatsApp"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-stone-300 block">Target Estate Zone</label>
+                  <select
+                    value={editingCampaign.targetZone}
+                    onChange={(e) => setEditingCampaign({ ...editingCampaign, targetZone: e.target.value })}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white"
+                  >
+                    <option value="All Kahawa West">All Kahawa West</option>
+                    <option value="Congo">Congo</option>
+                    <option value="Roundabout">Roundabout</option>
+                    <option value="Kamiti">Kamiti Rd</option>
+                    <option value="Jacaranda">Jacaranda</option>
+                    <option value="Kiu Kenda">Kiu Kenda</option>
+                    <option value="Soweto">Soweto</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-stone-300 block">Status</label>
+                  <select
+                    value={editingCampaign.status}
+                    onChange={(e) => setEditingCampaign({ ...editingCampaign, status: e.target.value as AdCampaignStatus })}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white"
+                  >
+                    <option value="in_review">In Review (Pending)</option>
+                    <option value="active">Active Live</option>
+                    <option value="changes_requested">Changes Requested</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-stone-300 block">Image Artwork URL</label>
+                <input
+                  type="url"
+                  value={editingCampaign.imageUrl || ''}
+                  onChange={(e) => setEditingCampaign({ ...editingCampaign, imageUrl: e.target.value })}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white text-xs font-mono"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-stone-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingCampaign(null)}
+                  className="px-4 py-2 rounded-xl text-stone-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold cursor-pointer"
+                >
+                  Save Ad Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Rejection Feedback Dialog */}
       {storyForRejection && (

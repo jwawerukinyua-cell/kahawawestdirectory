@@ -21,30 +21,11 @@ import {
   HelpCircle,
   Copy,
   ExternalLink,
+  Info,
 } from 'lucide-react';
-import { Business, EstateZone } from '../../types';
+import { Business, EstateZone, BusinessAdCampaign, AdCampaignStatus } from '../../types';
 
 export type AdFormatType = 'billboard' | 'resident_deal' | 'category_pin' | 'whatsapp_broadcast';
-
-export interface BusinessAdCampaign {
-  id: string;
-  businessId: string;
-  businessName: string;
-  format: AdFormatType;
-  headline: string;
-  description: string;
-  ctaText: string;
-  badgeText: string;
-  targetZone: string;
-  imageUrl: string;
-  requestCustomDesign: boolean;
-  packageDuration: '7_days' | '15_days' | '30_days';
-  placementPriceKsh: number;
-  creativeFeeKsh: number;
-  totalPriceKsh: number;
-  status: 'active' | 'in_review' | 'scheduled';
-  createdAt: string;
-}
 
 interface PromoteShopModalProps {
   business: Business;
@@ -198,7 +179,7 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
       placementPriceKsh: currentPkg.price,
       creativeFeeKsh: creativeFee,
       totalPriceKsh: totalAmountKsh,
-      status: 'active',
+      status: 'in_review',
       createdAt: new Date().toISOString(),
     };
 
@@ -213,22 +194,22 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
 
     onAdCreated?.(newAd);
 
-    // Format WhatsApp prefill message for instant activation
+    // Format WhatsApp prefill message for editorial review desk
     const formatName = AD_FORMATS.find((f) => f.id === selectedFormat)?.title || selectedFormat;
     const waText = encodeURIComponent(
-      `*🚀 KWEST AD CAMPAIGN BOOKING (KWEST MEDIA)*\n\n` +
+      `*🚀 KWEST AD SUBMISSION FOR EDITORIAL REVIEW (KWEST MEDIA)*\n\n` +
       `*Business:* ${business.name} (${business.zone})\n` +
       `*Ad Format:* ${formatName}\n` +
       `*Campaign Duration:* ${currentPkg.name} (${currentPkg.duration}) — KSh ${currentPkg.price}\n` +
       `*Ad Creation & Copywriting Service:* ${requestCustomDesign ? `YES (+KSh ${AD_CREATION_FEE_KSH})` : 'NO (Merchant provides graphics)'}\n` +
       `*TOTAL AMOUNT PAYABLE (Upfront):* KSh ${totalAmountKsh.toLocaleString()}\n\n` +
-      `*💳 Payment Details:* Paybill: 247247 | Acc No: 537409 | Acc Name: Ukweli Products\n\n` +
+      `*💳 Lipa na M-Pesa:* Paybill: 247247 | Acc No: 537409 | Acc Name: Ukweli Products\n\n` +
       `*Headline:* "${headline.trim()}"\n` +
       `*Description:* "${description.trim()}"\n` +
       `*Badge:* "${badgeText.trim()}"\n` +
       `*CTA Action:* ${ctaText}\n` +
       `*Target Estate Zone:* ${targetZone}\n\n` +
-      `I understand that all ads are payable upfront. Please verify my payment and activate the campaign.`
+      `I am submitting this ad for Editorial Desk review, quality checking, and activation upon M-Pesa verification.`
     );
 
     setIsSuccess(true);
@@ -280,14 +261,22 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
         {/* Modal Scrollable Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
           {isSuccess ? (
-            <div className="py-10 text-center space-y-4 max-w-md mx-auto animate-in zoom-in-95 duration-200">
-              <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center mx-auto shadow-lg">
-                <CheckCircle2 className="w-8 h-8" />
+            <div className="py-8 text-center space-y-4 max-w-lg mx-auto animate-in zoom-in-95 duration-200">
+              <div className="w-16 h-16 rounded-3xl bg-amber-500/20 border-2 border-amber-500 text-amber-400 flex items-center justify-center mx-auto shadow-lg">
+                <Clock className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-white">Ad Campaign Submitted!</h3>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 mb-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span>Status: Queued for Editorial Review &amp; Activation</span>
+                </div>
+                <h3 className="text-xl font-black text-white">Ad Submitted to Editorial Desk</h3>
+              </div>
+
               <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
-                Opening WhatsApp now with your ad copy and creative specs to finalize your live directory placement with the KWEST desk.
+                To guarantee maximum conversion and community trust, <strong>all ads are vetted by our Editorial Desk</strong>. We review copy quality, ensure high-resolution formatting, offer creative improvements, and activate your campaign live once upfront payment is confirmed.
               </p>
+
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-left space-y-2.5 text-xs">
                 <div className="flex justify-between text-stone-300">
                   <span>Merchant:</span>
@@ -298,29 +287,60 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
                   <strong className="text-amber-300">{currentPkg.name} ({currentPkg.duration})</strong>
                 </div>
                 <div className="flex justify-between text-stone-300">
-                  <span>Directory Placement:</span>
-                  <span className="text-stone-200 font-mono">KSh {currentPkg.price.toLocaleString()}</span>
+                  <span>Placement Duration:</span>
+                  <span className="text-stone-200 font-mono">{currentPkg.duration} (KSh {currentPkg.price.toLocaleString()})</span>
                 </div>
                 {requestCustomDesign && (
                   <div className="flex justify-between text-amber-300">
                     <span>Ad Creation &amp; Copywriting:</span>
-                    <span className="font-mono">+KSh {AD_CREATION_FEE_KSH.toLocaleString()}</span>
+                    <span className="font-mono">+KSh {AD_CREATION_FEE_KSH.toLocaleString()} (Editorial Polish)</span>
                   </div>
                 )}
                 <div className="pt-2 border-t border-white/10 flex justify-between items-center">
-                  <span className="font-bold text-white text-xs">Total Amount (Upfront):</span>
+                  <span className="font-bold text-white text-xs">Total Amount (Payable Upfront):</span>
                   <strong className="text-emerald-400 font-mono text-base">KSh {totalAmountKsh.toLocaleString()}</strong>
                 </div>
                 <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-[11px] text-emerald-200 space-y-1">
                   <div className="font-bold text-white flex items-center gap-1.5">
                     <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Lipa na M-Pesa (KWEST MEDIA)</span>
+                    <span>Lipa na M-Pesa (KWEST MEDIA Receiving Account)</span>
                   </div>
                   <p><strong>PAYBILL:</strong> 247247 • <strong>ACCOUNT NO:</strong> 537409</p>
                   <p><strong>ACCOUNT NAME:</strong> Ukweli Products</p>
                 </div>
               </div>
-              <div className="pt-2 flex justify-center gap-3">
+
+              <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-600/30 text-blue-200 text-xs flex items-start gap-2 text-left">
+                <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                <span>
+                  Our editors will review your headline and artwork. If you need revisions, our desk will guide you directly via WhatsApp before your ad goes live.
+                </span>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const formatName = AD_FORMATS.find((f) => f.id === selectedFormat)?.title || selectedFormat;
+                    const waText = encodeURIComponent(
+                      `*🚀 KWEST AD SUBMISSION FOR EDITORIAL REVIEW (KWEST MEDIA)*\n\n` +
+                      `*Business:* ${business.name} (${business.zone})\n` +
+                      `*Ad Format:* ${formatName}\n` +
+                      `*Campaign Duration:* ${currentPkg.name} (${currentPkg.duration}) — KSh ${currentPkg.price}\n` +
+                      `*Ad Creation & Copywriting Service:* ${requestCustomDesign ? `YES (+KSh ${AD_CREATION_FEE_KSH})` : 'NO'}\n` +
+                      `*TOTAL PAYABLE (Upfront):* KSh ${totalAmountKsh.toLocaleString()}\n\n` +
+                      `*Lipa na M-Pesa:* Paybill: 247247 | Acc No: 537409 | Name: Ukweli Products\n\n` +
+                      `*Headline:* "${headline.trim()}"\n` +
+                      `*Description:* "${description.trim()}"\n\n` +
+                      `Please review my ad copy and guide me on activation.`
+                    );
+                    window.open(`https://wa.me/254764405842?text=${waText}`, '_blank', 'noopener,noreferrer');
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Chat with Editorial Desk</span>
+                </button>
                 <button
                   type="button"
                   onClick={onClose}

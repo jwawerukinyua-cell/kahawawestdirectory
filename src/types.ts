@@ -221,6 +221,32 @@ export interface BusinessApplication {
   created_at: string;
 }
 
+export type AdCampaignStatus = 'in_review' | 'active' | 'changes_requested' | 'rejected' | 'completed' | 'expired';
+
+export interface BusinessAdCampaign {
+  id: string;
+  businessId: string;
+  businessName: string;
+  format: string;
+  headline: string;
+  description: string;
+  ctaText: string;
+  badgeText: string;
+  targetZone: string;
+  imageUrl?: string;
+  requestCustomDesign: boolean;
+  packageDuration: '7_days' | '15_days' | '30_days';
+  placementPriceKsh: number;
+  creativeFeeKsh: number;
+  totalPriceKsh: number;
+  status: AdCampaignStatus;
+  createdAt: string;
+  approvedAt?: string;
+  expiresAt?: string;
+  editorNotes?: string;
+  feedbackReason?: string;
+}
+
 // Backwards compatibility aliases
 export type BusinessListing = any;
 export type CommunityNotice = any;

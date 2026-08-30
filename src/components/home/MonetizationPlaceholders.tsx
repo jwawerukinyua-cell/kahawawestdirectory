@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Megaphone,
   Tag,
@@ -20,8 +20,11 @@ import {
   Target,
   ExternalLink,
   MessageSquare,
+  Sparkles,
+  Calendar,
 } from 'lucide-react';
-import { Business } from '../../types';
+import { Business, BusinessAdCampaign } from '../../types';
+import { getLiveActiveAdsFromStorage, getAdTimeRemaining } from '../../lib/adExpiryUtils';
 
 interface MonetizationPlaceholdersProps {
   businessesWithOffers: Business[];
@@ -39,58 +42,170 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
   const [showBannerSpecs, setShowBannerSpecs] = useState(false);
   const [showDealsSpecs, setShowDealsSpecs] = useState(false);
 
+  // Load only APPROVED and UNEXPIRED live ads (status === 'active' within 7, 15, or 30 day window)
+  const [approvedAds, setApprovedAds] = useState<BusinessAdCampaign[]>(() => {
+    return getLiveActiveAdsFromStorage();
+  });
+
+  useEffect(() => {
+    const refreshLiveAds = () => {
+      const live = getLiveActiveAdsFromStorage();
+      setApprovedAds(live);
+    };
+
+    // Initial check
+    refreshLiveAds();
+
+    // Check periodically for automatic expiration so expired ads instantly revert to "Own this space"
+    const interval = setInterval(refreshLiveAds, 15000);
+    window.addEventListener('storage', refreshLiveAds);
+    window.addEventListener('focus', refreshLiveAds);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', refreshLiveAds);
+      window.removeEventListener('focus', refreshLiveAds);
+    };
+  }, []);
+
+  const activeBillboard = approvedAds.find((ad) => ad.format === 'homepage-billboard' || ad.format === 'category-spotlight');
+  const activeDealCampaigns = approvedAds.filter((ad) => ad.format === 'resident-deal');
+
   return (
     <div className="space-y-8 my-8">
       {/* 1. Main Homepage Billboard Slot (Monetization Slot #1) - Styled with luxury #00000f background */}
-      <div
-        id="homepage-main-promo-banner"
-        className="relative overflow-hidden rounded-3xl bg-[#00000f] text-white p-6 sm:p-8 border-2 border-amber-400/70 shadow-2xl"
-      >
-        {/* Subtle Luxury Ambient Accents */}
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-[#630303]/30 rounded-full blur-3xl pointer-events-none" />
+      {activeBillboard ? (
+        <div
+          id="homepage-main-promo-banner"
+          className="relative overflow-hidden rounded-3xl bg-[#00000f] text-white p-6 sm:p-8 border-2 border-amber-400/80 shadow-2xl animate-in fade-in duration-300"
+        >
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-[#630303]/30 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 shadow-md">
-                <Flame className="w-3.5 h-3.5 text-stone-950 fill-stone-950" />
-                <span>COMING SOON • OWN THIS SPACE</span>
-              </span>
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-300">
-                <Target className="w-3.5 h-3.5" />
-                <span>Prime #1 Homepage Billboard</span>
-              </span>
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row gap-5 items-start">
+              {activeBillboard.imageUrl && (
+                <img
+                  src={activeBillboard.imageUrl}
+                  alt={activeBillboard.headline}
+                  className="w-full sm:w-48 h-32 object-cover rounded-2xl border-2 border-amber-400/50 shadow-md shrink-0"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              <div className="space-y-2.5 max-w-xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-400 text-stone-950 shadow-md">
+                    <Sparkles className="w-3.5 h-3.5 fill-stone-950" />
+                    <span>{activeBillboard.badgeText || 'FEATURED PARTNER'}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-500/40">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Verified Editorial Placement</span>
+                  </span>
+                  {(() => {
+                    const timeInfo = getAdTimeRemaining(activeBillboard);
+                    return (
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${timeInfo.badgeColorClass}`}>
+                        <Clock className="w-3 h-3" />
+                        <span>{timeInfo.label}</span>
+                      </span>
+                    );
+                  })()}
+                  <span className="text-xs text-stone-400">📍 {activeBillboard.targetZone}</span>
+                </div>
+
+                <div>
+                  <span className="text-xs font-bold text-amber-300 uppercase tracking-wide block">
+                    {activeBillboard.businessName}
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">
+                    {activeBillboard.headline}
+                  </h3>
+                </div>
+
+                <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-sans">
+                  {activeBillboard.description}
+                </p>
+              </div>
             </div>
 
-            <h3 className="text-xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-              Put Your Business in Front of 10,000+ Kahawa West Residents Every Day
-            </h3>
-
-            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-sans">
-              Claim exclusive top-of-page visibility before your competitors do. Instant brand authority, maximum estate recognition, and direct WhatsApp / phone orders or website clicks from every resident searching for local services.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-2.5 w-full md:w-auto flex-shrink-0">
-            <button
-              onClick={onOpenAdEnquiry}
-              className="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-amber-950/40 cursor-pointer"
-            >
-              <Megaphone className="w-4 h-4 text-stone-950" />
-              <span>Reserve Ad Space</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={onClaimListing}
-              className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/25 flex items-center justify-center gap-1.5 transition backdrop-blur-sm cursor-pointer"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Claim & List Business</span>
-            </button>
+            <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-2.5 w-full md:w-auto flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  const waText = encodeURIComponent(
+                    `Hello ${activeBillboard.businessName}, I saw your official featured ad on the Kahawa West Business Directory: "${activeBillboard.headline}". I would like to make an inquiry!`
+                  );
+                  window.open(`https://wa.me/254764405842?text=${waText}`, '_blank', 'noopener,noreferrer');
+                }}
+                className="px-6 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-amber-950/40 cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4 text-stone-950" />
+                <span>{activeBillboard.ctaText || 'Connect on WhatsApp'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onOpenAdEnquiry}
+                className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/25 flex items-center justify-center gap-1.5 transition backdrop-blur-sm cursor-pointer"
+              >
+                <Megaphone className="w-4 h-4 text-amber-300" />
+                <span>Promote Your Shop</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div
+          id="homepage-main-promo-banner"
+          className="relative overflow-hidden rounded-3xl bg-[#00000f] text-white p-6 sm:p-8 border-2 border-amber-400/70 shadow-2xl animate-in fade-in duration-300"
+        >
+          {/* Subtle Luxury Ambient Accents */}
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-[#630303]/30 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-2xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 shadow-md">
+                  <Flame className="w-3.5 h-3.5 text-stone-950 fill-stone-950" />
+                  <span>COMING SOON • OWN THIS SPACE</span>
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-300">
+                  <Target className="w-3.5 h-3.5" />
+                  <span>Prime #1 Homepage Billboard</span>
+                </span>
+              </div>
+
+              <h3 className="text-xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+                Put Your Business in Front of 10,000+ Kahawa West Residents Every Day
+              </h3>
+
+              <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-sans">
+                Claim exclusive top-of-page visibility before your competitors do. Instant brand authority, maximum estate recognition, and direct WhatsApp / phone orders or website clicks from every resident searching for local services.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-2.5 w-full md:w-auto flex-shrink-0">
+              <button
+                onClick={onOpenAdEnquiry}
+                className="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-amber-950/40 cursor-pointer"
+              >
+                <Megaphone className="w-4 h-4 text-stone-950" />
+                <span>Reserve Ad Space</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onClaimListing}
+                className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/25 flex items-center justify-center gap-1.5 transition backdrop-blur-sm cursor-pointer"
+              >
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Claim & List Business</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. Special Resident Offers & Hot Deals Showcase (Monetization Slot #2) */}
       <div
