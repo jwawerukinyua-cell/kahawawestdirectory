@@ -21,6 +21,8 @@ import {
   Target,
   CreditCard,
   Calendar,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 
@@ -35,7 +37,7 @@ const ENQUIRY_PACKAGES = [
   { id: '30_days', name: '30-Day Prime Leader', duration: '30 Days', price: 2500, rate: 'KSh 83/day' },
 ];
 
-const CREATIVE_DESIGN_FEE_KSH = 500;
+const CREATIVE_DESIGN_FEE_KSH = 1000;
 
 export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose }) => {
   const [businessName, setBusinessName] = useState('');
@@ -47,6 +49,8 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
   const [needCreativeServices, setNeedCreativeServices] = useState(false);
   const [clickAction, setClickAction] = useState<'whatsapp' | 'website' | 'call'>('whatsapp');
   const [notes, setNotes] = useState('');
+  const [mpesaReceiptCode, setMpesaReceiptCode] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   if (!isOpen) return null;
@@ -54,6 +58,12 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
   const currentPkg = ENQUIRY_PACKAGES.find((p) => p.id === selectedDuration) || ENQUIRY_PACKAGES[1];
   const creativeFee = needCreativeServices ? CREATIVE_DESIGN_FEE_KSH : 0;
   const totalPayableKsh = currentPkg.price + creativeFee;
+
+  const handleCopy = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,10 +84,13 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
       `*Package Duration:* ${currentPkg.name} (${currentPkg.duration}) — KSh ${currentPkg.price}\n` +
       `*Ad Creation & Copywriting Add-on:* ${needCreativeServices ? `YES (+KSh ${CREATIVE_DESIGN_FEE_KSH})` : 'NO (Merchant provides graphics)'}\n` +
       `*TOTAL AMOUNT DUE (Upfront):* KSh ${totalPayableKsh.toLocaleString()}\n\n` +
-      `*💳 Lipa na M-Pesa:* Paybill: 247247 | Acc: 537409 | Name: Ukweli Products\n\n` +
+      `*💳 Lipa na M-Pesa Payment:*\n` +
+      `• Paybill: 247247\n` +
+      `• Account: 537409 (Ukweli Products)\n` +
+      `• *M-Pesa Ref / Message:* ${mpesaReceiptCode.trim() || '[Receipt Pending]'}\n\n` +
       `*CTA Action:* ${clickAction}\n` +
       `*Notes/Goals:* ${notes || 'Standard promotion'}\n\n` +
-      `All ads are payable upfront. Please confirm availability and send M-Pesa receipt confirmation.`
+      `Please verify payment and confirm ad activation.`
     );
     window.open(`https://wa.me/254764405842?text=${text}`, '_blank');
   };
@@ -117,61 +130,139 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
         {/* Content */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
           {submitted ? (
-            <div className="text-center py-6 space-y-4">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-10 h-10" />
+            <div className="text-center py-4 space-y-4">
+              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Campaign Booking Received!</h3>
-              <p className="text-sm text-slate-600 max-w-md mx-auto">
-                Thank you for choosing to advertise on Kahawa West Directory. Please review your itemized package total below. All ads are activated upon upfront payment verification.
-              </p>
+              <div>
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 mb-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-amber-700" />
+                  Step 2: Complete Lipa na M-Pesa Upfront
+                </span>
+                <h3 className="text-xl font-bold text-slate-900">Campaign Booking Ready</h3>
+                <p className="text-xs text-slate-600 max-w-md mx-auto mt-1">
+                  Pay directly via M-Pesa Paybill below, then paste your confirmation code to forward your booking &amp; artwork details to our Editorial Desk on WhatsApp.
+                </p>
+              </div>
 
-              {/* Order Summary & Paybill Box */}
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 max-w-md mx-auto text-left text-xs text-slate-800 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Business:</span>
-                  <strong>{businessName}</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Campaign Duration:</span>
-                  <strong className="text-amber-800">{currentPkg.name} ({currentPkg.duration})</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Placement Slot Fee:</span>
-                  <span className="font-mono font-bold">KSh {currentPkg.price.toLocaleString()}</span>
-                </div>
-                {needCreativeServices && (
-                  <div className="flex justify-between text-amber-700">
-                    <span>Ad Creative &amp; Copywriting:</span>
-                    <span className="font-mono font-bold">+KSh {CREATIVE_DESIGN_FEE_KSH.toLocaleString()}</span>
+              {/* Order Summary & Interactive Lipa na M-Pesa Box */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 max-w-lg mx-auto text-left text-xs text-slate-800 space-y-3">
+                <div className="space-y-1.5 pb-2 border-b border-slate-200">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Business:</span>
+                    <strong>{businessName}</strong>
                   </div>
-                )}
-                <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-sm">
-                  <span className="font-bold text-slate-900">Total Due (Upfront):</span>
-                  <strong className="text-emerald-700 font-mono text-base">KSh {totalPayableKsh.toLocaleString()}</strong>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Campaign Duration:</span>
+                    <strong className="text-amber-800">{currentPkg.name} ({currentPkg.duration})</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Placement Slot Fee:</span>
+                    <span className="font-mono font-bold">KSh {currentPkg.price.toLocaleString()}</span>
+                  </div>
+                  {needCreativeServices && (
+                    <div className="flex justify-between text-amber-700 font-medium">
+                      <span>Create Ad For Me (HD Graphics &amp; Copywriting):</span>
+                      <span className="font-mono font-bold">+KSh {CREATIVE_DESIGN_FEE_KSH.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-sm">
+                    <span className="font-bold text-slate-900">Total Amount Due (Upfront):</span>
+                    <strong className="text-emerald-700 font-mono text-base">KSh {totalPayableKsh.toLocaleString()}</strong>
+                  </div>
                 </div>
 
-                {/* Lipa na M-Pesa */}
-                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-950 space-y-1 mt-2">
-                  <div className="font-bold flex items-center gap-1.5 text-emerald-900">
-                    <CreditCard className="w-4 h-4 text-emerald-700" />
-                    <span>Lipa na M-Pesa (KWEST MEDIA)</span>
+                {/* Lipa na M-Pesa Prompt Card with 1-Click Copy */}
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-950 space-y-2.5">
+                  <div className="font-bold flex items-center justify-between text-emerald-900 text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <CreditCard className="w-4 h-4 text-emerald-700" />
+                      <span>Lipa na M-Pesa (KWEST MEDIA)</span>
+                    </span>
+                    <span className="text-[10px] font-black uppercase bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded">
+                      Payable Upfront
+                    </span>
                   </div>
-                  <p><strong>PAYBILL:</strong> <span className="font-mono font-bold text-emerald-900">247247</span></p>
-                  <p><strong>ACCOUNT NO:</strong> <span className="font-mono font-bold text-emerald-900">537409</span></p>
-                  <p><strong>ACCOUNT NAME:</strong> Ukweli Products</p>
-                  <p className="text-[10px] text-emerald-800 font-medium pt-0.5">
-                    * Note: All ad placements and creative services are payable upfront prior to activation.
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    {/* Paybill */}
+                    <div className="p-2 rounded-lg bg-white border border-emerald-200 flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] text-slate-500 font-semibold uppercase">Paybill</div>
+                        <div className="font-mono font-black text-emerald-900 text-sm">247247</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy('247247', 'paybill')}
+                        className="p-1.5 rounded-md hover:bg-emerald-100 text-emerald-800 transition"
+                        title="Copy Paybill"
+                      >
+                        {copiedField === 'paybill' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+
+                    {/* Account */}
+                    <div className="p-2 rounded-lg bg-white border border-emerald-200 flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] text-slate-500 font-semibold uppercase">Account No</div>
+                        <div className="font-mono font-black text-emerald-900 text-sm">537409</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy('537409', 'account')}
+                        className="p-1.5 rounded-md hover:bg-emerald-100 text-emerald-800 transition"
+                        title="Copy Account"
+                      >
+                        {copiedField === 'account' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="p-2 rounded-lg bg-white border border-emerald-200 flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] text-slate-500 font-semibold uppercase">Amount (KSh)</div>
+                        <div className="font-mono font-black text-emerald-900 text-sm">{totalPayableKsh}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(`${totalPayableKsh}`, 'amount')}
+                        className="p-1.5 rounded-md hover:bg-emerald-100 text-emerald-800 transition"
+                        title="Copy Amount"
+                      >
+                        {copiedField === 'amount' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-emerald-900 font-medium">
+                    Account Name: <strong>Ukweli Products</strong> (Equity / M-Pesa Paybill)
+                  </p>
+                </div>
+
+                {/* Optional M-Pesa Code Input */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-bold text-slate-700">
+                    M-Pesa Confirmation Code or SMS Snippet (Optional / Recommended):
+                  </label>
+                  <input
+                    type="text"
+                    value={mpesaReceiptCode}
+                    onChange={(e) => setMpesaReceiptCode(e.target.value)}
+                    placeholder="e.g. SHB728192X or paste Safaricom SMS"
+                    className="w-full p-2 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                  />
+                  <p className="text-[10px] text-slate-500">
+                    Entering your code allows the Editorial Desk to verify payment and fast-track ad activation immediately.
                   </p>
                 </div>
               </div>
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Button variant="primary" onClick={handleWhatsAppDirect} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button variant="primary" onClick={handleWhatsAppDirect} className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
                   <MessageSquare className="w-4 h-4 mr-1.5" />
-                  Send Booking via WhatsApp
+                  Share M-Pesa Receipt &amp; Campaign on WhatsApp
                 </Button>
-                <Button variant="secondary" onClick={() => { setSubmitted(false); onClose(); }}>
+                <Button variant="secondary" onClick={() => { setSubmitted(false); onClose(); }} className="w-full sm:w-auto">
                   Close Window
                 </Button>
               </div>

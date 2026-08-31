@@ -212,12 +212,11 @@ export const Hero: React.FC<HeroProps> = ({
             <span className="font-bold text-[#630303]">Kahawa West, Finally Organized.</span> Find trusted businesses, discover hidden local gems, read community updates, and support businesses around you—all in one trusted place.
           </div>
 
-          {/* Brand Directory Badge positioned between description and search bar */}
+          {/* Brand Directory Title */}
           <div className="mb-4 sm:mb-5">
-            <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-sans font-semibold bg-[#1F0101]/90 text-emerald-300 border border-emerald-500/40 shadow-lg backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Official Kahawa West Business Directory</span>
-            </div>
+            <span className="text-xs sm:text-sm font-sans font-semibold text-emerald-200 tracking-wide">
+              Official Kahawa West Business Directory
+            </span>
           </div>
 
           {/* Search Controls & Sleek Action Button */}

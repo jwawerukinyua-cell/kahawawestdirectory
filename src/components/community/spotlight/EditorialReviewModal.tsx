@@ -1494,8 +1494,8 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                             requestCustomDesign: true,
                             packageDuration: '15_days',
                             placementPriceKsh: 1350,
-                            creativeFeeKsh: 500,
-                            totalPriceKsh: 1850,
+                            creativeFeeKsh: 1000,
+                            totalPriceKsh: 2350,
                             status: 'in_review',
                             createdAt: new Date().toISOString(),
                           };

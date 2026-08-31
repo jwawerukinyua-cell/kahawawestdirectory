@@ -112,7 +112,7 @@ const PACKAGES = [
 ];
 
 // Optional creative graphic design and persuasive copywriting service fee
-export const AD_CREATION_FEE_KSH = 500;
+export const AD_CREATION_FEE_KSH = 1000;
 
 export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
   business,
@@ -140,6 +140,8 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
   const [adImage, setAdImage] = useState<string>(() => {
     return business.heroImage || (business.galleryImages && business.galleryImages[0]) || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80';
   });
+  const [mpesaReceiptCode, setMpesaReceiptCode] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<'builder' | 'preview'>('builder');
 
@@ -148,6 +150,12 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
   const currentPkg = PACKAGES.find((p) => p.id === selectedPackage) || PACKAGES[1];
   const creativeFee = requestCustomDesign ? AD_CREATION_FEE_KSH : 0;
   const totalAmountKsh = currentPkg.price + creativeFee;
+
+  const handleCopy = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -160,6 +168,29 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleSendWhatsAppReceipt = () => {
+    const formatName = AD_FORMATS.find((f) => f.id === selectedFormat)?.title || selectedFormat;
+    const waText = encodeURIComponent(
+      `*🚀 KWEST AD SUBMISSION & M-PESA RECEIPT (KWEST MEDIA)*\n\n` +
+      `*Business:* ${business.name} (${business.zone})\n` +
+      `*Ad Placement:* ${formatName}\n` +
+      `*Campaign Package:* ${currentPkg.name} (${currentPkg.duration}) — KSh ${currentPkg.price.toLocaleString()}\n` +
+      `*Ad Creation & Copywriting Add-on:* ${requestCustomDesign ? `YES (+KSh ${AD_CREATION_FEE_KSH.toLocaleString()})` : 'NO (Merchant provides graphics)'}\n` +
+      `*TOTAL AMOUNT PAID (Upfront):* KSh ${totalAmountKsh.toLocaleString()}\n\n` +
+      `*💳 Lipa na M-Pesa Payment Details:*\n` +
+      `• Paybill: 247247\n` +
+      `• Account: 537409 (Ukweli Products)\n` +
+      `• *M-Pesa Ref / Message:* ${mpesaReceiptCode.trim() || '[Receipt Sent]'}\n\n` +
+      `*Ad Headline:* "${headline.trim()}"\n` +
+      `*Ad Description:* "${description.trim()}"\n` +
+      `*Badge:* "${badgeText.trim()}"\n` +
+      `*CTA Action:* ${ctaText}\n` +
+      `*Target Estate Zone:* ${targetZone}\n\n` +
+      `Please verify payment and start Editorial review to activate my campaign.`
+    );
+    window.open(`https://wa.me/254764405842?text=${waText}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleLaunchCampaign = () => {
@@ -193,30 +224,7 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
     }
 
     onAdCreated?.(newAd);
-
-    // Format WhatsApp prefill message for editorial review desk
-    const formatName = AD_FORMATS.find((f) => f.id === selectedFormat)?.title || selectedFormat;
-    const waText = encodeURIComponent(
-      `*🚀 KWEST AD SUBMISSION FOR EDITORIAL REVIEW (KWEST MEDIA)*\n\n` +
-      `*Business:* ${business.name} (${business.zone})\n` +
-      `*Ad Format:* ${formatName}\n` +
-      `*Campaign Duration:* ${currentPkg.name} (${currentPkg.duration}) — KSh ${currentPkg.price}\n` +
-      `*Ad Creation & Copywriting Service:* ${requestCustomDesign ? `YES (+KSh ${AD_CREATION_FEE_KSH})` : 'NO (Merchant provides graphics)'}\n` +
-      `*TOTAL AMOUNT PAYABLE (Upfront):* KSh ${totalAmountKsh.toLocaleString()}\n\n` +
-      `*💳 Lipa na M-Pesa:* Paybill: 247247 | Acc No: 537409 | Acc Name: Ukweli Products\n\n` +
-      `*Headline:* "${headline.trim()}"\n` +
-      `*Description:* "${description.trim()}"\n` +
-      `*Badge:* "${badgeText.trim()}"\n` +
-      `*CTA Action:* ${ctaText}\n` +
-      `*Target Estate Zone:* ${targetZone}\n\n` +
-      `I am submitting this ad for Editorial Desk review, quality checking, and activation upon M-Pesa verification.`
-    );
-
     setIsSuccess(true);
-
-    setTimeout(() => {
-      window.open(`https://wa.me/254764405842?text=${waText}`, '_blank', 'noopener,noreferrer');
-    }, 1200);
   };
 
   return (
@@ -261,85 +269,148 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
         {/* Modal Scrollable Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
           {isSuccess ? (
-            <div className="py-8 text-center space-y-4 max-w-lg mx-auto animate-in zoom-in-95 duration-200">
-              <div className="w-16 h-16 rounded-3xl bg-amber-500/20 border-2 border-amber-500 text-amber-400 flex items-center justify-center mx-auto shadow-lg">
-                <Clock className="w-8 h-8" />
+            <div className="py-6 text-center space-y-4 max-w-xl mx-auto animate-in zoom-in-95 duration-200">
+              <div className="w-14 h-14 rounded-3xl bg-amber-500/20 border-2 border-amber-500 text-amber-400 flex items-center justify-center mx-auto shadow-lg">
+                <Clock className="w-7 h-7" />
               </div>
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 mb-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 mb-1.5">
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  <span>Status: Queued for Editorial Review &amp; Activation</span>
+                  <span>Step 2: Complete Lipa na M-Pesa &amp; WhatsApp Confirmation</span>
                 </div>
-                <h3 className="text-xl font-black text-white">Ad Submitted to Editorial Desk</h3>
+                <h3 className="text-xl font-black text-white">Ad Queued for Editorial Review</h3>
+                <p className="text-stone-300 text-xs leading-relaxed max-w-md mx-auto mt-1">
+                  Pay via M-Pesa Paybill below, then copy your transaction reference to forward your booking &amp; artwork to our Editorial Desk on WhatsApp for fast-track activation.
+                </p>
               </div>
 
-              <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
-                To guarantee maximum conversion and community trust, <strong>all ads are vetted by our Editorial Desk</strong>. We review copy quality, ensure high-resolution formatting, offer creative improvements, and activate your campaign live once upfront payment is confirmed.
-              </p>
+              {/* Order Summary & Interactive Lipa na M-Pesa Box */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-left space-y-3 text-xs">
+                <div className="space-y-1.5 pb-2 border-b border-white/10">
+                  <div className="flex justify-between text-stone-300">
+                    <span>Merchant:</span>
+                    <strong className="text-white">{business.name}</strong>
+                  </div>
+                  <div className="flex justify-between text-stone-300">
+                    <span>Campaign Package:</span>
+                    <strong className="text-amber-300">{currentPkg.name} ({currentPkg.duration})</strong>
+                  </div>
+                  <div className="flex justify-between text-stone-300">
+                    <span>Placement Fee:</span>
+                    <span className="text-stone-200 font-mono">KSh {currentPkg.price.toLocaleString()}</span>
+                  </div>
+                  {requestCustomDesign && (
+                    <div className="flex justify-between text-amber-300">
+                      <span>Create Ad For Me (HD Graphics &amp; Copywriting):</span>
+                      <span className="font-mono font-bold">+KSh {AD_CREATION_FEE_KSH.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t border-white/10 flex justify-between items-center">
+                    <span className="font-bold text-white text-xs">Total Amount (Payable Upfront):</span>
+                    <strong className="text-emerald-400 font-mono text-base">KSh {totalAmountKsh.toLocaleString()}</strong>
+                  </div>
+                </div>
 
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-left space-y-2.5 text-xs">
-                <div className="flex justify-between text-stone-300">
-                  <span>Merchant:</span>
-                  <strong className="text-white">{business.name}</strong>
-                </div>
-                <div className="flex justify-between text-stone-300">
-                  <span>Campaign Package:</span>
-                  <strong className="text-amber-300">{currentPkg.name} ({currentPkg.duration})</strong>
-                </div>
-                <div className="flex justify-between text-stone-300">
-                  <span>Placement Duration:</span>
-                  <span className="text-stone-200 font-mono">{currentPkg.duration} (KSh {currentPkg.price.toLocaleString()})</span>
-                </div>
-                {requestCustomDesign && (
-                  <div className="flex justify-between text-amber-300">
-                    <span>Ad Creation &amp; Copywriting:</span>
-                    <span className="font-mono">+KSh {AD_CREATION_FEE_KSH.toLocaleString()} (Editorial Polish)</span>
+                {/* 1-Click Copy M-Pesa Prompt Card */}
+                <div className="p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-[11px] text-emerald-100 space-y-2.5">
+                  <div className="font-bold text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-emerald-300">
+                      <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Lipa na M-Pesa (KWEST MEDIA)</span>
+                    </span>
+                    <span className="text-[9px] font-black uppercase bg-emerald-500/30 text-emerald-200 px-1.5 py-0.5 rounded border border-emerald-400/40">
+                      Payable Upfront
+                    </span>
                   </div>
-                )}
-                <div className="pt-2 border-t border-white/10 flex justify-between items-center">
-                  <span className="font-bold text-white text-xs">Total Amount (Payable Upfront):</span>
-                  <strong className="text-emerald-400 font-mono text-base">KSh {totalAmountKsh.toLocaleString()}</strong>
-                </div>
-                <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-[11px] text-emerald-200 space-y-1">
-                  <div className="font-bold text-white flex items-center gap-1.5">
-                    <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Lipa na M-Pesa (KWEST MEDIA Receiving Account)</span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {/* Paybill */}
+                    <div className="p-2 rounded-lg bg-black/40 border border-emerald-500/30 flex items-center justify-between">
+                      <div>
+                        <div className="text-[9px] text-stone-400 font-semibold uppercase">Paybill</div>
+                        <div className="font-mono font-bold text-amber-300 text-xs sm:text-sm">247247</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy('247247', 'paybill')}
+                        className="p-1 rounded-md hover:bg-emerald-900 text-emerald-300 transition cursor-pointer"
+                        title="Copy Paybill"
+                      >
+                        {copiedField === 'paybill' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+
+                    {/* Account */}
+                    <div className="p-2 rounded-lg bg-black/40 border border-emerald-500/30 flex items-center justify-between">
+                      <div>
+                        <div className="text-[9px] text-stone-400 font-semibold uppercase">Account No</div>
+                        <div className="font-mono font-bold text-amber-300 text-xs sm:text-sm">537409</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy('537409', 'account')}
+                        className="p-1 rounded-md hover:bg-emerald-900 text-emerald-300 transition cursor-pointer"
+                        title="Copy Account"
+                      >
+                        {copiedField === 'account' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="p-2 rounded-lg bg-black/40 border border-emerald-500/30 flex items-center justify-between">
+                      <div>
+                        <div className="text-[9px] text-stone-400 font-semibold uppercase">Amount (KSh)</div>
+                        <div className="font-mono font-bold text-emerald-300 text-xs sm:text-sm">{totalAmountKsh}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(`${totalAmountKsh}`, 'amount')}
+                        className="p-1 rounded-md hover:bg-emerald-900 text-emerald-300 transition cursor-pointer"
+                        title="Copy Amount"
+                      >
+                        {copiedField === 'amount' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                   </div>
-                  <p><strong>PAYBILL:</strong> 247247 • <strong>ACCOUNT NO:</strong> 537409</p>
-                  <p><strong>ACCOUNT NAME:</strong> Ukweli Products</p>
+
+                  <p className="text-[10px] text-stone-300">
+                    Account Name: <strong className="text-white">Ukweli Products</strong> (Equity / M-Pesa Paybill)
+                  </p>
+                </div>
+
+                {/* Optional M-Pesa Transaction Code Input */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-bold text-stone-200">
+                    M-Pesa Transaction Code or SMS Snippet (Optional / Recommended):
+                  </label>
+                  <input
+                    type="text"
+                    value={mpesaReceiptCode}
+                    onChange={(e) => setMpesaReceiptCode(e.target.value)}
+                    placeholder="e.g. SHB728192X or paste Safaricom SMS"
+                    className="w-full p-2 text-xs rounded-xl bg-black/50 border border-white/20 text-white placeholder-stone-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                  />
+                  <p className="text-[10px] text-stone-400">
+                    Entering your receipt code allows the Editorial Desk to verify payment and approve your ad immediately.
+                  </p>
                 </div>
               </div>
 
               <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-600/30 text-blue-200 text-xs flex items-start gap-2 text-left">
                 <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                 <span>
-                  Our editors will review your headline and artwork. If you need revisions, our desk will guide you directly via WhatsApp before your ad goes live.
+                  Our editors review your copy and artwork to ensure high resolution. If you requested custom design, we will share the banner mockup via WhatsApp for your approval.
                 </span>
               </div>
 
               <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    const formatName = AD_FORMATS.find((f) => f.id === selectedFormat)?.title || selectedFormat;
-                    const waText = encodeURIComponent(
-                      `*🚀 KWEST AD SUBMISSION FOR EDITORIAL REVIEW (KWEST MEDIA)*\n\n` +
-                      `*Business:* ${business.name} (${business.zone})\n` +
-                      `*Ad Format:* ${formatName}\n` +
-                      `*Campaign Duration:* ${currentPkg.name} (${currentPkg.duration}) — KSh ${currentPkg.price}\n` +
-                      `*Ad Creation & Copywriting Service:* ${requestCustomDesign ? `YES (+KSh ${AD_CREATION_FEE_KSH})` : 'NO'}\n` +
-                      `*TOTAL PAYABLE (Upfront):* KSh ${totalAmountKsh.toLocaleString()}\n\n` +
-                      `*Lipa na M-Pesa:* Paybill: 247247 | Acc No: 537409 | Name: Ukweli Products\n\n` +
-                      `*Headline:* "${headline.trim()}"\n` +
-                      `*Description:* "${description.trim()}"\n\n` +
-                      `Please review my ad copy and guide me on activation.`
-                    );
-                    window.open(`https://wa.me/254764405842?text=${waText}`, '_blank', 'noopener,noreferrer');
-                  }}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  onClick={handleSendWhatsAppReceipt}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-lg"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  <span>Chat with Editorial Desk</span>
+                  <span>Share M-Pesa Receipt &amp; Ad via WhatsApp</span>
                 </button>
                 <button
                   type="button"
