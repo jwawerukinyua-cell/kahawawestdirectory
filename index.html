@@ -6,25 +6,29 @@
     <title>Kahawa West Directory | kahawawestdirectory.co.ke</title>
     <meta name="description" content="Find trusted Kahawa West businesses, domestic specialists, verified local contacts, emergency hotlines, and estate updates in one community directory." />
     <link rel="canonical" href="https://kahawawestdirectory.co.ke" />
-    <meta name="theme-color" content="#3B0202" />
+    <meta name="theme-color" content="#630303" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="KWEST" />
+    <meta name="apple-mobile-web-app-title" content="Kahawa West" />
+    <meta name="application-name" content="Kahawa West" />
     
     <!-- Preload Critical Above-The-Fold Assets for LCP Performance -->
     <link rel="preload" as="image" href="/hero.webp" type="image/webp" fetchpriority="high" />
     <link rel="preload" as="image" href="/kwest-logo.webp" type="image/webp" />
 
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/kwest-logo.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/kwest-logo.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/kwest-logo.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/kwest-logo.png" />
-    <link rel="apple-touch-icon" href="/kwest-logo.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/kwest-logo.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/kwest-logo.png" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/kwest-logo.png" />
-    <link rel="shortcut icon" href="/kwest-logo.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://kahawawestdirectory.co.ke" />
@@ -44,18 +48,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     
     <script>
+      // Early capture of PWA beforeinstallprompt
+      window.__kwestInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.__kwestInstallPrompt = e;
+        window.dispatchEvent(new CustomEvent('kwest_prompt_ready'));
+      });
+
       // Non-blocking Service Worker registration
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-              navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW registration error:', err));
-            });
-          } else {
-            setTimeout(() => {
-              navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW registration error:', err));
-            }, 1000);
-          }
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then((reg) => {
+              if (reg.waiting) {
+                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              }
+            })
+            .catch((err) => console.log('SW registration error:', err));
         });
       }
     </script>

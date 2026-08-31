@@ -1,11 +1,19 @@
-const CACHE_NAME = 'kwest-cache-v1';
+const CACHE_NAME = 'kwest-cache-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/kwest-icon.png',
+  '/favicon.ico',
+  '/favicon-32x32.png',
+  '/favicon-16x16.png',
+  '/apple-touch-icon.png',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
+  '/icon-maskable-192x192.png',
+  '/icon-maskable-512x512.png',
   '/kwest-logo.png',
-  '/hero.jpg',
+  '/kwest-logo.webp',
+  '/hero.webp',
 ];
 
 self.addEventListener('install', (event) => {

@@ -147,6 +147,7 @@ export default function App() {
     const handlePrompt = (e: Event) => {
       e.preventDefault();
       (window as any).__kwestInstallPrompt = e;
+      window.dispatchEvent(new CustomEvent('kwest_prompt_ready'));
     };
     window.addEventListener('beforeinstallprompt', handlePrompt);
     return () => window.removeEventListener('beforeinstallprompt', handlePrompt);
@@ -648,6 +649,7 @@ export default function App() {
         onLegalClick={(tab) => setLegalTab(tab)}
         onAboutClick={() => setIsAboutOpen(true)}
         onListBusinessClick={() => setIsListBusinessOpen(true)}
+        onInstallClick={() => setIsInstallAppOpen(true)}
       />
 
       {/* 5. Mobile Fixed Bottom Navigation */}

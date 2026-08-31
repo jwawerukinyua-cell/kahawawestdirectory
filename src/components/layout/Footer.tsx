@@ -15,12 +15,14 @@ interface FooterProps {
   onLegalClick: (tab: 'guidelines' | 'community' | 'privacy' | 'terms') => void;
   onAboutClick: () => void;
   onListBusinessClick: () => void;
+  onInstallClick?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   onLegalClick,
   onAboutClick,
   onListBusinessClick,
+  onInstallClick,
 }) => {
   const [openSections, setOpenSections] = useState({
     merchants: true,
@@ -92,6 +94,17 @@ export const Footer: React.FC<FooterProps> = ({
                     Business Listing Guidelines
                   </button>
                 </li>
+                {onInstallClick && (
+                  <li>
+                    <button
+                      id="footer-install-app-btn"
+                      onClick={onInstallClick}
+                      className="text-amber-300 hover:text-amber-200 font-bold transition text-left flex items-center gap-1.5"
+                    >
+                      <span>📲 Install App to Home Screen</span>
+                    </button>
+                  </li>
+                )}
                 <li>
                   <button
                     id="footer-community-standards-btn"

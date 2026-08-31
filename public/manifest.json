@@ -1,41 +1,53 @@
 {
   "name": "Kahawa West Directory",
-  "short_name": "KWEST",
-  "description": "Verified local businesses, fundis, emergency contacts & shops in Kahawa West, Nairobi.",
+  "short_name": "Kahawa West",
+  "description": "Official Kahawa West Business Directory: Verified local businesses, fundis, emergency contacts, estate updates & shops in Kahawa West, Nairobi.",
   "start_url": "/",
   "id": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#180101",
+  "theme_color": "#630303",
   "categories": ["business", "shopping", "utilities", "lifestyle"],
   "lang": "en",
   "dir": "ltr",
   "icons": [
     {
-      "src": "/kwest-logo.png",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/kwest-logo.png",
+      "src": "/icon-maskable-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/kwest-logo.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/kwest-logo.png",
+      "src": "/icon-maskable-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
