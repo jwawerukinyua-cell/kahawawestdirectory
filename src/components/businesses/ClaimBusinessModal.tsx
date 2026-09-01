@@ -28,6 +28,7 @@ import { Business, BusinessClaim, EstateZone, OperationType } from '../../types'
 import { saveBusinessClaim, saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
 import { registerMerchantAccount } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
+import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
 
 interface ClaimBusinessModalProps {
   business: Business;
@@ -120,48 +121,6 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
     setPhotos(updated);
   };
 
-  const compressAndReadFile = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1200;
-          const MAX_HEIGHT = 1200;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height = Math.round((height * MAX_WIDTH) / width);
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width = Math.round((width * MAX_HEIGHT) / height);
-              height = MAX_HEIGHT;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.85));
-          } else {
-            resolve(e.target?.result as string);
-          }
-        };
-        img.onerror = () => resolve(e.target?.result as string);
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleDeviceFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -171,7 +130,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
       const maxToLoad = Math.min(files.length, 5);
 
       for (let i = 0; i < maxToLoad; i++) {
-        const dataUrl = await compressAndReadFile(files[i]);
+        const file = files[i];
+        const validation = validateImageFile(file);
+        if (!validation.valid) {
+          alert(validation.error || 'Invalid photo format');
+          continue;
+        }
+        const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
         updatedPhotos[i] = dataUrl;
       }
       setPhotos(updatedPhotos);
@@ -186,7 +151,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
     if (!files || files.length === 0) return;
 
     try {
-      const dataUrl = await compressAndReadFile(files[0]);
+      const file = files[0];
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        alert(validation.error || 'Invalid photo format');
+        return;
+      }
+      const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
       handlePhotoChange(index, dataUrl);
     } catch (err) {
       console.error('Error reading file for slot:', err);
@@ -619,7 +590,8 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                           <div className="relative h-24 sm:h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group w-full">
                             <img
                               src={displayPhoto}
-                              alt={`Photo ${idx + 1}`}
+                              alt={business.name ? `${business.name} verification photo slot ${idx + 1} - Kahawa West` : `Verification photo ${idx + 1}`}
+                              title={`Verification photo slot ${idx + 1}`}
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
                             />

@@ -22,6 +22,7 @@ import { saveBusinessApplication, saveCustomizedBusiness, generateBusinessSlug }
 import { DEFAULT_OPENING_HOURS } from '../../data/defaultOpeningHours';
 import { registerMerchantAccount } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
+import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
 
 interface ListYourBusinessModalProps {
   isOpen: boolean;
@@ -78,48 +79,6 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
     setPhotos(updated);
   };
 
-  const compressAndReadFile = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1200;
-          const MAX_HEIGHT = 1200;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height = Math.round((height * MAX_WIDTH) / width);
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width = Math.round((width * MAX_HEIGHT) / height);
-              height = MAX_HEIGHT;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.85));
-          } else {
-            resolve(e.target?.result as string);
-          }
-        };
-        img.onerror = () => resolve(e.target?.result as string);
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleDeviceFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -129,7 +88,13 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
       const maxToLoad = Math.min(files.length, 5);
 
       for (let i = 0; i < maxToLoad; i++) {
-        const dataUrl = await compressAndReadFile(files[i]);
+        const file = files[i];
+        const validation = validateImageFile(file);
+        if (!validation.valid) {
+          alert(validation.error || 'Invalid photo format');
+          continue;
+        }
+        const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
         updatedPhotos[i] = dataUrl;
       }
       setPhotos(updatedPhotos);
@@ -144,7 +109,13 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
     if (!files || files.length === 0) return;
 
     try {
-      const dataUrl = await compressAndReadFile(files[0]);
+      const file = files[0];
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        alert(validation.error || 'Invalid photo format');
+        return;
+      }
+      const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
       handlePhotoChange(index, dataUrl);
     } catch (err) {
       console.error('Error reading file for slot:', err);
@@ -704,7 +675,13 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                   return (
                   <div key={idx} className="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs space-y-1.5 flex flex-col justify-between">
                     <div className="relative h-20 sm:h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
-                      <img src={photoSrc} alt="thumb" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img 
+                        src={photoSrc} 
+                        alt={`Business photo preview slot ${idx + 1}`} 
+                        title={`Photo upload slot ${idx + 1}`}
+                        className="w-full h-full object-cover" 
+                        referrerPolicy="no-referrer" 
+                      />
                       <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
                         {idx === 0 ? '★ Main' : `#${idx + 1}`}
                       </span>

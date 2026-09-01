@@ -188,7 +188,7 @@ export const Footer: React.FC<FooterProps> = ({
                 {/* Phone contact */}
                 <a
                   id="footer-phone-link"
-                  href="tel:0764405842"
+                  href="tel:+254764405842"
                   className="flex items-center gap-2 text-xs hover:text-emerald-300 transition"
                 >
                   <Phone className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />

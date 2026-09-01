@@ -10,6 +10,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { CommunityStory } from '../../../types';
+import { ListingImage } from '../../ui/ListingImage';
 
 interface CommunitySpotlightProps {
   stories: CommunityStory[];
@@ -100,11 +101,11 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
         <div className="relative w-full h-64 sm:h-80 md:h-96 bg-[#0E1318] flex items-center justify-center overflow-hidden border-b border-stone-800">
           {featuredStory?.imageUrl && featuredStory.imageUrl.trim() !== '' && !featuredImgError ? (
             <>
-              <img
+              <ListingImage
                 src={featuredStory.imageUrl}
-                alt={featuredStory.title}
+                story={featuredStory}
+                imageType="cover"
                 className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                referrerPolicy="no-referrer"
                 onError={() => setFeaturedImgError(true)}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#121820] via-transparent to-black/30" />
@@ -227,11 +228,11 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
                 {/* Story Photo */}
                 <div className="relative h-48 bg-stone-100 overflow-hidden">
                   {story.imageUrl && story.imageUrl.trim() !== '' ? (
-                    <img
+                    <ListingImage
                       src={story.imageUrl}
-                      alt={story.title}
+                      story={story}
+                      imageType="preview"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      referrerPolicy="no-referrer"
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 text-xs">

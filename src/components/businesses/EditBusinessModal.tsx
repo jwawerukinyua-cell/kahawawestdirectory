@@ -23,6 +23,7 @@ import {
 import { Business, EstateZone, OperationType } from '../../types';
 import { saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
 import { Button } from '../ui/Button';
+import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
 
 interface EditBusinessModalProps {
   business: Business | null;
@@ -254,16 +255,21 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
     setPhotos(next);
   };
 
-  const handleFileUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        if (uploadEvent.target?.result) {
-          handlePhotoChange(index, uploadEvent.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        alert(validation.error || 'Invalid photo format');
+        return;
+      }
+      try {
+        const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+        handlePhotoChange(index, dataUrl);
+      } catch (err) {
+        console.error('Failed to compress photo in edit modal:', err);
+        alert('Could not process selected image.');
+      }
     }
   };
 
@@ -820,7 +826,8 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
                       <div className="relative h-24 rounded-xl overflow-hidden bg-stone-100 border border-stone-200">
                         <img
                           src={displayImg}
-                          alt={`Slot ${idx + 1}`}
+                          alt={name ? `${name} photo slot ${idx + 1} - Kahawa West` : `Business photo slot ${idx + 1}`}
+                          title={`Photo slot ${idx + 1}`}
                           className="w-full h-full object-cover"
                           referrerPolicy="no-referrer"
                         />

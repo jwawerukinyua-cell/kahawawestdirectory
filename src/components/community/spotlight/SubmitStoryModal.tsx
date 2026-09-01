@@ -28,6 +28,7 @@ import {
 import { CommunityStory, EstateZone, StoryCategory } from '../../../types';
 import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
+import { compressImageFile, validateImageFile } from '../../../lib/imageCompression';
 
 interface SubmitStoryModalProps {
   isOpen: boolean;
@@ -87,14 +88,21 @@ export const SubmitStoryModal: React.FC<SubmitStoryModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        alert(validation.error || 'Invalid photo format');
+        return;
+      }
+      try {
+        const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+        setImageUrl(dataUrl);
+      } catch (err) {
+        console.error('Failed to compress story photo:', err);
+        alert('Could not process photo.');
+      }
     }
   };
 
@@ -331,7 +339,12 @@ Residents interested in joining our upcoming Saturday clean-ups can meet at the 
 
               {imageUrl && imageUrl.trim() !== '' ? (
                 <div className="rounded-2xl overflow-hidden shadow-md bg-stone-900 max-h-[350px]">
-                  <img src={imageUrl} alt="Story preview" className="w-full h-full object-cover max-h-[350px]" />
+                  <img
+                    src={imageUrl}
+                    alt={title ? `Preview: ${title} - Kahawa West Community Spotlight` : 'Community spotlight story photo preview'}
+                    title="Community spotlight story photo preview"
+                    className="w-full h-full object-cover max-h-[350px]"
+                  />
                 </div>
               ) : (
                 <div className="h-48 rounded-2xl bg-stone-200 flex flex-col items-center justify-center text-stone-500 text-xs border border-dashed border-stone-400">
@@ -632,7 +645,12 @@ Residents interested in joining our upcoming Saturday clean-ups can meet at the 
 
                 {imageUrl && imageUrl.trim() !== '' && (
                   <div className="relative rounded-xl overflow-hidden h-36 bg-stone-900 border border-stone-300">
-                    <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <img
+                      src={imageUrl}
+                      alt="Uploaded photo preview"
+                      title="Uploaded photo preview"
+                      className="w-full h-full object-cover"
+                    />
                     <button
                       type="button"
                       onClick={() => setImageUrl('')}

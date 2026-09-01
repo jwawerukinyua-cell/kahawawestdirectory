@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Business, BusinessAdCampaign } from '../../types';
 import { getLiveActiveAdsFromStorage, getAdTimeRemaining } from '../../lib/adExpiryUtils';
+import { ListingImage } from '../ui/ListingImage';
 
 interface MonetizationPlaceholdersProps {
   businessesWithOffers: Business[];
@@ -85,11 +86,12 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row gap-5 items-start">
               {activeBillboard.imageUrl && (
-                <img
+                <ListingImage
                   src={activeBillboard.imageUrl}
-                  alt={activeBillboard.headline}
+                  alt={`${activeBillboard.headline} - Featured Partner on Kahawa West Directory`}
+                  business={{ name: activeBillboard.businessName }}
+                  imageType="ad"
                   className="w-full sm:w-48 h-32 object-cover rounded-2xl border-2 border-amber-400/50 shadow-md shrink-0"
-                  referrerPolicy="no-referrer"
                 />
               )}
               <div className="space-y-2.5 max-w-xl">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, MapPin, ShieldCheck, Facebook, Instagram, Video, ExternalLink } from 'lucide-react';
 import { BrandLogo } from '../ui/BrandLogo';
+import { generateBrandAltText } from '../../lib/seoAltUtils';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -39,7 +40,8 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               <source srcSet="/hero.webp" type="image/webp" />
               <img
                 src="/hero.jpg"
-                alt="Kahawa West Community"
+                alt={generateBrandAltText('about-banner')}
+                title="Kahawa West Commercial Hub & Community Directory"
                 className="w-full h-full object-cover"
                 loading="lazy"
                 decoding="async"

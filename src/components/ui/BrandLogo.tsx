@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { generateBrandAltText } from '../../lib/seoAltUtils';
 
 interface BrandLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -36,7 +37,8 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           <source srcSet="/kwest-logo.webp" type="image/webp" />
           <img
             src="/kwest-logo.png"
-            alt="Kahawa West Directory"
+            alt={generateBrandAltText('logo')}
+            title="KWEST - Kahawa West Business & Services Directory"
             className="w-full h-full object-contain"
             width={iconDimensions.width}
             height={iconDimensions.height}

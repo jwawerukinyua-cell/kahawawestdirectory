@@ -11,6 +11,7 @@ import {
   Clock 
 } from 'lucide-react';
 import { EMERGENCY_CONTACTS } from '../data/mockData';
+import { formatKenyanPhoneForTel } from '../lib/phoneUtils';
 
 interface EmergencyModalProps {
   isOpen: boolean;
@@ -102,7 +103,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
               {/* Call Buttons */}
               <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                 <a
-                  href={`tel:${item.phone.replace(/[^0-9]/g, '')}`}
+                  href={`tel:${formatKenyanPhoneForTel(item.phone)}`}
                   className="flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
                 >
                   <PhoneCall className="w-3.5 h-3.5" />
@@ -110,7 +111,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
                 </a>
                 {item.altPhone && (
                   <a
-                    href={`tel:${item.altPhone.replace(/[^0-9]/g, '')}`}
+                    href={`tel:${formatKenyanPhoneForTel(item.altPhone)}`}
                     className="px-3 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 font-semibold text-xs rounded-xl transition-colors"
                     title="Alternative line"
                   >

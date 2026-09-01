@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Phone, MessageSquare, MapPin, Mail, Globe, Copy, Check, ExternalLink } from 'lucide-react';
 import { Business } from '../../types';
 import { trackBusinessInteraction } from '../../lib/tracking';
+import { formatKenyanPhoneForTel, getWhatsAppChatUrl, formatPhoneForDisplay } from '../../lib/phoneUtils';
 
 interface BusinessContactProps {
   business: Business;
@@ -31,9 +32,13 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business }) =>
     trackBusinessInteraction(business.id, 'whatsapp');
   };
 
-  const whatsappUrl = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(
+  const whatsappUrl = getWhatsAppChatUrl(
+    business.whatsapp || business.phone,
     `Hello ${business.name}, I am contacting you from KWEST Directory.`
-  )}`;
+  );
+
+  const phoneTelUri = formatKenyanPhoneForTel(business.phone);
+  const displayPhone = formatPhoneForDisplay(business.phone);
 
   return (
     <div id="business-contact-section" className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm mb-6">
@@ -64,11 +69,11 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business }) =>
             <div className="min-w-0 flex-1">
               <span className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider block">Phone Call</span>
               <a
-                href={`tel:${business.phone}`}
+                href={`tel:${phoneTelUri}`}
                 onClick={handlePhoneClick}
                 className="text-sm font-bold text-slate-900 hover:text-emerald-700 transition block truncate"
               >
-                {business.phone}
+                {displayPhone || business.phone}
               </a>
             </div>
           </div>

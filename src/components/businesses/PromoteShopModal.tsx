@@ -24,6 +24,7 @@ import {
   Info,
 } from 'lucide-react';
 import { Business, EstateZone, BusinessAdCampaign, AdCampaignStatus } from '../../types';
+import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
 
 export type AdFormatType = 'billboard' | 'resident_deal' | 'category_pin' | 'whatsapp_broadcast';
 
@@ -157,17 +158,23 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setAdImage(event.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      alert(validation.error || 'Invalid photo format');
+      return;
+    }
+
+    try {
+      const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+      setAdImage(dataUrl);
+    } catch (err) {
+      console.error('Failed to compress ad image:', err);
+      alert('Could not process ad image.');
+    }
   };
 
   const handleSendWhatsAppReceipt = () => {
@@ -655,7 +662,12 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
                     {selectedFormat === 'billboard' && (
                       <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#240101] via-[#3B0202] to-[#1F0101] p-4 text-white border border-amber-400/40">
                         <div className="absolute top-0 right-0 w-32 h-32 opacity-30 pointer-events-none">
-                          <img src={adImage} alt="Ad background" className="w-full h-full object-cover blur-xs" />
+                          <img 
+                            src={adImage} 
+                            alt={business.name ? `${business.name} commercial advertisement backdrop - Kahawa West` : 'Commercial advertisement backdrop'} 
+                            title="Commercial advertisement backdrop"
+                            className="w-full h-full object-cover blur-xs" 
+                          />
                         </div>
                         <div className="relative z-10 space-y-2">
                           <div className="flex items-center gap-2">

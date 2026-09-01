@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
+import { ListingImage } from '../ui/ListingImage';
+import { generateBusinessAltText } from '../../lib/seoAltUtils';
 
 interface BusinessGalleryProps {
   images: string[];
@@ -55,11 +57,12 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
           className="md:col-span-2 relative group overflow-hidden rounded-xl cursor-pointer bg-slate-100 min-h-[200px]"
           onClick={() => setSelectedIdx(0)}
         >
-          <img
+          <ListingImage
             src={mainPhoto}
-            alt={`${businessName} primary photo`}
+            business={{ name: businessName }}
+            imageType="gallery"
+            index={1}
             className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-            referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-slate-900/30 transition flex items-center justify-center">
             <span className="opacity-0 group-hover:opacity-100 transition inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-semibold backdrop-blur-sm">
@@ -79,11 +82,12 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
               className="relative group overflow-hidden rounded-xl cursor-pointer bg-slate-100 h-32 md:h-[138px]"
               onClick={() => setSelectedIdx(idx + 1)}
             >
-              <img
+              <ListingImage
                 src={img}
-                alt={`${businessName} photo ${idx + 2}`}
+                business={{ name: businessName }}
+                imageType="gallery"
+                index={idx + 2}
                 className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                referrerPolicy="no-referrer"
               />
               <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-slate-900/30 transition flex items-center justify-center">
                 <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition" />
@@ -121,11 +125,12 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
             className="max-w-4xl max-h-[85vh] flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
+            <ListingImage
               src={gallery[selectedIdx]}
-              alt={`${businessName} full view ${selectedIdx + 1}`}
+              business={{ name: businessName }}
+              imageType="gallery"
+              index={selectedIdx + 1}
               className="max-w-full max-h-[72vh] object-contain rounded-xl shadow-2xl"
-              referrerPolicy="no-referrer"
             />
             <div className="flex items-center justify-between w-full mt-3 text-white text-sm">
               <span className="font-medium">{businessName}</span>
@@ -142,7 +147,13 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
                     selectedIdx === tIdx ? 'border-emerald-400 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={thumb} alt="thumb" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <ListingImage
+                    src={thumb}
+                    business={{ name: businessName }}
+                    imageType="thumbnail"
+                    index={tIdx + 1}
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>

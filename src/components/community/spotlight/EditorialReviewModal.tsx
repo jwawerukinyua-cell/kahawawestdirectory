@@ -1829,7 +1829,8 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                                     {campaign.imageUrl && (
                                       <img
                                         src={campaign.imageUrl}
-                                        alt={campaign.headline}
+                                        alt={campaign.headline ? `${campaign.headline} - Sponsored campaign in Kahawa West` : 'Sponsored ad campaign'}
+                                        title="Sponsored ad campaign photo"
                                         className="w-full sm:w-28 h-20 object-cover rounded-lg border border-stone-700 shrink-0"
                                         referrerPolicy="no-referrer"
                                       />

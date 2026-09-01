@@ -3,6 +3,7 @@ import { X, Calendar, MapPin, Share2, ThumbsUp, CheckCircle2, ShieldCheck, Camer
 import { CommunityStory } from '../../../types';
 import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
+import { ListingImage } from '../../ui/ListingImage';
 
 interface StoryReaderModalProps {
   story: CommunityStory | null;
@@ -124,11 +125,12 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           {story.imageUrl && story.imageUrl.trim() !== '' && (
             <div className="space-y-1.5">
               <div className="relative rounded-2xl overflow-hidden shadow-md bg-stone-900 max-h-[420px]">
-                <img
+                <ListingImage
                   src={story.imageUrl}
-                  alt={story.title}
+                  story={story}
+                  customCaption={story.imageCaption}
+                  imageType="cover"
                   className="w-full h-full object-cover max-h-[420px]"
-                  referrerPolicy="no-referrer"
                 />
               </div>
               {story.imageCaption && (

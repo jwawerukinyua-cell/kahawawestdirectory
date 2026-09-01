@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { SearchBar } from '../directory/SearchBar';
 import { Category } from '../../types';
+import { generateBrandAltText } from '../../lib/seoAltUtils';
 
 interface HeroProps {
   searchQuery: string;
@@ -166,7 +167,8 @@ export const Hero: React.FC<HeroProps> = ({
             <source srcSet="/hero.webp" type="image/webp" />
             <img
               src="/hero.jpg"
-              alt="Kahawa West Bypass Roundabout Landmark"
+              alt={generateBrandAltText('hero-landmark')}
+              title="Kahawa West Landmark - Bypass Roundabout Intersection"
               className="w-full h-full object-cover object-center opacity-95 transition-all duration-300 transform scale-100 filter brightness-105 contrast-105"
               referrerPolicy="no-referrer"
               fetchPriority="high"

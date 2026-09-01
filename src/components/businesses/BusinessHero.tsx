@@ -3,6 +3,8 @@ import { MapPin, Star, Phone, MessageSquare, ShieldCheck, Share2, Tag, Edit3, Me
 import { Business } from '../../types';
 import { VerifiedBadge } from '../ui/VerifiedBadge';
 import { Button } from '../ui/Button';
+import { ListingImage } from '../ui/ListingImage';
+import { formatKenyanPhoneForTel, getWhatsAppChatUrl, formatPhoneForDisplay } from '../../lib/phoneUtils';
 
 interface BusinessHeroProps {
   business: Business;
@@ -25,9 +27,13 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
   onPromoteShopClick,
   onMerchantUnlockClick,
 }) => {
-  const whatsappUrl = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(
+  const whatsappUrl = getWhatsAppChatUrl(
+    business.whatsapp || business.phone,
     `Hello ${business.name}, I found your business on KWEST Directory and would like to inquire about your services.`
-  )}`;
+  );
+
+  const phoneTelUri = formatKenyanPhoneForTel(business.phone);
+  const displayPhone = formatPhoneForDisplay(business.phone);
 
   const heroImageUrl =
     business.heroImage && business.heroImage.trim() !== ''
@@ -38,11 +44,11 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
     <div id="business-hero-section" className="relative bg-[#3B0202] text-white rounded-2xl overflow-hidden shadow-xl mb-6 border border-[#630303] font-sans">
       {/* Background Cover Overlay */}
       <div className="absolute inset-0 opacity-25">
-        <img
+        <ListingImage
           src={heroImageUrl}
-          alt={business.name}
+          business={business}
+          imageType="hero"
           className="w-full h-full object-cover filter blur-md scale-105"
-          referrerPolicy="no-referrer"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#240101] via-[#3B0202]/90 to-transparent" />
       </div>
@@ -180,11 +186,11 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
 
           <a
             id="hero-call-btn"
-            href={`tel:${business.phone}`}
+            href={`tel:${phoneTelUri}`}
             className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#630303] hover:bg-[#7D0404] text-white shadow-md transition active:scale-95 border border-rose-400/40"
           >
             <Phone className="w-4 h-4" />
-            <span>Call {business.phone}</span>
+            <span>Call {displayPhone || business.phone}</span>
           </a>
 
           <button

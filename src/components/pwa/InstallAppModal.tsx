@@ -14,6 +14,7 @@ import {
   Compass,
   ArrowRight,
 } from 'lucide-react';
+import { generateBrandAltText } from '../../lib/seoAltUtils';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -188,7 +189,8 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
                   <source srcSet="/kwest-logo.webp" type="image/webp" />
                   <img
                     src="/kwest-logo.png"
-                    alt="Official KWEST Logo"
+                    alt={generateBrandAltText('pwa-icon')}
+                    title="Kahawa West Directory App Icon"
                     className="w-full h-full object-contain"
                     width="96"
                     height="96"

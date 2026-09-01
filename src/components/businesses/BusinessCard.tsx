@@ -2,7 +2,9 @@ import React from 'react';
 import { MapPin, Star, Phone, MessageSquare, ShieldCheck, ChevronRight, CreditCard, Tag } from 'lucide-react';
 import { Business } from '../../types';
 import { VerifiedBadge } from '../ui/VerifiedBadge';
+import { ListingImage } from '../ui/ListingImage';
 import { trackBusinessInteraction } from '../../lib/tracking';
+import { formatKenyanPhoneForTel, getWhatsAppChatUrl } from '../../lib/phoneUtils';
 
 interface BusinessCardProps {
   business: Business;
@@ -15,9 +17,12 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
   onViewDetails,
   onClaim,
 }) => {
-  const whatsappUrl = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(
-    `Hello ${business.name}, I saw your listing on KWEST Directory.`
-  )}`;
+  const whatsappUrl = getWhatsAppChatUrl(
+    business.whatsapp || business.phone,
+    `Hello ${business.name}, I saw your listing on KWEST Directory and would like to make an inquiry.`
+  );
+
+  const phoneTelUri = formatKenyanPhoneForTel(business.phone);
 
   const handleWhatsApp = () => {
     trackBusinessInteraction(business.id, 'whatsapp');
@@ -44,11 +49,11 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
     >
       {/* Main Single Photo (Hero Image Only on Card) */}
       <div className="relative h-48 w-full bg-stone-100 overflow-hidden cursor-pointer" onClick={handleDetails}>
-        <img
+        <ListingImage
           src={heroImageUrl}
-          alt={business.name}
+          business={business}
+          imageType="cover"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          referrerPolicy="no-referrer"
           loading="lazy"
           decoding="async"
           width="400"
@@ -141,7 +146,7 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
             </a>
 
             <a
-              href={`tel:${business.phone}`}
+              href={`tel:${phoneTelUri}`}
               onClick={handlePhone}
               className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-900 text-xs font-semibold transition active:scale-95 border border-sky-200"
             >

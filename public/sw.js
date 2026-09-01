@@ -1,7 +1,8 @@
-const CACHE_NAME = 'kwest-cache-v2';
+const CACHE_NAME = 'kwest-cache-v3';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
+  '/offline.html',
   '/manifest.json',
   '/favicon.ico',
   '/favicon-32x32.png',
@@ -63,18 +64,31 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
 
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+      return fetch(event.request)
+        .then((networkResponse) => {
+          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+            return networkResponse;
+          }
+
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+
           return networkResponse;
-        }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        })
+        .catch(() => {
+          // If offline and requesting an HTML page/navigation, serve offline.html fallback
+          if (
+            event.request.mode === 'navigate' ||
+            (event.request.headers.get('accept') &&
+              event.request.headers.get('accept').includes('text/html'))
+          ) {
+            return caches.match('/offline.html').then((offlineFallback) => {
+              return offlineFallback || caches.match('/index.html');
+            });
+          }
         });
-
-        return networkResponse;
-      });
     })
   );
 });
