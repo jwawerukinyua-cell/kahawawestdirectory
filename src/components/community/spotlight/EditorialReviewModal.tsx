@@ -64,6 +64,14 @@ import {
   exportAnalyticsCSV,
   BusinessAnalytics,
 } from '../../../lib/tracking';
+import {
+  getModeratorEmergencyPhone,
+  setModeratorEmergencyPhone,
+  getWhatsAppChatUrl,
+  generateEmergencyWhatsAppAlertCard,
+  formatPhoneForDisplay,
+  formatKenyanPhoneForWhatsApp,
+} from '../../../lib/phoneUtils';
 import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
 
@@ -126,6 +134,30 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   const [adCampaignsSubTab, setAdCampaignsSubTab] = useState<'pending' | 'active' | 'changes_requested' | 'expired' | 'all'>('pending');
   const [directorySearchQuery, setDirectorySearchQuery] = useState('');
   const [directoryZoneFilter, setDirectoryZoneFilter] = useState('all');
+
+  // Moderator Emergency WhatsApp Relay State
+  const [moderatorPhone, setModeratorPhone] = useState<string>(() => getModeratorEmergencyPhone());
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [tempPhone, setTempPhone] = useState('');
+  const [copiedAlertId, setCopiedAlertId] = useState<string | null>(null);
+
+  const handleSaveModeratorPhone = () => {
+    if (tempPhone.trim()) {
+      setModeratorEmergencyPhone(tempPhone.trim());
+      setModeratorPhone(getModeratorEmergencyPhone());
+      showToast('Moderator emergency WhatsApp number updated!');
+    }
+    setIsEditingPhone(false);
+  };
+
+  const handleCopyUpdateAlertCard = (up: CommunityUpdate) => {
+    const cardText = generateEmergencyWhatsAppAlertCard(up);
+    navigator.clipboard.writeText(cardText).then(() => {
+      setCopiedAlertId(up.id);
+      showToast('WhatsApp emergency alert card copied to clipboard!');
+      setTimeout(() => setCopiedAlertId(null), 3000);
+    });
+  };
 
   // Ad Campaigns Queue & Moderation State
   const [adCampaigns, setAdCampaigns] = useState<BusinessAdCampaign[]>(() => {
@@ -1124,7 +1156,67 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
               {/* TAB 2: UPDATES */}
               {activeMainTab === 'updates' && (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between gap-3">
+                  {/* MODERATOR EMERGENCY WHATSAPP RELAY BAR */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-stone-900 to-stone-900 border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-900/80 border border-emerald-500/50 flex items-center justify-center text-emerald-400 shrink-0">
+                        <MessageSquare className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                            Emergency WhatsApp Dispatch Target
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900/60 text-emerald-300 border border-emerald-700/60">
+                            Active
+                          </span>
+                        </div>
+                        {isEditingPhone ? (
+                          <div className="flex items-center gap-2 mt-1">
+                            <input
+                              type="tel"
+                              value={tempPhone}
+                              onChange={(e) => setTempPhone(e.target.value)}
+                              placeholder="e.g. 0764 405 842 or 2547..."
+                              className="px-2.5 py-1 text-xs rounded-lg bg-stone-950 border border-stone-700 text-white focus:outline-none focus:border-emerald-500"
+                            />
+                            <button
+                              onClick={handleSaveModeratorPhone}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setIsEditingPhone(false)}
+                              className="px-2 py-1 rounded-lg bg-stone-800 text-stone-300 text-xs hover:text-white transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-stone-300 font-mono flex items-center gap-2 mt-0.5">
+                            <span>Phone: <strong className="text-white font-sans">{formatPhoneForDisplay(moderatorPhone)}</strong></span>
+                            <span className="text-stone-500">•</span>
+                            <span className="text-[11px] text-stone-400 font-sans">Receives all emergency alert dispatch cards</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {!isEditingPhone && (
+                      <button
+                        onClick={() => {
+                          setTempPhone(moderatorPhone);
+                          setIsEditingPhone(true);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold border border-stone-700 transition shrink-0 self-start sm:self-center"
+                      >
+                        Change Number
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="inline-flex p-1 rounded-xl bg-stone-900 border border-stone-800">
                       <button
                         onClick={() => setUpdateSubTab('pending')}
@@ -1168,53 +1260,125 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                       {(updateSubTab === 'pending' ? pendingUpdates : publishedUpdates).map((up) => (
                         <div
                           key={up.id}
-                          className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                          className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-start justify-between gap-4"
                         >
-                          <div className="space-y-1.5 max-w-2xl">
-                            <div className="flex items-center gap-2">
-                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-stone-800 text-emerald-300 border border-stone-700">
-                                {up.type}
-                              </span>
-                              <span className="text-xs text-stone-400 flex items-center gap-1">
-                                <MapPin className="w-3 h-3 text-rose-400" />
-                                {up.location || up.zone}
-                              </span>
-                              <span className="text-xs text-stone-500">•</span>
-                              <span className="text-xs text-stone-400 flex items-center gap-1">
-                                <Clock className="w-3 h-3 text-sky-400" />
-                                {up.timeInfo || up.date}
-                              </span>
-                            </div>
+                          <div className="flex items-start gap-3.5 flex-1 max-w-2xl">
+                            {up.imageUrl && (
+                              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-stone-900 border border-stone-700 shrink-0">
+                                <img
+                                  src={up.imageUrl}
+                                  alt={up.title}
+                                  referrerPolicy="no-referrer"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
 
-                            <h4 className="font-display font-bold text-white text-base">
-                              {up.title}
-                            </h4>
+                            <div className="space-y-1.5 min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-stone-800 text-emerald-300 border border-stone-700">
+                                  {up.type}
+                                </span>
+                                <span className="text-xs text-stone-400 flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-rose-400" />
+                                  {up.location || up.zone}
+                                </span>
+                                <span className="text-xs text-stone-500">•</span>
+                                <span className="text-xs text-stone-400 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-sky-400" />
+                                  {up.timeInfo || up.date}
+                                </span>
+                                {up.obNumber && (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-amber-950/60 text-amber-300 border border-amber-800/60">
+                                    OB: {up.obNumber}
+                                  </span>
+                                )}
+                                {up.urgencyLevel && up.urgencyLevel !== 'standard' && (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-rose-950/80 text-rose-300 border border-rose-700/60">
+                                    {up.urgencyLevel === 'critical' ? '🚨 CRITICAL' : '⚡ HIGH PRIORITY'}
+                                  </span>
+                                )}
+                              </div>
 
-                            <p className="text-xs text-stone-300 leading-relaxed">
-                              {up.content}
-                            </p>
+                              <h4 className="font-display font-bold text-white text-base">
+                                {up.title}
+                              </h4>
 
-                            <div className="text-[11px] text-stone-400 pt-1">
-                              Submitted by: <strong className="text-stone-200">{up.author}</strong> {up.authorPhone && `(${up.authorPhone})`}
+                              <p className="text-xs text-stone-300 leading-relaxed line-clamp-2">
+                                {up.content}
+                              </p>
+
+                              {up.imageCaption && (
+                                <p className="text-[11px] text-stone-400 italic">
+                                  Photo Caption: {up.imageCaption}
+                                </p>
+                              )}
+
+                              <div className="text-[11px] text-stone-400 pt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <span>
+                                  Submitter: <strong className="text-stone-200">{up.author}</strong> {up.authorRole && <span className="text-stone-400 font-medium">({up.authorRole})</span>}
+                                </span>
+                                {up.authorPhone && (
+                                  <span className="text-stone-300">
+                                    Tel: <strong className="text-emerald-400">{up.authorPhone}</strong>
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex flex-wrap md:flex-col items-center md:items-end gap-2 shrink-0 md:self-center">
+                            {/* Fast WhatsApp Submitter Contact */}
+                            {up.authorPhone && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const text = `Hello ${up.author}, regarding your Kahawa West community notice "${up.title}": `;
+                                  window.open(getWhatsAppChatUrl(up.authorPhone, text), '_blank', 'noopener,noreferrer');
+                                }}
+                                className="px-3 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 text-xs font-bold border border-emerald-700/60 transition flex items-center gap-1.5"
+                                title="Chat with Submitter on WhatsApp"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                <span>WhatsApp</span>
+                              </button>
+                            )}
+
+                            {/* Copy Pre-formatted Emergency Dispatch Card */}
+                            <button
+                              type="button"
+                              onClick={() => handleCopyUpdateAlertCard(up)}
+                              className="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-medium border border-stone-700 transition flex items-center gap-1.5"
+                              title="Copy Pre-Formatted Emergency WhatsApp Card"
+                            >
+                              {copiedAlertId === up.id ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span className="text-emerald-300">Copied!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5 text-stone-400" />
+                                  <span>Copy Alert Card</span>
+                                </>
+                              )}
+                            </button>
+
                             {updateSubTab === 'pending' ? (
-                              <>
+                              <div className="flex items-center gap-2 pt-1">
                                 <button
                                   onClick={() => setUpdateForRejection(up)}
-                                  className="px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-300 text-xs font-bold border border-red-800/60"
+                                  className="px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-300 text-xs font-bold border border-red-800/60 transition"
                                 >
                                   Reject
                                 </button>
                                 <button
                                   onClick={() => onApproveUpdate && onApproveUpdate(up.id)}
-                                  className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+                                  className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-sm"
                                 >
                                   Approve Live
                                 </button>
-                              </>
+                              </div>
                             ) : (
                               <button
                                 onClick={() => onDeleteUpdate && onDeleteUpdate(up.id)}

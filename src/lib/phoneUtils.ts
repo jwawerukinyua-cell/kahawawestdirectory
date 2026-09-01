@@ -115,3 +115,46 @@ export function formatPhoneForDisplay(phone: string | undefined | null): string 
 
   return phone;
 }
+
+export function getModeratorEmergencyPhone(): string {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('kwest_moderator_emergency_phone');
+    if (saved && saved.trim()) return saved.trim();
+  }
+  return '254764405842';
+}
+
+export function setModeratorEmergencyPhone(phone: string): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('kwest_moderator_emergency_phone', formatKenyanPhoneForWhatsApp(phone));
+  }
+}
+
+export interface EmergencyAlertFormatInput {
+  title: string;
+  location?: string;
+  zone?: string;
+  author: string;
+  authorPhone?: string;
+  authorRole?: string;
+  obNumber?: string;
+  urgencyLevel?: 'standard' | 'high' | 'critical';
+  content?: string;
+}
+
+/**
+ * Generates the standardized emergency alert WhatsApp card for immediate moderator dispatch
+ */
+export function generateEmergencyWhatsAppAlertCard(update: EmergencyAlertFormatInput): string {
+  const isEmergency = update.urgencyLevel === 'critical' || update.urgencyLevel === 'high';
+  const header = isEmergency ? '🚨 [URGENT EMERGENCY ALERT SUBMITTED]' : '📢 [COMMUNITY UPDATE SUBMITTED]';
+  const obLine = update.obNumber ? `\nOB Number: ${update.obNumber}` : '';
+  const roleStr = update.authorRole ? ` (${update.authorRole})` : '';
+  const locStr = update.location ? `\nLocation: ${update.location}${update.zone ? ` [${update.zone}]` : ''}` : '';
+  const cleanPhone = update.authorPhone || 'Not Provided';
+
+  return `${header}
+Title: ${update.title}${locStr}
+Submitter: ${update.author} (${cleanPhone})${roleStr}${obLine}
+Action: Open Editorial Desk to Review & Publish`;
+}

@@ -72,6 +72,8 @@ import { trackSearchQuery } from './lib/tracking';
 import {
   AppNotification,
   getStoredNotifications,
+  saveNotification,
+  sendNativeNotification,
   generateSearchMatchAlerts,
 } from './lib/notifications';
 
@@ -502,6 +504,29 @@ export default function App() {
   const handleUpdateSubmitted = (newUpdate: CommunityUpdate) => {
     saveCommunityUpdate(newUpdate);
     setUpdates(getStoredCommunityUpdates());
+
+    const isUrgent = newUpdate.urgencyLevel === 'critical' || newUpdate.urgencyLevel === 'high' || newUpdate.type === 'alert';
+    const notif: AppNotification = {
+      id: `notif-update-${newUpdate.id}`,
+      title: isUrgent
+        ? `🚨 URGENT EMERGENCY POST: ${newUpdate.title}`
+        : `📢 New Notice Submitted: ${newUpdate.title}`,
+      body: `From ${newUpdate.author} (${newUpdate.authorPhone || 'No Phone'}). Pending editorial approval.`,
+      type: 'update',
+      time: 'Just now',
+      badge: isUrgent ? 'Urgent Alert' : 'Pending Review',
+      isRead: false,
+      relatedZone: newUpdate.zone,
+    };
+
+    saveNotification(notif);
+    setActiveToastNotification(notif);
+
+    if (isUrgent) {
+      sendNativeNotification(`🚨 EMERGENCY POST: ${newUpdate.title}`, {
+        body: `Submitted by ${newUpdate.author} in ${newUpdate.location}. Open Editorial Desk to review.`,
+      });
+    }
   };
 
   const handleApproveUpdate = (updateId: string) => {

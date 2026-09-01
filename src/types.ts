@@ -157,10 +157,15 @@ export interface CommunityUpdate {
   author: string;
   authorPhone?: string;
   authorEmail?: string;
+  authorRole?: string; // e.g. "Parent / Guardian", "Estate Welfare / Elder", "Resident", "Eyewitness", "Public Official"
+  obNumber?: string; // Police OB number / Reference if reporting lost child, missing person or security incident
   content: string;
   contact?: string;
   badge?: string;
   imageUrl?: string;
+  imageCaption?: string;
+  isAccountabilityConfirmed?: boolean;
+  urgencyLevel?: 'standard' | 'high' | 'critical';
   status?: 'published' | 'pending_review' | 'rejected';
   rejectionReason?: string;
   submittedAt?: string;

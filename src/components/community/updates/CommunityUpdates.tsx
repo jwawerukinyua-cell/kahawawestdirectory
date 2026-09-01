@@ -10,6 +10,11 @@ import {
   ShieldCheck,
   ChevronRight,
   Filter,
+  FileText,
+  AlertOctagon,
+  Image as ImageIcon,
+  User,
+  ShieldAlert,
 } from 'lucide-react';
 import { CommunityUpdate, UpdateType } from '../../../types';
 
@@ -56,7 +61,7 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
       case 'event':
         return 'EVENT';
       case 'business':
-        return 'BUSINESS';
+        return 'PUBLIC NOTICE';
       case 'community':
         return 'COMMUNITY';
       default:
@@ -81,7 +86,7 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
 
   return (
     <div id="community-updates-section" className="font-sans">
-      {/* 1. Centered Header Section matching mockup */}
+      {/* 1. Centered Header Section */}
       <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10 px-4">
         {/* Top Green Pill Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-950/70 text-emerald-400 border border-emerald-600/40 mb-4 shadow-sm backdrop-blur-md">
@@ -91,56 +96,96 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
 
         {/* Main Title */}
         <h2 className="font-display text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-stone-900 mb-3 sm:mb-4 leading-tight">
-          Stay Connected With what's Happening
+          Stay Connected With what&apos;s Happening
         </h2>
 
         {/* Subtitle */}
         <p className="text-stone-600 text-xs sm:text-base leading-relaxed max-w-2xl mx-auto">
-          Important announcements, local events, business openings, community initiatives and neighbourhood updates—all in one trusted place.
+          Verified announcements, emergency alerts (such as missing persons & utility notices), sports, and neighborhood civic updates—moderated with strict accountability.
         </p>
       </div>
 
-      {/* 2. Sleek Dark Container exactly matching image.png */}
+      {/* 2. Sleek Dark Container */}
       <div className="max-w-4xl mx-auto bg-[#101317] text-white rounded-3xl p-5 sm:p-8 border border-[#222831] shadow-2xl">
         <div className="space-y-3 divide-y divide-[#1D222A]">
           {filteredUpdates.map((item, idx) => (
             <div
               key={item.id || idx}
               onClick={() => setSelectedUpdateForDetail(item)}
-              className="pt-4 first:pt-0 group cursor-pointer hover:bg-[#161B22]/70 p-3.5 -mx-3.5 rounded-2xl transition duration-150"
+              className="pt-4 first:pt-0 group cursor-pointer hover:bg-[#161B22]/80 p-3.5 -mx-3.5 rounded-2xl transition duration-150 flex flex-col sm:flex-row items-start gap-4"
             >
-              {/* Category Dot & Badge Label */}
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className={`w-2 h-2 rounded-full ${getDotColor(item.type)}`} />
-                <span className={`text-[11px] font-black uppercase tracking-wider ${getBadgeTextColor(item.type)}`}>
-                  {getBadgeText(item.type)}
-                </span>
-              </div>
+              {/* Photo Thumbnail if available */}
+              {item.imageUrl ? (
+                <div className="relative w-full sm:w-20 sm:h-20 h-36 rounded-2xl overflow-hidden bg-stone-900 border border-stone-800 shrink-0 shadow-sm">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                  />
+                  {item.urgencyLevel === 'critical' && (
+                    <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-red-600/90 text-white text-[9px] font-black uppercase tracking-wider">
+                      Urgent
+                    </span>
+                  )}
+                </div>
+              ) : null}
 
-              {/* Title & Location Row */}
-              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 sm:gap-4">
-                <h3 className="font-display font-bold text-white text-base sm:text-lg group-hover:text-emerald-300 transition leading-snug">
-                  {item.title}
-                </h3>
+              {/* Update Details */}
+              <div className="flex-1 min-w-0 space-y-1.5 w-full">
+                {/* Category Dot & Badge Label */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${getDotColor(item.type)}`} />
+                  <span className={`text-[11px] font-black uppercase tracking-wider ${getBadgeTextColor(item.type)}`}>
+                    {getBadgeText(item.type)}
+                  </span>
 
-                <span className="inline-flex items-center gap-1 text-xs text-stone-400 group-hover:text-stone-200 shrink-0">
-                  <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                  <span>{item.location || item.zone || 'Kahawa West'}</span>
-                </span>
-              </div>
+                  {item.obNumber && (
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-stone-800 text-stone-300 border border-stone-700">
+                      OB REF: {item.obNumber.split(' ')[0] || item.obNumber}
+                    </span>
+                  )}
 
-              {/* Time / Schedule info */}
-              <div className="text-xs text-stone-400 mt-1 flex items-center justify-between">
-                <span>{item.timeInfo || item.date}</span>
-                <span className="text-[11px] text-emerald-400/80 group-hover:text-emerald-300 flex items-center gap-0.5 sm:opacity-0 group-hover:opacity-100 transition">
-                  Details <ChevronRight className="w-3 h-3" />
-                </span>
+                  {item.authorRole && (
+                    <span className="text-[10px] text-stone-400 flex items-center gap-1">
+                      • {item.authorRole}
+                    </span>
+                  )}
+                </div>
+
+                {/* Title & Location Row */}
+                <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 sm:gap-4">
+                  <h3 className="font-display font-bold text-white text-base sm:text-lg group-hover:text-emerald-300 transition leading-snug">
+                    {item.title}
+                  </h3>
+
+                  <span className="inline-flex items-center gap-1 text-xs text-stone-400 group-hover:text-stone-200 shrink-0">
+                    <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                    <span>{item.location || item.zone || 'Kahawa West'}</span>
+                  </span>
+                </div>
+
+                {/* Snippet */}
+                <p className="text-xs text-stone-300/90 line-clamp-1 leading-relaxed">
+                  {item.content}
+                </p>
+
+                {/* Time / Schedule info & Author */}
+                <div className="text-xs text-stone-400 pt-0.5 flex items-center justify-between">
+                  <span className="flex items-center gap-1 text-[11px]">
+                    <Clock className="w-3 h-3 text-sky-400" />
+                    {item.timeInfo || item.date}
+                  </span>
+                  <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
+                    View Details <ChevronRight className="w-3 h-3" />
+                  </span>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* 3. Bottom CTA Button exactly matching image.png */}
+        {/* 3. Bottom CTA Button */}
         <div className="mt-8 pt-6 border-t border-[#222831] flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={() => setShowAllModal(true)}
@@ -155,7 +200,7 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
               className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#1C222B] hover:bg-[#252C37] text-stone-200 hover:text-white font-bold text-sm border border-[#2E3744] transition active:scale-95 flex items-center justify-center gap-2"
             >
               <PlusCircle className="w-4 h-4 text-emerald-400" />
-              <span>Post an Update</span>
+              <span>Post a Notice / Alert</span>
             </button>
           )}
         </div>
@@ -163,17 +208,24 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
 
       {/* 4. Single Update Detail Modal */}
       {selectedUpdateForDetail && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-sans animate-in fade-in">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-sans animate-in fade-in">
           <div className="bg-[#121417] text-white rounded-3xl max-w-lg w-full border border-stone-800 shadow-2xl overflow-hidden my-6">
             {/* Header */}
-            <div className="p-5 sm:p-6 bg-[#181B20] border-b border-stone-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="p-4 sm:p-5 bg-[#181B20] border-b border-stone-800 flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className={`w-2.5 h-2.5 rounded-full ${getDotColor(selectedUpdateForDetail.type)}`} />
                 <span className={`text-xs font-black uppercase tracking-wider ${getBadgeTextColor(selectedUpdateForDetail.type)}`}>
                   {getBadgeText(selectedUpdateForDetail.type)}
                 </span>
                 <span className="text-xs text-stone-500">•</span>
                 <span className="text-xs text-stone-400">{selectedUpdateForDetail.zone || 'Kahawa West'}</span>
+
+                {selectedUpdateForDetail.isAccountabilityConfirmed && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-700/50">
+                    <ShieldCheck className="w-3 h-3" />
+                    Verified Submitter
+                  </span>
+                )}
               </div>
               <button
                 onClick={() => setSelectedUpdateForDetail(null)}
@@ -184,12 +236,32 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
             </div>
 
             {/* Content */}
-            <div className="p-5 sm:p-6 space-y-4">
-              <h3 className="font-display font-black text-xl text-white">
+            <div className="p-5 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              <h3 className="font-display font-black text-xl text-white leading-snug">
                 {selectedUpdateForDetail.title}
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-[#1A1E24] p-3 rounded-xl border border-stone-800">
+              {/* Photo Display if present */}
+              {selectedUpdateForDetail.imageUrl && (
+                <div className="space-y-1.5">
+                  <div className="rounded-2xl overflow-hidden bg-stone-900 border border-stone-800 max-h-72 w-full flex items-center justify-center">
+                    <img
+                      src={selectedUpdateForDetail.imageUrl}
+                      alt={selectedUpdateForDetail.title}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-auto max-h-72 object-contain bg-black/40"
+                    />
+                  </div>
+                  {selectedUpdateForDetail.imageCaption && (
+                    <p className="text-[11px] text-stone-400 italic text-center">
+                      Photo: {selectedUpdateForDetail.imageCaption}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Time, Location & OB Ref */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-[#1A1E24] p-3 rounded-2xl border border-stone-800">
                 <div className="flex items-center gap-2 text-stone-300">
                   <Clock className="w-4 h-4 text-sky-400 shrink-0" />
                   <span>{selectedUpdateForDetail.timeInfo || selectedUpdateForDetail.date}</span>
@@ -198,24 +270,43 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
                   <MapPin className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>{selectedUpdateForDetail.location || selectedUpdateForDetail.zone}</span>
                 </div>
+                {selectedUpdateForDetail.obNumber && (
+                  <div className="col-span-1 sm:col-span-2 flex items-center gap-2 text-amber-300 bg-amber-950/30 p-2 rounded-xl border border-amber-800/40">
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span>Police Occurrence Book (OB): <strong>{selectedUpdateForDetail.obNumber}</strong></span>
+                  </div>
+                )}
               </div>
 
-              <div className="text-stone-300 text-sm leading-relaxed whitespace-pre-line">
+              <div className="text-stone-200 text-sm leading-relaxed whitespace-pre-line bg-[#16191E] p-3.5 rounded-2xl border border-stone-800/80">
                 {selectedUpdateForDetail.content}
               </div>
 
-              {/* Author / Source */}
-              <div className="pt-3 border-t border-stone-800 flex flex-wrap items-center justify-between gap-2 text-xs text-stone-400">
-                <span>Posted by: <strong className="text-stone-200">{selectedUpdateForDetail.author}</strong></span>
-                {selectedUpdateForDetail.contact && (
-                  <a
-                    href={`tel:${selectedUpdateForDetail.contact}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 font-bold hover:bg-emerald-900 transition"
-                  >
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>Call {selectedUpdateForDetail.contact}</span>
-                  </a>
-                )}
+              {/* Author / Accountability Source */}
+              <div className="pt-3 border-t border-stone-800 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-stone-400">
+                  <div>
+                    <span className="block text-[10px] uppercase font-bold text-stone-500">Submitted by</span>
+                    <strong className="text-stone-200">{selectedUpdateForDetail.author}</strong>
+                    {selectedUpdateForDetail.authorRole && (
+                      <span className="text-stone-400 text-[11px] block">({selectedUpdateForDetail.authorRole})</span>
+                    )}
+                  </div>
+
+                  {selectedUpdateForDetail.contact && (
+                    <a
+                      href={`tel:${selectedUpdateForDetail.contact}`}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Call {selectedUpdateForDetail.contact}</span>
+                    </a>
+                  )}
+                </div>
+
+                <p className="text-[10px] text-stone-500 text-center pt-2">
+                  🛡️ This update has been verified in accordance with Kahawa West community anti-spam and integrity standards.
+                </p>
               </div>
             </div>
           </div>
@@ -224,7 +315,7 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
 
       {/* 5. "Explore All Community Updates" Full Filterable Modal */}
       {showAllModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-sans animate-in fade-in">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-sans animate-in fade-in">
           <div className="bg-[#101317] text-white rounded-3xl max-w-2xl w-full border border-stone-800 shadow-2xl overflow-hidden my-6 max-h-[90vh] flex flex-col">
             {/* Modal Header */}
             <div className="p-5 sm:p-6 bg-[#161B22] border-b border-stone-800 flex items-center justify-between shrink-0">
@@ -234,10 +325,10 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
                 </div>
                 <div>
                   <h3 className="font-display font-black text-lg sm:text-xl text-white">
-                    All Community Updates
+                    All Community Updates & Alerts
                   </h3>
                   <p className="text-xs text-stone-400">
-                    Live announcements, utilities, sports, business & events
+                    Live announcements, emergency notices, utilities, sports & civic notices
                   </p>
                 </div>
               </div>
@@ -253,17 +344,17 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
             <div className="p-4 bg-[#12161C] border-b border-stone-800 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
               {[
                 { id: 'all', label: 'All Updates' },
-                { id: 'alert', label: '🚨 Alerts' },
+                { id: 'alert', label: '🚨 Alerts & Emergencies' },
                 { id: 'event', label: '🔵 Events' },
-                { id: 'business', label: '🟢 Business' },
-                { id: 'community', label: '💖 Community' },
+                { id: 'business', label: '🟢 Public Notices' },
+                { id: 'community', label: '💖 Welfare' },
               ].map((pill) => (
                 <button
                   key={pill.id}
                   onClick={() => setSelectedType(pill.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
                     selectedType === pill.id
-                      ? 'bg-emerald-700 text-white shadow-sm'
+                      ? 'bg-emerald-600 text-white shadow-sm'
                       : 'bg-[#1D222A] text-stone-300 hover:bg-[#252C37]'
                   }`}
                 >
@@ -285,37 +376,55 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
                     onClick={() => {
                       setSelectedUpdateForDetail(item);
                     }}
-                    className="p-4 rounded-2xl bg-[#161B22] border border-stone-800/80 hover:border-emerald-500/40 transition cursor-pointer space-y-2"
+                    className="p-4 rounded-2xl bg-[#161B22] border border-stone-800/80 hover:border-emerald-500/40 transition cursor-pointer flex flex-col sm:flex-row items-start gap-3.5"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${getDotColor(item.type)}`} />
-                        <span className={`text-[11px] font-black uppercase tracking-wider ${getBadgeTextColor(item.type)}`}>
-                          {getBadgeText(item.type)}
+                    {item.imageUrl && (
+                      <div className="w-full sm:w-20 sm:h-20 h-32 rounded-xl overflow-hidden bg-stone-900 border border-stone-800 shrink-0">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex-1 space-y-1.5 min-w-0 w-full">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${getDotColor(item.type)}`} />
+                          <span className={`text-[11px] font-black uppercase tracking-wider ${getBadgeTextColor(item.type)}`}>
+                            {getBadgeText(item.type)}
+                          </span>
+                          {item.obNumber && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-stone-800 text-stone-300 border border-stone-700">
+                              OB REF
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-stone-400 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-rose-400" />
+                          {item.location || item.zone}
                         </span>
                       </div>
-                      <span className="text-xs text-stone-400 flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-rose-400" />
-                        {item.location || item.zone}
-                      </span>
-                    </div>
 
-                    <h4 className="font-display font-bold text-white text-base">
-                      {item.title}
-                    </h4>
+                      <h4 className="font-display font-bold text-white text-base">
+                        {item.title}
+                      </h4>
 
-                    <p className="text-xs text-stone-300 line-clamp-2 leading-relaxed">
-                      {item.content}
-                    </p>
+                      <p className="text-xs text-stone-300 line-clamp-2 leading-relaxed">
+                        {item.content}
+                      </p>
 
-                    <div className="pt-2 flex items-center justify-between text-xs text-stone-400 border-t border-stone-800/60">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-stone-500" />
-                        {item.timeInfo || item.date}
-                      </span>
-                      <span className="text-emerald-400 font-bold flex items-center gap-0.5">
-                        Read more <ChevronRight className="w-3 h-3" />
-                      </span>
+                      <div className="pt-2 flex items-center justify-between text-xs text-stone-400 border-t border-stone-800/60">
+                        <span className="flex items-center gap-1 text-[11px]">
+                          <Clock className="w-3 h-3 text-stone-500" />
+                          {item.timeInfo || item.date}
+                        </span>
+                        <span className="text-emerald-400 font-bold flex items-center gap-0.5 text-xs">
+                          Read full notice <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -350,3 +459,4 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
     </div>
   );
 };
+
