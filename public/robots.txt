@@ -1,0 +1,28 @@
+# Robots.txt for KWEST (Kahawa West Neighborhood Directory)
+# Canonical URL: https://kwestdirectory.co.ke
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /*?*filter=*
+
+# Explicit Search Engine Allow Rules
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Sitemap Index Declaration
+Sitemap: https://kwestdirectory.co.ke/sitemap.xml
+Host: kwestdirectory.co.ke

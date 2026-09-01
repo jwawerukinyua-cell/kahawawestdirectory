@@ -67,6 +67,7 @@ import { FloatingShareButton } from './components/ui/FloatingShareButton';
 import { NotificationCenter } from './components/notifications/NotificationCenter';
 import { NotificationToast } from './components/notifications/NotificationToast';
 import { InstallAppModal } from './components/pwa/InstallAppModal';
+import { SitemapModal } from './components/seo/SitemapModal';
 import { trackSearchQuery } from './lib/tracking';
 import {
   AppNotification,
@@ -109,6 +110,7 @@ export default function App() {
   const [isAdEnquiryOpen, setIsAdEnquiryOpen] = useState(false);
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
   const [isInstallAppOpen, setIsInstallAppOpen] = useState(false);
+  const [isSitemapOpen, setIsSitemapOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications());
   const [activeToastNotification, setActiveToastNotification] = useState<AppNotification | null>(null);
   const [legalTab, setLegalTab] = useState<'guidelines' | 'community' | 'privacy' | 'terms' | null>(null);
@@ -189,24 +191,58 @@ export default function App() {
     return businesses.filter((b) => Boolean(b.specialOffer));
   }, [businesses]);
 
-  // 4. Check URL hash on load for deep linking (e.g. #slug or ?id=)
+  // 4. Check URL hash & search query parameters for SEO deep linking (e.g. #slug, ?biz=, ?story=, ?view=)
   useEffect(() => {
-    const handleHashChange = () => {
-      const rawHash = window.location.hash.replace('#', '');
-      if (rawHash) {
-        const hash = decodeURIComponent(rawHash).toLowerCase().trim();
+    const handleUrlRoute = () => {
+      // A. Query Param Parsing
+      const searchParams = new URLSearchParams(window.location.search);
+      const bizParam = searchParams.get('biz');
+      const storyParam = searchParams.get('story');
+      const viewParam = searchParams.get('view');
+      const catParam = searchParams.get('category');
+      const zoneParam = searchParams.get('zone');
+
+      if (catParam) {
+        setSelectedCategory(catParam);
+      }
+      if (zoneParam) {
+        setSelectedZone(zoneParam);
+      }
+      if (viewParam) {
+        if (viewParam === 'sitemap') setIsSitemapOpen(true);
+        else if (viewParam === 'emergency') setIsEmergencyOpen(true);
+        else if (viewParam === 'list-business') setIsListBusinessOpen(true);
+        else if (viewParam === 'promote') setIsAdEnquiryOpen(true);
+        else if (viewParam === 'about') setIsAboutOpen(true);
+        else if (viewParam === 'guidelines') setLegalTab('guidelines');
+        else if (viewParam === 'community-standards') setLegalTab('community');
+        else if (viewParam === 'privacy') setLegalTab('privacy');
+        else if (viewParam === 'terms') setLegalTab('terms');
+      }
+
+      if (storyParam) {
+        const foundStory = stories.find((s) => s.id === storyParam);
+        if (foundStory) {
+          setSelectedStoryForReading(foundStory);
+        }
+      }
+
+      // B. Business matching from ?biz= or #hash
+      const rawTarget = bizParam || window.location.hash.replace('#', '');
+      if (rawTarget) {
+        const target = decodeURIComponent(rawTarget).toLowerCase().trim();
         // 1. Direct slug or ID match
-        let found = businesses.find((b) => b.slug?.toLowerCase() === hash || b.id?.toLowerCase() === hash);
+        let found = businesses.find((b) => b.slug?.toLowerCase() === target || b.id?.toLowerCase() === target);
 
         // 2. Name-derived slug match
         if (!found) {
           found = businesses.find(
-            (b) => b.name && generateBusinessSlug(b.name) === hash
+            (b) => b.name && generateBusinessSlug(b.name) === target
           );
         }
 
-        // 3. Fallback for seed business variants (e.g. #kahawa-west-furniture-crafts when renamed to Ukweli Furniture Crafts)
-        if (!found && (hash.includes('furniture-crafts') || hash.includes('furniture'))) {
+        // 3. Fallback for seed business variants
+        if (!found && (target.includes('furniture-crafts') || target.includes('furniture'))) {
           found = businesses.find(
             (b) =>
               b.category === 'hardware-construction' &&
@@ -218,18 +254,21 @@ export default function App() {
 
         if (found) {
           setSelectedBusinessForDetails(found);
-          // If the URL had an outdated hash or legacy alias, adapt to the current active slug
-          if (found.slug && rawHash !== found.slug) {
+          if (found.slug && window.location.hash.replace('#', '') !== found.slug && !bizParam) {
             window.history.replaceState(null, '', `#${found.slug}`);
           }
         }
       }
     };
 
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [businesses]);
+    handleUrlRoute();
+    window.addEventListener('hashchange', handleUrlRoute);
+    window.addEventListener('popstate', handleUrlRoute);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlRoute);
+      window.removeEventListener('popstate', handleUrlRoute);
+    };
+  }, [businesses, stories]);
 
   // 5. Category Counts
   const categoryCounts = useMemo(() => {
@@ -825,6 +864,14 @@ export default function App() {
       <InstallAppModal
         isOpen={isInstallAppOpen}
         onClose={() => setIsInstallAppOpen(false)}
+      />
+
+      {/* SEO Sitemap & Robots.txt Webmaster Modal */}
+      <SitemapModal
+        isOpen={isSitemapOpen}
+        onClose={() => setIsSitemapOpen(false)}
+        businesses={businesses}
+        stories={stories}
       />
     </div>
   );
