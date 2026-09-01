@@ -499,8 +499,6 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
     return () => clearInterval(timer);
   }, [lockoutTimeLeft]);
 
-  if (!isOpen) return null;
-
   const pendingStories = stories.filter((s) => s.status === 'pending_review');
   const publishedStories = stories.filter((s) => s.status === 'published' || !s.status);
 
@@ -703,6 +701,8 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
     setUpdateForRejection(null);
     setCustomRejectionFeedback('');
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 font-sans animate-in fade-in">
@@ -1058,33 +1058,52 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                             </div>
 
                             {storySubTab === 'pending' ? (
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <button
                                   onClick={() => setStoryForRejection(story)}
-                                  className="px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-300 text-xs font-bold border border-red-800/60"
+                                  className="px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-300 text-xs font-bold border border-red-800/60 transition"
                                 >
                                   Reject
                                 </button>
                                 <button
                                   onClick={() => onApproveStory(story.id, false)}
-                                  className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+                                  className="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-white text-xs font-bold transition"
                                 >
                                   Approve & Publish
+                                </button>
+                                <button
+                                  onClick={() => onApproveStory(story.id, true)}
+                                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 text-xs font-black shadow-md flex items-center gap-1.5 transition"
+                                >
+                                  <Star className="w-3.5 h-3.5 fill-current" />
+                                  <span>Approve & Feature This Week</span>
                                 </button>
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => onApproveStory(story.id, !story.featured)}
-                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 ${
-                                    story.featured
-                                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                      : 'bg-stone-800 text-stone-300 hover:text-white'
-                                  }`}
-                                >
-                                  <Star className="w-3.5 h-3.5" />
-                                  <span>{story.featured ? 'Featured' : 'Feature'}</span>
-                                </button>
+                                {story.featured ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1">
+                                      <Star className="w-3.5 h-3.5 fill-current" />
+                                      <span>★ Featured This Week</span>
+                                    </span>
+                                    <button
+                                      onClick={() => onApproveStory(story.id, false)}
+                                      className="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white text-xs font-medium transition"
+                                      title="Remove from featured spotlight"
+                                    >
+                                      Unfeature
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => onApproveStory(story.id, true)}
+                                    className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 hover:border-amber-400 text-xs font-bold flex items-center gap-1.5 transition"
+                                  >
+                                    <Star className="w-3.5 h-3.5" />
+                                    <span>Set as Featured This Week</span>
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => onDeleteStory(story.id)}
                                   className="p-1.5 text-stone-500 hover:text-red-400 transition"

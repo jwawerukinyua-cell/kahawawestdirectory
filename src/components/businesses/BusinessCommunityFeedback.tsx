@@ -29,10 +29,8 @@ export const BusinessCommunityFeedback: React.FC<BusinessCommunityFeedbackProps>
   business,
   onLeaveReviewClick,
 }) => {
-  if (!business) return null;
-
   const [feedbackList, setFeedbackList] = useState<CommunityFeedback[]>(() =>
-    getStoredFeedback(business.id)
+    business?.id ? getStoredFeedback(business.id) : []
   );
 
   // Response composer state
@@ -45,12 +43,15 @@ export const BusinessCommunityFeedback: React.FC<BusinessCommunityFeedbackProps>
 
   // Refresh feedback when updated
   useEffect(() => {
+    if (!business?.id) return;
     const handleFeedbackUpdate = () => {
       setFeedbackList(getStoredFeedback(business.id));
     };
     window.addEventListener('kwest_feedback_updated', handleFeedbackUpdate);
     return () => window.removeEventListener('kwest_feedback_updated', handleFeedbackUpdate);
-  }, [business.id]);
+  }, [business?.id]);
+
+  if (!business) return null;
 
   const reviewCount = feedbackList.length > 0 ? feedbackList.length : (business.reviewCount ?? 0);
   const averageRating =

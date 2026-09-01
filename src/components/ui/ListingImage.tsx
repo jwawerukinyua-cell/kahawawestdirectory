@@ -37,6 +37,7 @@ export const ListingImage: React.FC<ListingImageProps> = ({
   loading = 'lazy',
   decoding = 'async',
   referrerPolicy = 'no-referrer',
+  aspectRatio,
   onError,
   ...props
 }) => {
