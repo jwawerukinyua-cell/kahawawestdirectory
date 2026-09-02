@@ -57,13 +57,13 @@ Coach Baba Brian and the technical bench recognized early on that football is a 
 "When Kahawa Pride FC steps onto the pitch, our entire community stands united," says Coach Baba Brian. "Mothers selling boiled maize and water, elders sharing stories on the sidelines, and youth channeling their energy into positive sportsmanship."
 
 The club is currently preparing for the upcoming Nairobi North Inter-Subcounty Championship, carrying the hopes and pride of all Kahawa West residents.`,
-    imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80',
-    imageCaption: 'Kahawa Pride FC squad during intensive weekend tactical training at Mahiga Grounds.',
+    imageUrl: '/kahawa-pride-fc.jpg',
+    imageCaption: 'Kahawa Pride FC squad and captain celebrating with coaches, young trainees, and community supporters at Mahiga Grounds (Photo by Mfalme Ukweli).',
     isRealPhotoConfirmed: true,
-    authorName: 'Coach Baba Brian & Technical Bench',
-    authorEmail: 'kahawapridefc@kwest.org',
+    authorName: 'Mfalme Ukweli',
+    authorEmail: 'ukweliproducts@gmail.com',
     authorPhone: '+254712998877',
-    authorRole: 'Head Youth Coach & Sports Mentor',
+    authorRole: 'Founder & Community Chronicler',
     date: '2026-08-28',
     readTimeMinutes: 4,
     featured: true,
@@ -117,16 +117,21 @@ export function getStoredCommunityStories(): CommunityStory[] {
       if (initialMap.has(p.id)) {
         const seed = initialMap.get(p.id)!;
         result.push({
-          ...seed,
           ...p,
-          title: seed.title, // Keep canonical updated title for seed stories
+          ...seed,
+          title: seed.title,
           subtitle: seed.subtitle,
           slug: seed.slug || p.slug,
           category: seed.category,
           content: seed.content,
           featured: seed.featured,
-          status: 'published',
+          authorName: seed.authorName,
+          authorEmail: seed.authorEmail,
+          authorRole: seed.authorRole,
           imageUrl: seed.imageUrl || p.imageUrl,
+          imageCaption: seed.imageCaption || p.imageCaption,
+          isRealPhotoConfirmed: seed.isRealPhotoConfirmed,
+          status: 'published',
           likes: Math.max(seed.likes || 0, p.likes || 0),
         });
       } else {

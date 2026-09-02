@@ -34,8 +34,8 @@ export const SEED_COMMUNITY_UPDATES: CommunityUpdate[] = [
     authorPhone: '+254722890123',
     authorEmail: 'sports@kahawawestdirectory.co.ke',
     authorRole: 'Community Organizer',
-    imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80',
-    imageCaption: 'Youth teams practicing at Kahawa West grounds',
+    imageUrl: '/kahawa-pride-fc.jpg',
+    imageCaption: 'Kahawa Pride FC and youth squad training at Kahawa West grounds (Photo by Mfalme Ukweli)',
     isAccountabilityConfirmed: true,
     urgencyLevel: 'standard',
     date: 'Saturday',
@@ -140,7 +140,19 @@ export function getStoredCommunityUpdates(): CommunityUpdate[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+      const seedMap = new Map(SEED_COMMUNITY_UPDATES.map((u) => [u.id, u]));
+      return parsed.map((item: CommunityUpdate) => {
+        if (seedMap.has(item.id)) {
+          const seed = seedMap.get(item.id)!;
+          return {
+            ...item,
+            ...seed,
+            imageUrl: seed.imageUrl || item.imageUrl,
+            imageCaption: seed.imageCaption || item.imageCaption,
+          };
+        }
+        return item;
+      });
     }
     return SEED_COMMUNITY_UPDATES;
   } catch {
