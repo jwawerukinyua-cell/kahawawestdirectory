@@ -5,6 +5,7 @@ import { VerifiedBadge } from '../ui/VerifiedBadge';
 import { Button } from '../ui/Button';
 import { ListingImage } from '../ui/ListingImage';
 import { formatKenyanPhoneForTel, getWhatsAppChatUrl, formatPhoneForDisplay } from '../../lib/phoneUtils';
+import { isBusinessContactGated, HOUSING_CONTACT_UNLOCK_FEE, maskPhoneNumber } from '../../lib/contactGating';
 
 interface BusinessHeroProps {
   business: Business;
@@ -15,6 +16,7 @@ interface BusinessHeroProps {
   onEditClick?: () => void;
   onPromoteShopClick?: () => void;
   onMerchantUnlockClick?: () => void;
+  onUnlockContactClick?: () => void;
 }
 
 export const BusinessHero: React.FC<BusinessHeroProps> = ({
@@ -26,7 +28,10 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
   onEditClick,
   onPromoteShopClick,
   onMerchantUnlockClick,
+  onUnlockContactClick,
 }) => {
+  const isGated = isBusinessContactGated(business);
+
   const whatsappUrl = getWhatsAppChatUrl(
     business.whatsapp || business.phone,
     `Hello ${business.name}, I found your business on KWEST Directory and would like to inquire about your services.`
@@ -34,6 +39,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
 
   const phoneTelUri = formatKenyanPhoneForTel(business.phone);
   const displayPhone = formatPhoneForDisplay(business.phone);
+  const maskedPhone = maskPhoneNumber(business.phone);
 
   const heroImageUrl =
     business.heroImage && business.heroImage.trim() !== ''
@@ -173,30 +179,64 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
 
         {/* Direct Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-          <a
-            id="hero-whatsapp-btn"
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow-md transition active:scale-95 border border-emerald-500/40"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>WhatsApp</span>
-          </a>
+          {isGated ? (
+            <>
+              <button
+                id="hero-unlock-contact-btn"
+                type="button"
+                onClick={onUnlockContactClick}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold bg-amber-400 hover:bg-amber-300 text-stone-950 shadow-md transition active:scale-95 border border-amber-300 cursor-pointer"
+              >
+                <Lock className="w-4 h-4 text-stone-900" />
+                <span>Unlock Direct Contacts (KES {HOUSING_CONTACT_UNLOCK_FEE})</span>
+              </button>
 
-          <a
-            id="hero-call-btn"
-            href={`tel:${phoneTelUri}`}
-            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#630303] hover:bg-[#7D0404] text-white shadow-md transition active:scale-95 border border-rose-400/40"
-          >
-            <Phone className="w-4 h-4" />
-            <span>Call {displayPhone || business.phone}</span>
-          </a>
+              <button
+                type="button"
+                onClick={onUnlockContactClick}
+                className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-900/70 hover:bg-emerald-800 text-emerald-200 shadow-md transition active:scale-95 border border-emerald-600/40 cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                <span>WhatsApp (Gated)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onUnlockContactClick}
+                className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#4D0202] hover:bg-[#630303] text-stone-200 shadow-md transition active:scale-95 border border-rose-400/40 cursor-pointer"
+              >
+                <Phone className="w-4 h-4 text-rose-300" />
+                <span>Call {maskedPhone}</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <a
+                id="hero-whatsapp-btn"
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow-md transition active:scale-95 border border-emerald-500/40"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>WhatsApp</span>
+              </a>
+
+              <a
+                id="hero-call-btn"
+                href={`tel:${phoneTelUri}`}
+                className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#630303] hover:bg-[#7D0404] text-white shadow-md transition active:scale-95 border border-rose-400/40"
+              >
+                <Phone className="w-4 h-4" />
+                <span>Call {displayPhone || business.phone}</span>
+              </a>
+            </>
+          )}
 
           <button
             id="hero-share-action-btn"
             onClick={onShareClick}
-            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#4D0202] hover:bg-[#630303] text-stone-200 hover:text-white shadow-md transition active:scale-95 border border-[#7D0404]"
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#4D0202] hover:bg-[#630303] text-stone-200 hover:text-white shadow-md transition active:scale-95 border border-[#7D0404] cursor-pointer"
           >
             <Share2 className="w-4 h-4 text-amber-400" />
             <span>Share</span>
@@ -207,7 +247,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
             variant="outline"
             size="md"
             onClick={onFeedbackClick}
-            className="border-stone-300 bg-stone-100 text-black hover:bg-white font-bold shadow-sm"
+            className="border-stone-300 bg-stone-100 text-black hover:bg-white font-bold shadow-sm cursor-pointer"
           >
             Leave Review
           </Button>

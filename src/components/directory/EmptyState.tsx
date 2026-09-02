@@ -6,6 +6,9 @@ interface EmptyStateProps {
   searchQuery?: string;
   selectedCategory?: string;
   selectedZone?: string;
+  isHousingFilterActive?: boolean;
+  isVerifiedFilterActive?: boolean;
+  isMpesaFilterActive?: boolean;
   onReset: () => void;
   onListBusiness: () => void;
   onSelectSuggestion?: (query: string) => void;
@@ -25,6 +28,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   searchQuery = '',
   selectedCategory = 'all',
   selectedZone = 'all',
+  isHousingFilterActive = false,
+  isVerifiedFilterActive = false,
+  isMpesaFilterActive = false,
   onReset,
   onListBusiness,
   onSelectSuggestion,
@@ -34,6 +40,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   const hasSearch = Boolean(searchQuery && searchQuery.trim() !== '');
   const hasCategoryFilter = selectedCategory !== 'all';
   const hasZoneFilter = selectedZone !== 'all';
+  const hasQuickFilter = isHousingFilterActive || isVerifiedFilterActive || isMpesaFilterActive;
 
   const shareText = hasSearch
     ? `Hello! I was searching for "${searchQuery.trim()}" on Kahawa West Directory (KWEST) and couldn't find your listing. You can add your business for free so neighbors find you easily: https://kwestdirectory.co.ke`
@@ -63,8 +70,23 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       </h3>
 
       {/* Active Filter Tags */}
-      {(hasCategoryFilter || hasZoneFilter) && (
+      {(hasCategoryFilter || hasZoneFilter || hasQuickFilter) && (
         <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3">
+          {isHousingFilterActive && (
+            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-semibold">
+              🏢 Housing & Rent Agents
+            </span>
+          )}
+          {isVerifiedFilterActive && (
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-semibold">
+              ✓ Verified
+            </span>
+          )}
+          {isMpesaFilterActive && (
+            <span className="px-2.5 py-0.5 rounded-full bg-sky-100 border border-sky-300 text-sky-900 text-xs font-semibold">
+              💳 M-Pesa Till
+            </span>
+          )}
           {hasZoneFilter && (
             <span className="px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-300 text-stone-700 text-xs font-semibold">
               Zone: {selectedZone}
@@ -116,7 +138,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       </div>
 
       {/* Reset Filter Button */}
-      {(hasSearch || hasCategoryFilter || hasZoneFilter) && (
+      {(hasSearch || hasCategoryFilter || hasZoneFilter || hasQuickFilter) && (
         <div className="pt-4 border-t border-stone-100">
           <button
             onClick={onReset}

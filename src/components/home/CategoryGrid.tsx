@@ -10,6 +10,8 @@ import {
   CreditCard,
   GraduationCap,
   Home,
+  Building2,
+  Key,
   PartyPopper,
   Droplets,
   ArrowRight,
@@ -48,7 +50,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const PINNED_CATEGORY_IDS = [
-    'hardware-construction',
+    'home-rentals',
     'food-fresh',
     'health-wellness',
     'mama-fua-domestic',
@@ -125,6 +127,11 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         return <Droplets className="w-5 h-5" />;
       case 'Home':
         return <Home className="w-5 h-5" />;
+      case 'Building2':
+      case 'Building':
+        return <Building2 className="w-5 h-5" />;
+      case 'Key':
+        return <Key className="w-5 h-5" />;
       default:
         return <Folder className="w-5 h-5" />;
     }

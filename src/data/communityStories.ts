@@ -3,6 +3,7 @@ import { CommunityStory } from '../types';
 export const INITIAL_COMMUNITY_STORIES: CommunityStory[] = [
   {
     id: 'story-01',
+    slug: 'congo-stage-youth-urban-nursery',
     title: 'How Congo Stage Youth Turned an Abandoned Plot into a Thriving Urban Nursery',
     subtitle: 'Over 4,500 tree seedlings distributed across Bima Road and Jacaranda Estate in six months.',
     category: 'Environment & Clean-up',
@@ -29,39 +30,49 @@ Local business owners have enthusiastically backed the initiative, with hardware
     authorRole: 'Youth Environmental Leader & Resident',
     date: '2026-08-22',
     readTimeMinutes: 3,
-    featured: true,
+    featured: false,
     status: 'published',
     likes: 42,
   },
   {
     id: 'story-02',
-    title: 'Kahawa West Inter-Estate Football League Unites Hundreds of Youths Every Weekend',
-    subtitle: 'Sixteen local teams battle for the community trophy while fostering discipline and talent scouting.',
+    slug: 'kahawa-pride-fc',
+    title: "Kahawa Pride FC: From a Grassroots Soccer Academy to Kahawa West's Football Pride",
+    subtitle: "How dedicated local coaches, community elders and neighborhood shopkeepers turned a dusty pitch into a beacon of youth football talent and academic mentorship.",
     category: 'Youth & Sports',
     zone: 'Mahiga',
-    excerpt: 'Every Saturday afternoon, residents gather at the Mahiga grounds to cheer on local youth squads, bringing families and local food vendors together in high spirits.',
-    content: `Sports have long been the beating heart of weekend social life in Kahawa West. The newly inaugurated Inter-Estate Football Tournament has taken that community spirit to a whole new level.
+    excerpt: 'Every weekend, hundreds of families gather at the Mahiga grounds to cheer on Kahawa Pride FC, fostering youth discipline, athletic excellence, and academic support across the sub-county.',
+    content: `Sports have long been the beating heart of weekend social life in Kahawa West. Among the estate teams lighting up our neighborhood, **Kahawa Pride FC** stands out as a shining example of grassroots passion transforming lives.
 
-Featuring 16 teams representing Jacaranda, Congo, Bima, Soweto, Mahiga, and Roundabout, the tournament is organized independently by estate captains with match logistics and jerseys sponsored by local pharmacies, barbershops, and transport operators.
+Founded on the dusty grounds near Mahiga and Bima Road, the academy started with just 14 young boys and two second-hand leather balls. Today, Kahawa Pride FC has grown into a structured youth talent hub featuring Under-13, Under-17, and Senior squads competing across the Nairobi County League.
 
-Beyond football, the league offers mentorship sessions on financial literacy, drug abuse awareness, and vocational trade enrollment for players aged 16 to 25.
+### Building Discipline On and Off the Pitch
+Coach Baba Brian and the technical bench recognized early on that football is a catalyst for life skills and community unity:
 
-"When our young people are on the pitch or cheering from the touchline, our estate stands as one family," notes Coach Baba Brian. "Merchants selling sugarcane, boiled maize, and water also report their highest weekend sales during match days."`,
+1. **Mandatory Academic Study Hall:** Before Saturday training sessions, senior players and volunteer university students run a 90-minute homework clinic and mentorship circle for primary and secondary schoolers.
+2. **Community Kit & Equipment Support:** Local pharmacies, hardware stores, and barber shops across Kahawa West have generously sponsored match jerseys, shin guards, and first aid kits.
+3. **Talent Pathway & High School Scholarships:** Over the past two years, six academy graduates have secured academic and sports bursaries in prestigious national secondary schools.
+
+### Estate Unity on Match Days
+"When Kahawa Pride FC steps onto the pitch, our entire community stands united," says Coach Baba Brian. "Mothers selling boiled maize and water, elders sharing stories on the sidelines, and youth channeling their energy into positive sportsmanship."
+
+The club is currently preparing for the upcoming Nairobi North Inter-Subcounty Championship, carrying the hopes and pride of all Kahawa West residents.`,
     imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80',
-    imageCaption: 'Mahiga grounds during an intense weekend inter-estate league derby.',
+    imageCaption: 'Kahawa Pride FC squad during intensive weekend tactical training at Mahiga Grounds.',
     isRealPhotoConfirmed: true,
-    authorName: 'Coach Baba Brian',
-    authorEmail: 'sports.kwest@gmail.com',
+    authorName: 'Coach Baba Brian & Technical Bench',
+    authorEmail: 'kahawapridefc@kwest.org',
     authorPhone: '+254712998877',
-    authorRole: 'Head Youth Coach & Mahiga Sports Mentor',
-    date: '2026-08-18',
+    authorRole: 'Head Youth Coach & Sports Mentor',
+    date: '2026-08-28',
     readTimeMinutes: 4,
-    featured: false,
+    featured: true,
     status: 'published',
-    likes: 29,
+    likes: 58,
   },
   {
     id: 'story-03',
+    slug: 'jacaranda-women-artisans',
     title: 'Jacaranda Estate Women Artisans Expand Woven Baskets to Regional Markets',
     subtitle: 'A self-help group of 28 mothers turns sisal and recycled materials into sustainable livelihoods.',
     category: 'Local Business & Artisan',
@@ -94,7 +105,44 @@ export function getStoredCommunityStories(): CommunityStory[] {
     const raw = localStorage.getItem(LOCAL_STORAGE_STORIES_KEY);
     if (!raw) return INITIAL_COMMUNITY_STORIES;
     const parsed = JSON.parse(raw) as CommunityStory[];
-    return parsed.length > 0 ? parsed : INITIAL_COMMUNITY_STORIES;
+    if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_COMMUNITY_STORIES;
+
+    // Merge updated initial stories (like Kahawa Pride FC) with any locally added stories
+    const initialMap = new Map(INITIAL_COMMUNITY_STORIES.map((s) => [s.id, s]));
+    const result: CommunityStory[] = [];
+    const seenIds = new Set<string>();
+
+    // First add parsed stories with updated initial fields if they are seed stories
+    for (const p of parsed) {
+      if (initialMap.has(p.id)) {
+        const seed = initialMap.get(p.id)!;
+        result.push({
+          ...seed,
+          ...p,
+          title: seed.title, // Keep canonical updated title for seed stories
+          subtitle: seed.subtitle,
+          slug: seed.slug || p.slug,
+          category: seed.category,
+          content: seed.content,
+          featured: seed.featured,
+          status: 'published',
+          imageUrl: seed.imageUrl || p.imageUrl,
+          likes: Math.max(seed.likes || 0, p.likes || 0),
+        });
+      } else {
+        result.push(p);
+      }
+      seenIds.add(p.id);
+    }
+
+    // Ensure all seed stories exist
+    for (const init of INITIAL_COMMUNITY_STORIES) {
+      if (!seenIds.has(init.id)) {
+        result.push(init);
+      }
+    }
+
+    return result;
   } catch (err) {
     console.warn('Error reading stored community stories:', err);
     return INITIAL_COMMUNITY_STORIES;

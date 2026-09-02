@@ -26,6 +26,7 @@ import {
   saveCommunityStory,
   updateStoryModeration,
   deleteCommunityStory,
+  INITIAL_COMMUNITY_STORIES,
 } from './data/communityStories';
 import {
   getStoredBusinesses,
@@ -91,6 +92,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedZone, setSelectedZone] = useState('all');
+  const [housingAgentsOnly, setHousingAgentsOnly] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [mpesaOnly, setMpesaOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'name' | 'verified'>('rating');
@@ -193,16 +195,29 @@ export default function App() {
     return businesses.filter((b) => Boolean(b.specialOffer));
   }, [businesses]);
 
-  // 4. Check URL hash & search query parameters for SEO deep linking (e.g. #slug, ?biz=, ?story=, ?view=)
+  // 4. Check URL hash, search query parameters & pathname for SEO deep linking (e.g. #slug, ?biz=, ?story=, ?view=)
   useEffect(() => {
     const handleUrlRoute = () => {
       // A. Query Param Parsing
       const searchParams = new URLSearchParams(window.location.search);
       const bizParam = searchParams.get('biz');
-      const storyParam = searchParams.get('story');
+      const storyParam =
+        searchParams.get('story') ||
+        searchParams.get('storyId') ||
+        searchParams.get('article') ||
+        searchParams.get('s');
       const viewParam = searchParams.get('view');
       const catParam = searchParams.get('category');
       const zoneParam = searchParams.get('zone');
+
+      // B. Pathname Parsing (e.g. /story/kahawa-pride-fc or /stories/story-02)
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      let storyFromPath: string | null = null;
+      if (pathSegments.length > 0) {
+        if (pathSegments[0] === 'story' || pathSegments[0] === 'stories') {
+          storyFromPath = pathSegments[1] || null;
+        }
+      }
 
       if (catParam) {
         setSelectedCategory(catParam);
@@ -222,42 +237,102 @@ export default function App() {
         else if (viewParam === 'terms') setLegalTab('terms');
       }
 
-      if (storyParam) {
-        const foundStory = stories.find((s) => s.id === storyParam);
+      // 1. Story matching from query param (?story=...) or pathname (/story/...)
+      const allStories = stories.length > 0 ? stories : INITIAL_COMMUNITY_STORIES;
+      const targetStoryFromQueryOrPath = storyParam || storyFromPath;
+
+      if (targetStoryFromQueryOrPath) {
+        const targetStoryKey = decodeURIComponent(targetStoryFromQueryOrPath).toLowerCase().trim();
+        const foundStory = allStories.find((s) => {
+          const idMatch = s.id?.toLowerCase() === targetStoryKey;
+          const slugMatch = s.slug?.toLowerCase() === targetStoryKey;
+          const titleNormalized = s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const titleMatch =
+            titleNormalized === targetStoryKey ||
+            titleNormalized.includes(targetStoryKey) ||
+            targetStoryKey.includes(titleNormalized);
+          const fuzzyKahawaPride =
+            (targetStoryKey.includes('kahawa-pride') ||
+              targetStoryKey.includes('pride-fc') ||
+              targetStoryKey.includes('pride') ||
+              targetStoryKey.includes('soccer') ||
+              targetStoryKey.includes('football')) &&
+            (s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
+          const fuzzyCongo =
+            targetStoryKey.includes('congo') &&
+            (s.id === 'story-01' || s.slug?.includes('congo') || s.title.toLowerCase().includes('congo'));
+          const fuzzyJacaranda =
+            targetStoryKey.includes('jacaranda') &&
+            (s.id === 'story-03' || s.slug?.includes('jacaranda') || s.title.toLowerCase().includes('jacaranda'));
+
+          return idMatch || slugMatch || titleMatch || fuzzyKahawaPride || fuzzyCongo || fuzzyJacaranda;
+        });
+
         if (foundStory) {
           setSelectedStoryForReading(foundStory);
+          return;
         }
       }
 
-      // B. Business matching from ?biz= or #hash
-      const rawTarget = bizParam || window.location.hash.replace('#', '');
-      if (rawTarget) {
-        const target = decodeURIComponent(rawTarget).toLowerCase().trim();
-        // 1. Direct slug or ID match
-        let found = businesses.find((b) => b.slug?.toLowerCase() === target || b.id?.toLowerCase() === target);
+      // 2. Hash-based routing check (#story=... or #biz-slug or #story-02 or #kahawa-pride-fc)
+      const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
+      if (rawHash) {
+        const decodedHash = decodeURIComponent(rawHash).toLowerCase();
 
-        // 2. Name-derived slug match
-        if (!found) {
-          found = businesses.find(
-            (b) => b.name && generateBusinessSlug(b.name) === target
-          );
+        // Check if hash matches any story (either explicit prefix or matching slug/id)
+        const foundStoryFromHash = allStories.find((s) => {
+          const cleanHash = decodedHash.replace(/^story=/, '');
+          const idMatch = s.id?.toLowerCase() === cleanHash;
+          const slugMatch = s.slug?.toLowerCase() === cleanHash;
+          const titleNormalized = s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const titleMatch = titleNormalized === cleanHash || titleNormalized.includes(cleanHash);
+          const fuzzyKahawaPride =
+            (cleanHash.includes('pride') || cleanHash.includes('kahawa-pride') || cleanHash.includes('football') || cleanHash.includes('soccer')) &&
+            (s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
+          const fuzzyCongo =
+            cleanHash.includes('congo') &&
+            (s.id === 'story-01' || s.slug?.includes('congo') || s.title.toLowerCase().includes('congo'));
+          const fuzzyJacaranda =
+            cleanHash.includes('jacaranda') &&
+            (s.id === 'story-03' || s.slug?.includes('jacaranda') || s.title.toLowerCase().includes('jacaranda'));
+
+          return idMatch || slugMatch || titleMatch || fuzzyKahawaPride || fuzzyCongo || fuzzyJacaranda;
+        });
+
+        if (foundStoryFromHash) {
+          setSelectedStoryForReading(foundStoryFromHash);
+          return;
         }
 
-        // 3. Fallback for seed business variants
-        if (!found && (target.includes('furniture-crafts') || target.includes('furniture'))) {
-          found = businesses.find(
-            (b) =>
-              b.category === 'hardware-construction' &&
-              (b.subCategory?.toLowerCase().includes('furniture') ||
-                b.name.toLowerCase().includes('furniture') ||
-                b.name.toLowerCase().includes('ukweli'))
+        // 3. Otherwise check business matching
+        const targetBiz = (bizParam || decodedHash).toLowerCase().trim();
+        if (targetBiz) {
+          // 1. Direct slug or ID match
+          let found = businesses.find(
+            (b) => b.slug?.toLowerCase() === targetBiz || b.id?.toLowerCase() === targetBiz
           );
-        }
 
-        if (found) {
-          setSelectedBusinessForDetails(found);
-          if (found.slug && window.location.hash.replace('#', '') !== found.slug && !bizParam) {
-            window.history.replaceState(null, '', `#${found.slug}`);
+          // 2. Name-derived slug match
+          if (!found) {
+            found = businesses.find((b) => b.name && generateBusinessSlug(b.name) === targetBiz);
+          }
+
+          // 3. Fallback for seed business variants
+          if (!found && (targetBiz.includes('furniture-crafts') || targetBiz.includes('furniture'))) {
+            found = businesses.find(
+              (b) =>
+                b.category === 'hardware-construction' &&
+                (b.subCategory?.toLowerCase().includes('furniture') ||
+                  b.name.toLowerCase().includes('furniture') ||
+                  b.name.toLowerCase().includes('ukweli'))
+            );
+          }
+
+          if (found) {
+            setSelectedBusinessForDetails(found);
+            if (found.slug && window.location.hash.replace('#', '') !== found.slug && !bizParam) {
+              window.history.replaceState(null, '', `#${found.slug}`);
+            }
           }
         }
       }
@@ -319,6 +394,11 @@ export default function App() {
           return false;
         }
 
+        // Housing & Rent Collecting Agents filter
+        if (housingAgentsOnly && b.category !== 'home-rentals') {
+          return false;
+        }
+
         // Verified filter
         if (verifiedOnly && !b.isVerified && !b.isClaimed) {
           return false;
@@ -342,7 +422,7 @@ export default function App() {
         if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
         return 0;
       });
-  }, [businesses, searchQuery, selectedCategory, selectedZone, verifiedOnly, mpesaOnly, sortBy]);
+  }, [businesses, searchQuery, selectedCategory, selectedZone, housingAgentsOnly, verifiedOnly, mpesaOnly, sortBy]);
 
   // Handlers for Businesses
   const handleViewDetails = (business: Business) => {
@@ -494,6 +574,30 @@ export default function App() {
     setStories((prev) => prev.map((s) => (s.id === updatedStory.id ? updatedStory : s)));
   };
 
+  const handleReadStory = (story: CommunityStory) => {
+    setSelectedStoryForReading(story);
+    const storyKey = story.slug || story.id;
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set('view', 'stories');
+    searchParams.set('story', storyKey);
+    const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
+    window.history.pushState(null, '', newUrl);
+  };
+
+  const handleCloseStoryReader = () => {
+    setSelectedStoryForReading(null);
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.delete('story');
+    searchParams.delete('storyId');
+    searchParams.delete('article');
+    if (searchParams.get('view') === 'stories') {
+      searchParams.delete('view');
+    }
+    const newSearch = searchParams.toString();
+    const newUrl = newSearch ? `${window.location.pathname}?${newSearch}` : window.location.pathname;
+    window.history.pushState(null, '', newUrl);
+  };
+
   const handleLikeStory = (storyId: string) => {
     setStories((prev) =>
       prev.map((s) => (s.id === storyId ? { ...s, likes: (s.likes || 0) + 1 } : s))
@@ -548,6 +652,7 @@ export default function App() {
     setSearchQuery('');
     setSelectedCategory('all');
     setSelectedZone('all');
+    setHousingAgentsOnly(false);
     setVerifiedOnly(false);
     setMpesaOnly(false);
     setSortBy('rating');
@@ -626,26 +731,80 @@ export default function App() {
 
             {/* Sort & Quick Toggles */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {/* Housing & Rent Collecting Agents Checkbox Filter */}
               <button
+                id="filter-housing-agents-toggle"
+                type="button"
+                onClick={() => setHousingAgentsOnly(!housingAgentsOnly)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-2 active:scale-95 cursor-pointer select-none ${
+                  housingAgentsOnly
+                    ? 'bg-amber-100 border-amber-500 text-amber-950 shadow-2xs'
+                    : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
+                }`}
+                title="Filter only Housing & Rent Collecting Agents"
+                role="checkbox"
+                aria-checked={housingAgentsOnly}
+              >
+                <input
+                  type="checkbox"
+                  id="filter-housing-agents-checkbox"
+                  checked={housingAgentsOnly}
+                  onChange={() => {}}
+                  className="w-3.5 h-3.5 rounded text-amber-600 border-stone-300 focus:ring-amber-500 cursor-pointer pointer-events-none"
+                  aria-label="Filter only Housing & Rent Collecting Agents"
+                />
+                <Building className={`w-3.5 h-3.5 ${housingAgentsOnly ? 'text-amber-800' : 'text-stone-400'}`} />
+                <span>Housing & Rent Collecting Agents</span>
+              </button>
+
+              {/* Verified Filter */}
+              <button
+                id="filter-verified-toggle"
+                type="button"
                 onClick={() => setVerifiedOnly(!verifiedOnly)}
-                className={`px-3 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 active:scale-95 ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-2 active:scale-95 cursor-pointer select-none ${
                   verifiedOnly
                     ? 'bg-emerald-100 border-emerald-600 text-emerald-950 shadow-2xs'
                     : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
                 }`}
+                title="Filter only Verified listings"
+                role="checkbox"
+                aria-checked={verifiedOnly}
               >
+                <input
+                  type="checkbox"
+                  id="filter-verified-checkbox"
+                  checked={verifiedOnly}
+                  onChange={() => {}}
+                  className="w-3.5 h-3.5 rounded text-emerald-600 border-stone-300 focus:ring-emerald-500 cursor-pointer pointer-events-none"
+                  aria-label="Filter only Verified listings"
+                />
                 <ShieldCheck className={`w-3.5 h-3.5 ${verifiedOnly ? 'text-emerald-700' : 'text-stone-400'}`} />
                 <span>Verified</span>
               </button>
 
+              {/* M-Pesa Till Filter */}
               <button
+                id="filter-mpesa-toggle"
+                type="button"
                 onClick={() => setMpesaOnly(!mpesaOnly)}
-                className={`px-3 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 active:scale-95 ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-2 active:scale-95 cursor-pointer select-none ${
                   mpesaOnly
                     ? 'bg-sky-100 border-sky-600 text-sky-950 shadow-2xs'
                     : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
                 }`}
+                title="Filter only listings with M-Pesa Till"
+                role="checkbox"
+                aria-checked={mpesaOnly}
               >
+                <input
+                  type="checkbox"
+                  id="filter-mpesa-checkbox"
+                  checked={mpesaOnly}
+                  onChange={() => {}}
+                  className="w-3.5 h-3.5 rounded text-sky-600 border-stone-300 focus:ring-sky-500 cursor-pointer pointer-events-none"
+                  aria-label="Filter only listings with M-Pesa Till"
+                />
                 <CreditCard className={`w-3.5 h-3.5 ${mpesaOnly ? 'text-sky-700' : 'text-stone-400'}`} />
                 <span>M-Pesa Till</span>
               </button>
@@ -676,6 +835,9 @@ export default function App() {
             searchQuery={searchQuery}
             selectedCategory={selectedCategory}
             selectedZone={selectedZone}
+            isHousingFilterActive={housingAgentsOnly}
+            isVerifiedFilterActive={verifiedOnly}
+            isMpesaFilterActive={mpesaOnly}
             onReset={handleResetFilters}
             onListBusiness={() => setIsListBusinessOpen(true)}
             onSelectSuggestion={(sug) => setSearchQuery(sug)}
@@ -698,7 +860,7 @@ export default function App() {
           {/* A. Community Spotlight */}
           <CommunitySpotlight
             stories={stories.filter((s) => s.status === 'published' || !s.status)}
-            onReadStory={(story) => setSelectedStoryForReading(story)}
+            onReadStory={handleReadStory}
             onSubmitStoryClick={() => setIsSubmitStoryOpen(true)}
             onOpenEditorialDesk={() => setIsEditorialReviewOpen(true)}
             pendingCount={pendingCount}
@@ -770,7 +932,7 @@ export default function App() {
       <StoryReaderModal
         story={selectedStoryForReading}
         isOpen={Boolean(selectedStoryForReading)}
-        onClose={() => setSelectedStoryForReading(null)}
+        onClose={handleCloseStoryReader}
         onLike={handleLikeStory}
       />
 

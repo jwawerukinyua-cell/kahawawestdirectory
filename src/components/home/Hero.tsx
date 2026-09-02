@@ -14,6 +14,8 @@ import {
   Laptop,
   GraduationCap,
   Home,
+  Building2,
+  Key,
   PartyPopper,
   Droplets,
   ArrowRight,
@@ -68,9 +70,9 @@ export const Hero: React.FC<HeroProps> = ({
   const [heroImgError, setHeroImgError] = useState(false);
   const [isMoreCategoriesOpen, setIsMoreCategoriesOpen] = useState(false);
 
-  // Top 4 High-Demand Pinned Category IDs
+  // Top 4 High-Demand Pinned Category IDs (Housing, Food, Health, Mama Fua)
   const PINNED_CATEGORY_IDS = [
-    'hardware-construction',
+    'home-rentals',
     'food-fresh',
     'health-wellness',
     'mama-fua-domestic',
@@ -150,6 +152,11 @@ export const Hero: React.FC<HeroProps> = ({
         return <Droplets className="w-4 h-4 sm:w-4.5 sm:h-4.5" />;
       case 'Home':
         return <Home className="w-4 h-4 sm:w-4.5 sm:h-4.5" />;
+      case 'Building2':
+      case 'Building':
+        return <Building2 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />;
+      case 'Key':
+        return <Key className="w-4 h-4 sm:w-4.5 sm:h-4.5" />;
       default:
         return <Folder className="w-4 h-4 sm:w-4.5 sm:h-4.5" />;
     }

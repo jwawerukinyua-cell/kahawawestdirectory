@@ -2,6 +2,27 @@ import { Category } from '../types';
 
 export const CATEGORIES: Category[] = [
   {
+    id: 'home-rentals',
+    name: 'Housing & Rent Collecting Agents',
+    icon: 'Building2',
+    color: 'from-[#0D6E44] to-[#044E2E]',
+    description: 'Verified estate housing agents, bedsitter/1BR/2BR rental listings, caretakers, landlord rent collection agencies, property managers & commercial stall leasing.',
+  },
+  {
+    id: 'food-fresh',
+    name: 'Food & Fresh',
+    icon: 'ShoppingBasket',
+    color: 'from-[#0D6E44] to-[#065F46]',
+    description: 'Market mamas (mboga), fresh fruit stalls, butcheries, grain stores & wholesale distributors.',
+  },
+  {
+    id: 'health-wellness',
+    name: 'Health & Wellness',
+    icon: 'Pill',
+    color: 'from-[#0D6E44] to-[#044E2E]',
+    description: '24/7 pharmacies & chemists, outpatient clinics, dental centers, optical diagnostics & fitness gyms.',
+  },
+  {
     id: 'mama-fua-domestic',
     name: 'Mama Fua & Domestic Services',
     icon: 'Users',
@@ -21,13 +42,6 @@ export const CATEGORIES: Category[] = [
     icon: 'Wrench',
     color: 'from-[#0284C7] to-[#0369A1]',
     description: 'Plumbers, electricians, welders, painters, carpenters, timber yards & building supplies.',
-  },
-  {
-    id: 'food-fresh',
-    name: 'Food & Fresh',
-    icon: 'ShoppingBasket',
-    color: 'from-[#0D6E44] to-[#065F46]',
-    description: 'Market mamas (mboga), fresh fruit stalls, butcheries, grain stores & wholesale distributors.',
   },
   {
     id: 'restaurants-cafes',
@@ -56,13 +70,6 @@ export const CATEGORIES: Category[] = [
     icon: 'Scissors',
     color: 'from-[#9A3412] to-[#7C2D12]',
     description: 'Executive barbershops (kinyozi), hair salons, spas, nail bars, dreadlocks & makeup artists.',
-  },
-  {
-    id: 'health-wellness',
-    name: 'Health & Wellness',
-    icon: 'Pill',
-    color: 'from-[#0D6E44] to-[#044E2E]',
-    description: '24/7 pharmacies & chemists, outpatient clinics, dental centers, optical diagnostics & fitness gyms.',
   },
   {
     id: 'automotive',

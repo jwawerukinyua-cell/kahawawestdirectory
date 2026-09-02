@@ -14,6 +14,7 @@ import { BusinessEngagementStats } from './BusinessEngagementStats';
 import { BusinessAdSuite } from './BusinessAdSuite';
 import { PromoteShopModal } from './PromoteShopModal';
 import { MerchantUnlockModal } from './MerchantUnlockModal';
+import { ContactUnlockModal } from './ContactUnlockModal';
 
 interface BusinessDetailModalProps {
   business: Business | null;
@@ -39,6 +40,7 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
   const [showToast, setShowToast] = useState<string | null>(null);
   const [isPromoteShopModalOpen, setIsPromoteShopModalOpen] = useState(false);
   const [isMerchantUnlockModalOpen, setIsMerchantUnlockModalOpen] = useState(false);
+  const [isContactUnlockModalOpen, setIsContactUnlockModalOpen] = useState(false);
   const [isMerchantUnlocked, setIsMerchantUnlocked] = useState(false);
 
   // Check merchant authentication status on open or business change
@@ -224,6 +226,7 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
             onEditClick={() => onEditClick?.(business)}
             onPromoteShopClick={handleOpenPromote}
             onMerchantUnlockClick={() => setIsMerchantUnlockModalOpen(true)}
+            onUnlockContactClick={() => setIsContactUnlockModalOpen(true)}
           />
 
           {/* 2. Full 5-Photo Gallery Component */}
@@ -277,7 +280,10 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
 
             <div className="space-y-6">
               {/* Direct Contacts & M-Pesa Till */}
-              <BusinessContact business={business} />
+              <BusinessContact
+                business={business}
+                onUnlockContactClick={() => setIsContactUnlockModalOpen(true)}
+              />
 
               {/* Opening Hours & Status */}
               <BusinessOpeningHours openingHours={business.openingHours} />
@@ -364,6 +370,18 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
             setIsMerchantUnlocked(true);
             setShowToast('Merchant session unlocked! Welcome back.');
             setTimeout(() => setShowToast(null), 3000);
+          }}
+        />
+      )}
+      {/* Contact Unlock Modal for Housing & Rent Collecting Agents */}
+      {isContactUnlockModalOpen && (
+        <ContactUnlockModal
+          business={business}
+          isOpen={isContactUnlockModalOpen}
+          onClose={() => setIsContactUnlockModalOpen(false)}
+          onUnlocked={() => {
+            setShowToast('Agent Hotline Unlocked! Direct contacts are now visible.');
+            setTimeout(() => setShowToast(null), 3500);
           }}
         />
       )}

@@ -175,9 +175,11 @@ export const getStoredBusinesses = (seedBusinesses: Business[]): Business[] => {
         const c = custom[seed.id];
         // Ensure slug is synced with updated name if name changed
         const currentSlug = c.slug || generateBusinessSlug(c.name || seed.name);
+        const resolvedCategory = seed.id === 'kw-biz-10' ? 'home-rentals' : (c.category || seed.category);
         return {
           ...seed,
           ...c,
+          category: resolvedCategory,
           slug: currentSlug,
         };
       }

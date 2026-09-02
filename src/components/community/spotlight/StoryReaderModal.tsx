@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, MapPin, Share2, ThumbsUp, CheckCircle2, ShieldCheck, Camera, Sparkles, Clock, Tag } from 'lucide-react';
+import { X, Calendar, MapPin, Share2, ThumbsUp, CheckCircle2, ShieldCheck, Camera, Sparkles, Clock, Tag, MessageCircle, Copy, Check } from 'lucide-react';
 import { CommunityStory } from '../../../types';
 import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
@@ -23,20 +23,45 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
 
   if (!isOpen || !story) return null;
 
+  const getStoryUrl = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const storyKey = story.slug || story.id;
+    return `${origin}/?view=stories&story=${encodeURIComponent(storyKey)}`;
+  };
+
   const handleShare = () => {
+    const shareUrl = getStoryUrl();
+    const shareTitle = `${story.title} - Read this inspiring Kahawa West community story on KWEST Directory`;
+
     if (navigator.share) {
       navigator
         .share({
           title: story.title,
-          text: `${story.title} - Read this inspiring Kahawa West community story on KWEST Directory`,
-          url: window.location.href,
+          text: shareTitle,
+          url: shareUrl,
         })
-        .catch(() => {});
+        .catch(() => {
+          // Fallback to copy
+          copyLink();
+        });
     } else {
-      navigator.clipboard.writeText(`${story.title} - Read more on kahawawestdirectory.co.ke: ${window.location.href}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      copyLink();
     }
+  };
+
+  const copyLink = () => {
+    const shareUrl = getStoryUrl();
+    const shareText = `${story.title} - Read this inspiring Kahawa West community story on KWEST Directory\n${shareUrl}`;
+    navigator.clipboard.writeText(shareText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleWhatsAppShare = () => {
+    const shareUrl = getStoryUrl();
+    const message = `*${story.title}*\n\nRead this inspiring Kahawa West community story on KWEST Directory:\n${shareUrl}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleLikeClick = () => {
@@ -171,7 +196,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
               <Button
                 variant="outline"
                 size="sm"
@@ -187,13 +212,23 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                 <span className="ml-1 text-xs opacity-75">({(story.likes || 0) + (liked ? 1 : 0)})</span>
               </Button>
 
+              <button
+                type="button"
+                onClick={handleWhatsAppShare}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 transition active:scale-95 cursor-pointer shadow-xs"
+                title="Share this story directly on WhatsApp"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-700 fill-emerald-600/20" />
+                <span>WhatsApp</span>
+              </button>
+
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleShare}
-                icon={<Share2 className="w-4 h-4 text-sky-600" />}
+                icon={copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-sky-600" />}
               >
-                <span>{copied ? 'Link Copied!' : 'Share Story'}</span>
+                <span>{copied ? 'Link Copied!' : 'Share / Copy'}</span>
               </Button>
             </div>
           </div>

@@ -8,6 +8,8 @@ import {
   ArrowRight,
   PlusCircle,
   Sparkles,
+  Share2,
+  Check,
 } from 'lucide-react';
 import { CommunityStory } from '../../../types';
 import { ListingImage } from '../../ui/ListingImage';
@@ -29,9 +31,42 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
 }) => {
   const [selectedStoryCategory, setSelectedStoryCategory] = useState<string>('all');
   const [featuredImgError, setFeaturedImgError] = useState(false);
+  const [copiedStoryId, setCopiedStoryId] = useState<string | null>(null);
 
   // Find the featured story (or the first available story)
   const featuredStory = stories.find((s) => s.featured && s.status === 'published') || stories[0];
+
+  const handleQuickShare = (e: React.MouseEvent, story: CommunityStory) => {
+    e.stopPropagation();
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const storyKey = story.slug || story.id;
+    const shareUrl = `${origin}/?view=stories&story=${encodeURIComponent(storyKey)}`;
+    const shareTitle = `${story.title} - Read this inspiring Kahawa West community story on KWEST Directory`;
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: story.title,
+          text: shareTitle,
+          url: shareUrl,
+        })
+        .catch(() => {
+          copyShareLink(story);
+        });
+    } else {
+      copyShareLink(story);
+    }
+  };
+
+  const copyShareLink = (story: CommunityStory) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const storyKey = story.slug || story.id;
+    const shareUrl = `${origin}/?view=stories&story=${encodeURIComponent(storyKey)}`;
+    const shareText = `${story.title} - Read this inspiring Kahawa West community story on KWEST Directory\n${shareUrl}`;
+    navigator.clipboard.writeText(shareText);
+    setCopiedStoryId(story.id);
+    setTimeout(() => setCopiedStoryId(null), 2500);
+  };
 
   const categories: string[] = [
     'all',
@@ -155,13 +190,29 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             {featuredStory && (
-              <button
-                onClick={() => onReadStory(featuredStory)}
-                className="px-5 py-2.5 rounded-xl bg-[#0D6E44] hover:bg-[#0B5C39] text-white text-xs sm:text-sm font-bold transition shadow-lg flex items-center gap-2 active:scale-95"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Read This Week's Story</span>
-              </button>
+              <>
+                <button
+                  onClick={() => onReadStory(featuredStory)}
+                  className="px-5 py-2.5 rounded-xl bg-[#0D6E44] hover:bg-[#0B5C39] text-white text-xs sm:text-sm font-bold transition shadow-lg flex items-center gap-2 active:scale-95"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Read This Week's Story</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => handleQuickShare(e, featuredStory)}
+                  className="px-4 py-2.5 rounded-xl bg-[#1D2630] hover:bg-[#25313E] text-stone-200 hover:text-white border border-stone-700 text-xs sm:text-sm font-bold transition flex items-center gap-2 active:scale-95 cursor-pointer"
+                  title="Share or Copy Direct Link to this Story"
+                >
+                  {copiedStoryId === featuredStory.id ? (
+                    <Check className="w-4 h-4 text-emerald-400" />
+                  ) : (
+                    <Share2 className="w-4 h-4 text-emerald-400" />
+                  )}
+                  <span>{copiedStoryId === featuredStory.id ? 'Link Copied!' : 'Share Story Link'}</span>
+                </button>
+              </>
             )}
 
             <button
@@ -273,12 +324,27 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
                   <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center">
                     {(story.authorName || 'K').charAt(0)}
                   </div>
-                  <span className="truncate max-w-[110px]">{story.authorName || 'Resident'}</span>
+                  <span className="truncate max-w-[100px]">{story.authorName || 'Resident'}</span>
                 </div>
 
-                <div className="flex items-center gap-3 text-emerald-700 font-bold group-hover:translate-x-0.5 transition">
-                  <span>Read Story</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={(e) => handleQuickShare(e, story)}
+                    className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-emerald-700 transition"
+                    title="Share direct link"
+                  >
+                    {copiedStoryId === story.id ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : (
+                      <Share2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+
+                  <div className="flex items-center gap-1.5 text-emerald-700 font-bold group-hover:translate-x-0.5 transition">
+                    <span>Read</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
                 </div>
               </div>
             </div>

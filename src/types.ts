@@ -95,6 +95,9 @@ export interface Business {
     lat: number;
     lng: number;
   };
+  isContactGated?: boolean;
+  isContactUnlocked?: boolean;
+  contactUnlockFee?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -182,6 +185,7 @@ export type StoryCategory =
 
 export interface CommunityStory {
   id: string;
+  slug?: string;
   title: string;
   subtitle?: string;
   category: StoryCategory;

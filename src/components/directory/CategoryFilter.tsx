@@ -10,10 +10,26 @@ import {
   CreditCard,
   GraduationCap,
   Home,
+  Building2,
+  Key,
   PartyPopper,
   Droplets,
   LayoutGrid,
   Folder,
+  Users,
+  Flame,
+  ShoppingBasket,
+  Coffee,
+  Truck,
+  Briefcase,
+  Pill,
+  Smartphone,
+  BadgeDollarSign,
+  Church,
+  Shirt,
+  Bus,
+  Sprout,
+  Handshake,
 } from 'lucide-react';
 import { Category } from '../../types';
 
@@ -52,6 +68,39 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
         return <GraduationCap className="w-4 h-4" />;
       case 'Home':
         return <Home className="w-4 h-4" />;
+      case 'Building2':
+      case 'Building':
+        return <Building2 className="w-4 h-4" />;
+      case 'Key':
+        return <Key className="w-4 h-4" />;
+      case 'Users':
+        return <Users className="w-4 h-4" />;
+      case 'Flame':
+        return <Flame className="w-4 h-4" />;
+      case 'ShoppingBasket':
+        return <ShoppingBasket className="w-4 h-4" />;
+      case 'Coffee':
+        return <Coffee className="w-4 h-4" />;
+      case 'Truck':
+        return <Truck className="w-4 h-4" />;
+      case 'Briefcase':
+        return <Briefcase className="w-4 h-4" />;
+      case 'Pill':
+        return <Pill className="w-4 h-4" />;
+      case 'Smartphone':
+        return <Smartphone className="w-4 h-4" />;
+      case 'BadgeDollarSign':
+        return <BadgeDollarSign className="w-4 h-4" />;
+      case 'Church':
+        return <Church className="w-4 h-4" />;
+      case 'Shirt':
+        return <Shirt className="w-4 h-4" />;
+      case 'Bus':
+        return <Bus className="w-4 h-4" />;
+      case 'Sprout':
+        return <Sprout className="w-4 h-4" />;
+      case 'Handshake':
+        return <Handshake className="w-4 h-4" />;
       case 'PartyPopper':
         return <PartyPopper className="w-4 h-4" />;
       case 'Droplets':

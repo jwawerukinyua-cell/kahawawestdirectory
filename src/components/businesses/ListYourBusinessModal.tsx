@@ -480,34 +480,64 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm font-medium"
                 >
-                  <option value="food-dining">Food & Dining</option>
-                  <option value="health-medical">Health & Medical</option>
-                  <option value="beauty-grooming">Beauty & Grooming</option>
-                  <option value="shopping-groceries">Shopping & Groceries</option>
-                  <option value="fundis-trades">Fundis & Artisan Trades</option>
-                  <option value="auto-transport">Auto & Transport</option>
-                  <option value="tech-cyber">Tech, Cyber & Printing</option>
-                  <option value="financial-mpesa">Financial & M-Pesa</option>
-                  <option value="education-daycare">Schools & Daycare</option>
-                  <option value="home-rentals">Housing & Property</option>
-                  <option value="events-leisure">Events & Entertainment</option>
-                  <option value="laundry-cleaning">Laundry & Cleaning</option>
+                  <option value="home-rentals">🏢 Housing & Rent Collecting Agents</option>
+                  <option value="mama-fua-domestic">🧺 Mama Fua & Domestic Services</option>
+                  <option value="home-utilities">🔥 Home & Utilities (Gas, Water, Solar)</option>
+                  <option value="hardware-construction">🔧 Hardware & Construction (Fundis)</option>
+                  <option value="food-fresh">🥦 Food & Fresh Groceries</option>
+                  <option value="restaurants-cafes">☕ Restaurants & Cafés (Nyama Choma)</option>
+                  <option value="errands-deliveries">🚚 Errands & Courier Deliveries</option>
+                  <option value="professional-services">💼 Professional Services & Freelancers</option>
+                  <option value="beauty-personal-care">✂️ Beauty & Personal Care (Kinyozi/Salon)</option>
+                  <option value="health-wellness">💊 Health & Wellness (Pharmacies/Clinics)</option>
+                  <option value="automotive">🚗 Automotive & Bodaboda Garages</option>
+                  <option value="education">🎓 Education, Daycares & Tuition</option>
+                  <option value="electronics-tech">📱 Electronics, Phones & Cyber</option>
+                  <option value="shopping-retail">🛍️ Shopping & General Retail</option>
+                  <option value="financial-services">💳 Financial & M-Pesa Agency</option>
+                  <option value="churches">⛪ Churches & Faith Ministries</option>
+                  <option value="fashion-clothing">👕 Fashion, Mitumba & Tailoring</option>
+                  <option value="transport-travel">🚌 Transport & Matatu Saccos</option>
+                  <option value="events-entertainment">🎉 Events & Entertainment</option>
+                  <option value="home-garden">🌱 Home & Garden Nursery</option>
+                  <option value="community-organizations">🤝 Community Groups & Associations</option>
                 </select>
               </div>
             </div>
 
+            {/* Housing & Rent Collecting Agent Notice */}
+            {category === 'home-rentals' && (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-400/40 text-amber-950">
+                <div className="flex items-start gap-2.5">
+                  <Building className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                  <div className="text-xs space-y-1">
+                    <strong className="block text-amber-900 font-bold">
+                      Housing & Rent Collecting Agent Policy Notice
+                    </strong>
+                    <p className="text-amber-800 leading-relaxed">
+                      Listing your housing agency or property management agency on KWEST is <strong>100% FREE</strong>. To prevent brokerage spam and ensure verified tenant safety, direct phone & WhatsApp contact lines are gated and can be activated for <strong>KES 500</strong>. You can submit your free listing right now!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Specific Sub-Specialty
+                  Specific Sub-Specialty / Role *
                 </label>
                 <input
                   type="text"
                   value={subCategory}
                   onChange={(e) => setSubCategory(e.target.value)}
-                  placeholder="e.g. Chemist, Plumber, Graphic Designer, Tutor"
+                  placeholder={
+                    category === 'home-rentals'
+                      ? 'e.g. Rent Collection Agency, Bedsitter/1BR Agent, Caretaker'
+                      : 'e.g. Chemist, Plumber, Graphic Designer, Tutor'
+                  }
                   className="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
                 />
               </div>

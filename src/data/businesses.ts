@@ -346,8 +346,8 @@ export const INITIAL_BUSINESSES: Business[] = [
     slug: 'mahiga-estate-care-property-agents',
     name: 'Mahiga Ridge Property Agency & Caretaker Hub',
     tagline: 'Verified Bedsitters, 1 & 2 Bedroom Apartments, Borehole Water & Security',
-    category: 'home-utilities',
-    subCategory: 'Real Estate & Rentals',
+    category: 'home-rentals',
+    subCategory: 'Housing & Rent Collecting Agency',
     zone: 'Mahiga',
     landmark: 'Mahiga Close, Yellow Gate opposite ACK Church',
     addressDetails: 'Office 2, Mahiga Ridge Commercial Block, Kahawa West',
@@ -866,7 +866,10 @@ function generateAdditionalBusinesses(): Business[] {
     { name: 'Kahawa West Pork Joint & Roast Kitchen', cat: 'restaurants-cafes', sub: 'Pork Choma', tag: 'Fried & Roasted Pork, Ugali, Kachumbari & Fries' },
     { name: 'Jacaranda Home Paint & Decor Solutions', cat: 'hardware-construction', sub: 'Painting & Interior Decor', tag: 'Silk Paint, Wallpaper Installation & Gypsum Ceilings' },
     { name: 'Station Road Milk ATM & Dairy Pure', cat: 'food-fresh', sub: 'Milk & Dairy', tag: 'Fresh Pasteurized Whole Milk Refill ATM & Yogurt' },
-    { name: 'Bima Ridge Movers & Storage Logistics', cat: 'home-utilities', sub: 'Moving Services', tag: 'Careful Packing, Household Relocation & Closed Trucks' }
+    { name: 'Bima Ridge Movers & Storage Logistics', cat: 'home-utilities', sub: 'Moving Services', tag: 'Careful Packing, Household Relocation & Closed Trucks' },
+    { name: 'Kahawa West Housing & Rent Collection Agency', cat: 'home-rentals', sub: 'Rent Collection & Landlord Agency', tag: 'Verified Bedsitter, 1BR & 2BR Vacancies, Landlord Rent Remittance & Caretakers' },
+    { name: 'Jacaranda Estate Property Management & Rental Finding', cat: 'home-rentals', sub: 'Housing Agent & Rental Finding', tag: 'Prime Bedsitters, 1BR/2BR Apartments, Commercial Stalls & Gate Pass Caretaking' },
+    { name: 'Bima Road Landlord Caretaker & Rent Agency', cat: 'home-rentals', sub: 'Rent Collection & Landlord Agency', tag: 'Transparent Monthly Rent Remittance, Tenant Vetting & Maintenance Supervision' }
   ];
 
   const results: Business[] = [];
