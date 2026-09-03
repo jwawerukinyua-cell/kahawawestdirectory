@@ -56,17 +56,20 @@
         window.dispatchEvent(new CustomEvent('kwest_prompt_ready'));
       });
 
-      // Non-blocking Service Worker registration
+      // Clean up any stale service workers or caches to ensure fresh Vite modules
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js', { scope: '/' })
-            .then((reg) => {
-              if (reg.waiting) {
-                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-              }
-            })
-            .catch((err) => console.log('SW registration error:', err));
-        });
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            registration.unregister();
+          }
+        }).catch(() => {});
+        if ('caches' in window) {
+          caches.keys().then((keys) => {
+            for (const key of keys) {
+              caches.delete(key);
+            }
+          }).catch(() => {});
+        }
       }
     </script>
   </head>

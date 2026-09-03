@@ -117,7 +117,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
   const [tagline, setTagline] = useState('');
   const [category, setCategory] = useState('');
   const [operationType, setOperationType] = useState<OperationType>('physical_shop');
-  const [zone, setZone] = useState<EstateZone>('Zone 1 (Posta / Kamiti Rd)');
+  const [zone, setZone] = useState<EstateZone>('Kamiti Road');
   const [landmark, setLandmark] = useState('');
   const [addressDetails, setAddressDetails] = useState('');
   const [description, setDescription] = useState('');
@@ -166,7 +166,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
       setTagline(business.tagline || '');
       setCategory(business.category || 'Groceries & Fresh Food');
       setOperationType(business.operationType || 'physical_shop');
-      setZone(business.zone || 'Zone 1 (Posta / Kamiti Rd)');
+      setZone(business.zone || 'Kamiti Road');
       setLandmark(business.landmark || '');
       setAddressDetails(business.addressDetails || '');
       setDescription(business.description || '');

@@ -82,10 +82,10 @@ export const BusinessOpeningHours: React.FC<BusinessOpeningHoursProps> = ({ open
               </div>
 
               <div>
-                {!schedule || (typeof schedule === 'object' && schedule.isClosed) || (typeof schedule === 'string' && schedule.toLowerCase().includes('closed')) ? (
+                {!schedule || (typeof schedule === 'object' && (schedule as any).isClosed) || (typeof schedule === 'string' && String(schedule).toLowerCase().includes('closed')) ? (
                   <span className="text-slate-400 font-medium">Closed</span>
                 ) : (typeof schedule === 'string') ? (
-                  <span className="font-medium text-slate-800">{schedule}</span>
+                  <span className="font-medium text-slate-800">{String(schedule)}</span>
                 ) : (schedule.open === '00:00' && schedule.close === '23:59') || schedule.open === '24 Hours' ? (
                   <span className="text-emerald-600 font-semibold">24 Hours</span>
                 ) : schedule.open && schedule.close ? (

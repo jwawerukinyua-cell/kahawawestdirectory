@@ -68,12 +68,12 @@ export const Hero: React.FC<HeroProps> = ({
   onSelectCategory,
   categoryCounts = {},
 }) => {
-  const [currentHeroSrc, setCurrentHeroSrc] = useState('/hero.webp');
+  const [currentHeroSrc, setCurrentHeroSrc] = useState('/hero.jpg');
 
   const handleHeroImgError = () => {
-    if (currentHeroSrc === '/hero.webp') {
-      setCurrentHeroSrc('/hero.jpg');
-    } else if (currentHeroSrc === '/hero.jpg') {
+    if (currentHeroSrc === '/hero.jpg') {
+      setCurrentHeroSrc('/hero.webp');
+    } else if (currentHeroSrc === '/hero.webp') {
       setCurrentHeroSrc('/hero-opt.jpg');
     }
   };
@@ -109,6 +109,54 @@ export const Hero: React.FC<HeroProps> = ({
       emptyCategories: zeroCount,
     };
   }, [categories, categoryCounts]);
+
+  // Guaranteed high-contrast color badges for category icons
+  const getCategoryBadgeClass = (catId: string) => {
+    switch (catId) {
+      case 'home-rentals':
+        return 'bg-emerald-600 text-white';
+      case 'food-fresh':
+        return 'bg-emerald-700 text-white';
+      case 'health-wellness':
+        return 'bg-teal-600 text-white';
+      case 'mama-fua-domestic':
+        return 'bg-rose-700 text-white';
+      case 'home-utilities':
+        return 'bg-orange-600 text-white';
+      case 'hardware-construction':
+        return 'bg-blue-600 text-white';
+      case 'restaurants-cafes':
+        return 'bg-amber-600 text-white';
+      case 'errands-deliveries':
+        return 'bg-yellow-600 text-white';
+      case 'beauty-personal-care':
+        return 'bg-pink-600 text-white';
+      case 'automotive':
+        return 'bg-indigo-600 text-white';
+      case 'education':
+        return 'bg-purple-600 text-white';
+      case 'electronics-tech':
+        return 'bg-cyan-600 text-white';
+      case 'financial-services':
+        return 'bg-emerald-800 text-white';
+      case 'events-entertainment':
+        return 'bg-fuchsia-600 text-white';
+      case 'fashion-clothing':
+        return 'bg-violet-600 text-white';
+      case 'transport-travel':
+        return 'bg-sky-600 text-white';
+      case 'home-garden':
+        return 'bg-lime-700 text-white';
+      case 'community-organizations':
+        return 'bg-teal-700 text-white';
+      case 'churches-faith':
+        return 'bg-amber-700 text-white';
+      case 'professional-services':
+        return 'bg-slate-700 text-white';
+      default:
+        return 'bg-rose-600 text-white';
+    }
+  };
 
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
@@ -175,15 +223,15 @@ export const Hero: React.FC<HeroProps> = ({
   return (
     <div
       id="home-hero-banner"
-      className="relative bg-[#3B0202] text-white rounded-3xl overflow-hidden shadow-2xl mb-8 border border-[#630303]"
+      className="relative bg-stone-950 text-white rounded-3xl overflow-hidden shadow-2xl mb-8 border border-stone-800"
     >
       {/* Background Image: High Priority Landmark Photo */}
-      <div className="absolute inset-0 z-0 overflow-hidden bg-[#240101]">
+      <div className="absolute inset-0 z-0 overflow-hidden bg-stone-950">
         <img
           src={currentHeroSrc}
           alt={generateBrandAltText('hero-landmark')}
           title="Kahawa West Landmark - Bypass Roundabout Intersection"
-          className="w-full h-full object-cover object-center opacity-95 transition-all duration-300 transform scale-100 filter brightness-105 contrast-105"
+          className="w-full h-full object-cover object-[center_35%] transition-all duration-300 transform scale-100 filter brightness-105 contrast-105"
           fetchPriority="high"
           loading="eager"
           decoding="async"
@@ -192,16 +240,16 @@ export const Hero: React.FC<HeroProps> = ({
           onError={handleHeroImgError}
         />
 
-        {/* Lightweight translucent dark gradient overlay calibrated so the roundabout landmark is clearly visible */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1F0101]/95 via-[#2E0202]/50 to-[#2E0202]/30" />
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-[0.5px]" />
+        {/* Scenic calibrated overlay that lets the bypass roundabout landmark shine through vividly while keeping text 100% readable */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/80" />
+        <div className="absolute inset-0 bg-[#3B0202]/25 mix-blend-multiply" />
       </div>
 
       {/* Decorative Subtle Ambient Accents */}
       <div className="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-80 h-80 bg-sky-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-80 h-80 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Landmark Pin Indicator cleanly anchored at bottom-right of hero image to eliminate top-badge overlap on tablet/desktop */}
+      {/* Landmark Pin Indicator cleanly anchored at bottom-right of hero image */}
       <div className="absolute bottom-4 right-4 z-10 hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-sans font-medium bg-black/80 text-stone-200 border border-white/20 backdrop-blur-md shadow-md pointer-events-none">
         <MapPin className="w-3 h-3 text-emerald-400" />
         <span>Kahawa West Bypass Roundabout</span>
@@ -210,25 +258,26 @@ export const Hero: React.FC<HeroProps> = ({
       <div className="relative z-10 p-5 sm:p-8 lg:p-10">
         {/* Top Header & Search Area */}
         <div className="max-w-3xl mx-auto text-center mb-8 sm:mb-10">
+          {/* Brand Directory Title */}
+          <div className="mb-3 sm:mb-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-sans font-semibold text-emerald-300 bg-black/60 border border-emerald-400/40 backdrop-blur-md shadow-sm">
+              <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+              Official Kahawa West Business Directory
+            </span>
+          </div>
+
           {/* Main Title */}
-          <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-black sm:text-black mb-3 sm:mb-4 leading-tight drop-shadow-sm bg-white/95 px-4 py-2 rounded-2xl inline-block border border-stone-300/80 shadow-md">
+          <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white mb-3 sm:mb-4 leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
             Find Verified Local Businesses in{' '}
-            <span className="text-[#630303] font-black">
+            <span className="text-rose-400 font-black">
               Kahawa West
             </span>
           </h1>
 
           {/* Description */}
-          <div className="font-sans text-black text-xs sm:text-base mb-3 sm:mb-4 max-w-2xl mx-auto leading-relaxed font-medium bg-white/90 px-4 py-2.5 rounded-xl border border-stone-200/80 shadow-sm">
-            <span className="font-bold text-[#630303]">Kahawa West, Finally Organized.</span> Find trusted businesses, discover hidden local gems, read community updates, and support businesses around you—all in one trusted place.
-          </div>
-
-          {/* Brand Directory Title */}
-          <div className="mb-4 sm:mb-5">
-            <span className="text-xs sm:text-sm font-sans font-semibold text-emerald-200 tracking-wide">
-              Official Kahawa West Business Directory
-            </span>
-          </div>
+          <p className="font-sans text-stone-200 text-xs sm:text-base mb-5 max-w-2xl mx-auto leading-relaxed font-medium drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
+            <span className="font-bold text-white">Kahawa West, Finally Organized.</span> Find trusted businesses, discover hidden local gems, read community updates, and support businesses around you—all in one trusted place.
+          </p>
 
           {/* Search Controls & Sleek Action Button */}
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 shadow-2xl">
@@ -334,7 +383,7 @@ export const Hero: React.FC<HeroProps> = ({
           </div>
 
           {/* Active Category Cards Grid (Top 4 on Mobile/Tablet, Full Active Grid on Desktop) */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
             {primaryCategories.map((cat) => {
               const count = categoryCounts[cat.id] || 0;
               const isSelected = selectedCategory === cat.id;
@@ -345,45 +394,45 @@ export const Hero: React.FC<HeroProps> = ({
                   key={cat.id}
                   id={`cat-card-${cat.id}`}
                   onClick={() => onSelectCategory(isSelected ? 'all' : cat.id)}
-                  className={`group relative rounded-xl p-2.5 sm:p-3 transition-all duration-200 ease-out cursor-pointer justify-between ${
+                  className={`group relative rounded-2xl p-3 sm:p-3.5 transition-all duration-200 ease-out cursor-pointer justify-between border ${
                     !isPinned ? 'hidden lg:flex flex-col' : 'flex flex-col'
                   } ${
                     isSelected
-                      ? 'bg-gradient-to-b from-[#800707] to-[#450202] text-white shadow-[0_8px_20px_rgba(0,0,0,0.7),0_2px_6px_rgba(225,29,72,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.4),inset_0_-2px_4px_rgba(0,0,0,0.5)] -translate-y-0.5'
+                      ? 'bg-gradient-to-b from-[#8E0808] to-[#4A0303] text-white border-rose-400 ring-2 ring-rose-400/50 shadow-xl -translate-y-0.5'
                       : isPinned
-                      ? 'bg-gradient-to-b from-stone-900/95 via-stone-900/90 to-black text-white shadow-[0_5px_14px_rgba(0,0,0,0.65),0_1px_3px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(251,191,36,0.45),inset_0_-2px_3px_rgba(0,0,0,0.6)] hover:bg-gradient-to-b hover:from-[#750505] hover:to-[#380101] hover:shadow-[0_10px_24px_rgba(0,0,0,0.8),0_2px_6px_rgba(251,191,36,0.3),inset_0_1px_1.5px_rgba(251,191,36,0.65)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_2px_6px_rgba(0,0,0,0.7),inset_0_1px_2px_rgba(0,0,0,0.5)]'
-                      : 'bg-gradient-to-b from-stone-900/90 via-stone-900/80 to-black text-white shadow-[0_4px_12px_rgba(0,0,0,0.6),0_1px_3px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-2px_3px_rgba(0,0,0,0.6)] hover:bg-gradient-to-b hover:from-[#750505] hover:to-[#380101] hover:shadow-[0_10px_22px_rgba(0,0,0,0.75),0_2px_5px_rgba(0,0,0,0.8),inset_0_1px_1.5px_rgba(255,255,255,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_2px_6px_rgba(0,0,0,0.7),inset_0_1px_2px_rgba(0,0,0,0.5)]'
+                      ? 'bg-stone-900/85 hover:bg-[#630303] text-white border-amber-400/50 hover:border-amber-300 shadow-[0_4px_14px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] hover:shadow-xl backdrop-blur-md hover:-translate-y-0.5 active:translate-y-0'
+                      : 'bg-stone-900/80 hover:bg-[#630303] text-white border-white/20 hover:border-rose-400 shadow-[0_4px_12px_rgba(0,0,0,0.45),inset_0_1px_1px_rgba(255,255,255,0.15)] hover:shadow-xl backdrop-blur-md hover:-translate-y-0.5 active:translate-y-0'
                   }`}
                 >
                   {isPinned && !isSelected && (
-                    <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-extrabold uppercase tracking-wide bg-amber-400 text-stone-950 flex items-center gap-0.5 shadow-xs">
+                    <span className="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-amber-400 text-stone-950 flex items-center gap-0.5 shadow-sm">
                       <Star className="w-2.5 h-2.5 fill-stone-950" />
                       <span>Top</span>
                     </span>
                   )}
 
-                  <div className="flex items-start gap-2 sm:gap-2.5">
+                  <div className="flex items-start gap-2.5 sm:gap-3">
                     <div
-                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br ${cat.color} text-white flex items-center justify-center flex-shrink-0 shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)] group-hover:scale-105 transition-transform`}
+                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${getCategoryBadgeClass(cat.id)} flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform`}
                     >
                       {getCategoryIcon(cat.icon)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3
-                        className={`font-display font-bold text-[11px] sm:text-xs leading-snug truncate transition-colors duration-150 ${
+                        className={`font-display font-bold text-xs sm:text-sm leading-snug truncate transition-colors duration-150 ${
                           isSelected
                             ? 'text-white'
-                            : 'text-stone-100 group-hover:text-white'
+                            : 'text-white group-hover:text-rose-200'
                         }`}
                         title={cat.name}
                       >
                         {cat.name}
                       </h3>
                       <span
-                        className={`text-[10px] font-medium block mt-0.5 transition-colors duration-150 ${
+                        className={`text-[10px] sm:text-[11px] font-semibold block mt-1 transition-colors duration-150 ${
                           isSelected
                             ? 'text-rose-200'
-                            : 'text-stone-300 group-hover:text-rose-200'
+                            : 'text-stone-300 group-hover:text-white'
                         }`}
                       >
                         {count} {count === 1 ? 'place' : 'places'}
@@ -397,12 +446,12 @@ export const Hero: React.FC<HeroProps> = ({
 
           {/* Expandable "More Categories" Collapsible Drawer */}
           {(otherActiveCategories.length > 0 || emptyCategories.length > 0) && (
-            <div className="mt-3.5 pt-3 border-t border-white/15">
+            <div className="mt-4 pt-3.5 border-t border-white/20">
               <button
                 type="button"
                 id="toggle-more-categories-drawer"
                 onClick={() => setIsMoreCategoriesOpen(!isMoreCategoriesOpen)}
-                className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-b from-stone-900/90 to-black/95 hover:from-[#5E0505] hover:to-[#2B0101] text-stone-200 hover:text-white text-xs font-bold transition-all duration-200 ease-out flex items-center justify-between shadow-[0_4px_12px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.15)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.75),inset_0_1px_1px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 active:translate-y-0"
+                className="w-full py-2.5 px-3.5 rounded-xl bg-stone-900/85 hover:bg-[#630303] text-stone-200 hover:text-white text-xs font-bold transition-all duration-200 ease-out flex items-center justify-between border border-white/20 hover:border-rose-400 shadow-md hover:-translate-y-0.5 active:translate-y-0"
               >
                 <div className="flex items-center gap-2">
                   <Folder className="w-3.5 h-3.5 text-rose-400" />
@@ -432,7 +481,7 @@ export const Hero: React.FC<HeroProps> = ({
               </button>
 
               {isMoreCategoriesOpen && (
-                <div className="mt-2.5 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
                   {/* On mobile/tablet: Show remaining active categories */}
                   {otherActiveCategories.length > 0 && (
                     <div className="lg:hidden">
@@ -452,21 +501,21 @@ export const Hero: React.FC<HeroProps> = ({
                               key={cat.id}
                               id={`mobile-extra-cat-${cat.id}`}
                               onClick={() => onSelectCategory(isSelected ? 'all' : cat.id)}
-                              className={`group rounded-xl p-2.5 transition-all duration-200 ease-out cursor-pointer flex flex-col justify-between ${
+                              className={`group rounded-xl p-2.5 transition-all duration-200 ease-out cursor-pointer flex flex-col justify-between border ${
                                 isSelected
-                                  ? 'bg-gradient-to-b from-[#800707] to-[#450202] text-white shadow-[0_6px_16px_rgba(0,0,0,0.7),0_2px_4px_rgba(225,29,72,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.35)] -translate-y-0.5'
-                                  : 'bg-gradient-to-b from-stone-900/90 to-black text-white shadow-[0_4px_10px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.18)] hover:bg-gradient-to-b hover:from-[#750505] hover:to-[#380101] hover:shadow-[0_8px_18px_rgba(0,0,0,0.75),inset_0_1px_1.5px_rgba(255,255,255,0.3)] hover:-translate-y-0.5 active:translate-y-0'
+                                  ? 'bg-gradient-to-b from-[#8E0808] to-[#4A0303] text-white border-rose-400 shadow-md -translate-y-0.5'
+                                  : 'bg-stone-900/80 hover:bg-[#630303] text-white border-white/20 hover:border-rose-400 shadow-md hover:-translate-y-0.5'
                               }`}
                             >
                               <div className="flex items-start gap-2">
                                 <div
-                                  className={`w-6 h-6 rounded-lg bg-gradient-to-br ${cat.color} text-white flex items-center justify-center flex-shrink-0 shadow-[0_2px_4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)]`}
+                                  className={`w-7 h-7 rounded-lg ${getCategoryBadgeClass(cat.id)} text-white flex items-center justify-center flex-shrink-0 shadow-sm`}
                                 >
                                   {getCategoryIcon(cat.icon)}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <h3
-                                    className={`font-display font-bold text-[10px] sm:text-[11px] leading-snug truncate transition-colors duration-150 ${
+                                    className={`font-display font-bold text-[11px] sm:text-xs leading-snug truncate transition-colors duration-150 ${
                                       isSelected ? 'text-white' : 'text-stone-100 group-hover:text-white'
                                     }`}
                                     title={cat.name}
@@ -474,7 +523,7 @@ export const Hero: React.FC<HeroProps> = ({
                                     {cat.name}
                                   </h3>
                                   <span
-                                    className={`text-[9px] font-medium block mt-0.5 ${
+                                    className={`text-[10px] font-medium block mt-0.5 ${
                                       isSelected ? 'text-rose-200' : 'text-stone-300'
                                     }`}
                                   >
@@ -507,21 +556,21 @@ export const Hero: React.FC<HeroProps> = ({
                               key={cat.id}
                               id={`empty-cat-card-${cat.id}`}
                               onClick={() => onSelectCategory(isSelected ? 'all' : cat.id)}
-                              className={`group rounded-xl p-2 sm:p-2.5 transition-all duration-200 ease-out cursor-pointer flex flex-col justify-between ${
+                              className={`group rounded-xl p-2 sm:p-2.5 transition-all duration-200 ease-out cursor-pointer flex flex-col justify-between border ${
                                 isSelected
-                                  ? 'bg-gradient-to-b from-[#800707] to-[#450202] text-white shadow-[0_6px_16px_rgba(0,0,0,0.7),inset_0_1px_1.5px_rgba(255,255,255,0.35)] -translate-y-0.5'
-                                  : 'bg-gradient-to-b from-stone-950/85 to-black/90 text-stone-300 hover:text-white shadow-[0_3px_8px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)] hover:bg-gradient-to-b hover:from-[#6B0404] hover:to-[#2B0101] hover:shadow-[0_6px_16px_rgba(0,0,0,0.7),inset_0_1px_1.5px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 active:translate-y-0'
+                                  ? 'bg-gradient-to-b from-[#8E0808] to-[#4A0303] text-white border-rose-400 shadow-md -translate-y-0.5'
+                                  : 'bg-stone-900/60 hover:bg-[#630303]/80 text-stone-200 hover:text-white border-white/15 hover:border-rose-400 shadow-sm hover:-translate-y-0.5'
                               }`}
                             >
                               <div className="flex items-start gap-2">
                                 <div
-                                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-br ${cat.color} opacity-85 text-white flex items-center justify-center flex-shrink-0 shadow-[0_2px_4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)]`}
+                                  className={`w-7 h-7 rounded-lg ${getCategoryBadgeClass(cat.id)} opacity-90 text-white flex items-center justify-center flex-shrink-0 shadow-sm`}
                                 >
                                   {getCategoryIcon(cat.icon)}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <h3
-                                    className="font-display font-bold text-[10px] sm:text-[11px] leading-snug truncate text-stone-300 group-hover:text-white"
+                                    className="font-display font-bold text-[10px] sm:text-[11px] leading-snug truncate text-stone-200 group-hover:text-white"
                                     title={cat.name}
                                   >
                                     {cat.name}

@@ -111,7 +111,15 @@ export interface BusinessClaim {
   full_name: string;
   phone_number: string;
   email: string;
-  business_role: 'Owner' | 'Manager' | 'Authorized Representative' | 'Partner';
+  business_role:
+    | 'Owner'
+    | 'Manager'
+    | 'Authorized Representative'
+    | 'Partner'
+    | 'Agent / On Behalf of Owner'
+    | 'Agent / Listing on Behalf of Owner'
+    | 'Listing on Behalf of Owner'
+    | string;
   status: 'pending' | 'verified' | 'rejected';
   notes?: string;
   created_at: string;

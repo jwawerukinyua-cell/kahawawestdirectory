@@ -5,7 +5,15 @@ export interface MerchantAccountRecord {
   businessName: string;
   phone: string;
   pin: string; // 4-digit numeric string e.g. "1234"
-  role: 'Owner' | 'Manager' | 'Authorized Representative' | 'Partner' | 'Agent / On Behalf of Owner';
+  role:
+    | 'Owner'
+    | 'Manager'
+    | 'Authorized Representative'
+    | 'Partner'
+    | 'Agent / On Behalf of Owner'
+    | 'Agent / Listing on Behalf of Owner'
+    | 'Listing on Behalf of Owner'
+    | string;
   isListingOnBehalf?: boolean;
   ownerName?: string;
   ownerPhone?: string;

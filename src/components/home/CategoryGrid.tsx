@@ -75,6 +75,54 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
       emptyCategories: zeroCount,
     };
   }, [categories, categoryCounts]);
+
+  const getCategoryBadgeClass = (catId: string) => {
+    switch (catId) {
+      case 'home-rentals':
+        return 'bg-emerald-600 text-white';
+      case 'food-fresh':
+        return 'bg-emerald-700 text-white';
+      case 'health-wellness':
+        return 'bg-teal-600 text-white';
+      case 'mama-fua-domestic':
+        return 'bg-rose-700 text-white';
+      case 'home-utilities':
+        return 'bg-orange-600 text-white';
+      case 'hardware-construction':
+        return 'bg-blue-600 text-white';
+      case 'restaurants-cafes':
+        return 'bg-amber-600 text-white';
+      case 'errands-deliveries':
+        return 'bg-yellow-600 text-white';
+      case 'beauty-personal-care':
+        return 'bg-pink-600 text-white';
+      case 'automotive':
+        return 'bg-indigo-600 text-white';
+      case 'education':
+        return 'bg-purple-600 text-white';
+      case 'electronics-tech':
+        return 'bg-cyan-600 text-white';
+      case 'financial-services':
+        return 'bg-emerald-800 text-white';
+      case 'events-entertainment':
+        return 'bg-fuchsia-600 text-white';
+      case 'fashion-clothing':
+        return 'bg-violet-600 text-white';
+      case 'transport-travel':
+        return 'bg-sky-600 text-white';
+      case 'home-garden':
+        return 'bg-lime-700 text-white';
+      case 'community-organizations':
+        return 'bg-teal-700 text-white';
+      case 'churches-faith':
+        return 'bg-amber-700 text-white';
+      case 'professional-services':
+        return 'bg-slate-700 text-white';
+      default:
+        return 'bg-rose-600 text-white';
+    }
+  };
+
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
       case 'Users':
@@ -184,7 +232,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
 
               <div>
                 <div
-                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${cat.color} text-white flex items-center justify-center mb-2.5 shadow-[0_2px_6px_rgba(0,0,0,0.15),inset_0_1px_1px_rgba(255,255,255,0.4)] group-hover:scale-105 transition-transform`}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${getCategoryBadgeClass(cat.id)} text-white flex items-center justify-center mb-2.5 shadow-[0_2px_6px_rgba(0,0,0,0.15),inset_0_1px_1px_rgba(255,255,255,0.4)] group-hover:scale-105 transition-transform`}
                 >
                   {getCategoryIcon(cat.icon)}
                 </div>
@@ -254,7 +302,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                           className="bg-white hover:bg-stone-50 rounded-xl p-2.5 transition-all duration-200 ease-out cursor-pointer flex items-start gap-2 shadow-[0_4px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.06)] hover:shadow-[0_8px_18px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:translate-y-0"
                         >
                           <div
-                            className={`w-7 h-7 rounded-lg bg-gradient-to-br ${cat.color} text-white flex items-center justify-center flex-shrink-0 shadow-xs`}
+                            className={`w-7 h-7 rounded-lg ${getCategoryBadgeClass(cat.id)} text-white flex items-center justify-center flex-shrink-0 shadow-xs`}
                           >
                             {getCategoryIcon(cat.icon)}
                           </div>
@@ -287,7 +335,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                         className="bg-stone-50 hover:bg-white rounded-xl p-2.5 transition-all duration-200 ease-out cursor-pointer flex items-start gap-2 shadow-[0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] hover:shadow-[0_6px_14px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 active:translate-y-0"
                       >
                         <div
-                          className={`w-7 h-7 rounded-lg bg-gradient-to-br ${cat.color} opacity-80 text-white flex items-center justify-center flex-shrink-0`}
+                          className={`w-7 h-7 rounded-lg ${getCategoryBadgeClass(cat.id)} opacity-80 text-white flex items-center justify-center flex-shrink-0`}
                         >
                           {getCategoryIcon(cat.icon)}
                         </div>
