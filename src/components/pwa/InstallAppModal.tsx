@@ -15,6 +15,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { generateBrandAltText } from '../../lib/seoAltUtils';
+import { copyToClipboard } from '../../lib/clipboard';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -141,18 +142,9 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
     setTimeout(() => setHighlightStep(false), 3000);
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const url = window.location.origin || 'https://kahawawestdirectory.co.ke';
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(url);
-    } else {
-      const el = document.createElement('textarea');
-      el.value = url;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-    }
+    await copyToClipboard(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
   };

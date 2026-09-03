@@ -3,6 +3,7 @@ import { X, Lock, Check, ShieldCheck, CreditCard, Building2, Phone, MessageSquar
 import { Business } from '../../types';
 import { HOUSING_CONTACT_UNLOCK_FEE, unlockBusinessContact, maskPhoneNumber } from '../../lib/contactGating';
 import { formatPhoneForDisplay } from '../../lib/phoneUtils';
+import { copyToClipboard } from '../../lib/clipboard';
 
 interface ContactUnlockModalProps {
   business: Business | null;
@@ -28,8 +29,8 @@ export const ContactUnlockModal: React.FC<ContactUnlockModalProps> = ({
   const tillNumber = business.mpesa?.number || '554019';
   const tillAccountName = business.mpesa?.accountName || 'KWEST HOUSING & DIRECTORY';
 
-  const handleCopyTill = () => {
-    navigator.clipboard.writeText(tillNumber);
+  const handleCopyTill = async () => {
+    await copyToClipboard(tillNumber);
     setCopiedTill(true);
     setTimeout(() => setCopiedTill(false), 2000);
   };

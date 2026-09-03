@@ -215,8 +215,9 @@ export default function App() {
               targetStoryKey.includes('pride-fc') ||
               targetStoryKey.includes('pride') ||
               targetStoryKey.includes('soccer') ||
-              targetStoryKey.includes('football')) &&
-            (s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
+              targetStoryKey.includes('football') ||
+              targetStoryKey.includes('1788342289836')) &&
+            (s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
           const fuzzyCongo =
             targetStoryKey.includes('congo') &&
             (s.id === 'story-01' || s.slug?.includes('congo') || s.title.toLowerCase().includes('congo'));
@@ -246,8 +247,8 @@ export default function App() {
           const titleNormalized = s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           const titleMatch = titleNormalized === cleanHash || titleNormalized.includes(cleanHash);
           const fuzzyKahawaPride =
-            (cleanHash.includes('pride') || cleanHash.includes('kahawa-pride') || cleanHash.includes('football') || cleanHash.includes('soccer')) &&
-            (s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
+            (cleanHash.includes('pride') || cleanHash.includes('kahawa-pride') || cleanHash.includes('football') || cleanHash.includes('soccer') || cleanHash.includes('1788342289836')) &&
+            (s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
           const fuzzyCongo =
             cleanHash.includes('congo') &&
             (s.id === 'story-01' || s.slug?.includes('congo') || s.title.toLowerCase().includes('congo'));
@@ -560,6 +561,12 @@ export default function App() {
   const handleLikeStory = (storyId: string) => {
     setStories((prev) =>
       prev.map((s) => (s.id === storyId ? { ...s, likes: (s.likes || 0) + 1 } : s))
+    );
+  };
+
+  const handleDislikeStory = (storyId: string) => {
+    setStories((prev) =>
+      prev.map((s) => (s.id === storyId ? { ...s, dislikes: (s.dislikes || 0) + 1 } : s))
     );
   };
 
@@ -903,6 +910,7 @@ export default function App() {
         isOpen={Boolean(selectedStoryForReading)}
         onClose={handleCloseStoryReader}
         onLike={handleLikeStory}
+        onDislike={handleDislikeStory}
       />
 
       {/* Submit Community Story Modal */}

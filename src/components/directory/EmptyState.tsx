@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SearchX, PlusCircle, Share2, RotateCcw, Check, Sparkles } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { copyToClipboard } from '../../lib/clipboard';
 
 interface EmptyStateProps {
   searchQuery?: string;
@@ -48,8 +49,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
-  const handleCopyInvite = () => {
-    navigator.clipboard.writeText(shareText);
+  const handleCopyInvite = async () => {
+    await copyToClipboard(shareText);
     setCopiedInvite(true);
     setTimeout(() => setCopiedInvite(false), 2500);
   };

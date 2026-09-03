@@ -34,8 +34,8 @@ export const SEED_COMMUNITY_UPDATES: CommunityUpdate[] = [
     authorPhone: '+254722890123',
     authorEmail: 'sports@kahawawestdirectory.co.ke',
     authorRole: 'Community Organizer',
-    imageUrl: '/kahawa-pride-fc.jpg',
-    imageCaption: 'Kahawa Pride FC and youth squad training at Kahawa West grounds (Photo by Mfalme Ukweli)',
+    imageUrl: '/kahawa-pride-real.jpg',
+    imageCaption: 'Kahawa Pride FC and youth squad training at Mahiga grounds along Kamiti Road (Photo by Mfalme Ukweli)',
     isAccountabilityConfirmed: true,
     urgencyLevel: 'standard',
     date: 'Saturday',
@@ -130,31 +130,55 @@ export const SEED_COMMUNITY_UPDATES: CommunityUpdate[] = [
 export const COMMUNITY_UPDATES = SEED_COMMUNITY_UPDATES;
 
 const STORAGE_KEY = 'kwest_community_updates_v1';
+const DELETED_UPDATES_KEY = 'kwest_deleted_update_ids_v1';
+
+export function getDeletedUpdateIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(DELETED_UPDATES_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function markUpdateAsDeleted(updateId: string): void {
+  try {
+    const set = getDeletedUpdateIds();
+    set.add(updateId);
+    localStorage.setItem(DELETED_UPDATES_KEY, JSON.stringify(Array.from(set)));
+  } catch {}
+}
 
 export function getStoredCommunityUpdates(): CommunityUpdate[] {
   try {
+    const deletedIds = getDeletedUpdateIds();
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_COMMUNITY_UPDATES));
-      return SEED_COMMUNITY_UPDATES;
+      const filteredSeed = SEED_COMMUNITY_UPDATES.filter((u) => !deletedIds.has(u.id));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredSeed));
+      return filteredSeed;
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
       const seedMap = new Map(SEED_COMMUNITY_UPDATES.map((u) => [u.id, u]));
-      return parsed.map((item: CommunityUpdate) => {
-        if (seedMap.has(item.id)) {
-          const seed = seedMap.get(item.id)!;
-          return {
-            ...item,
-            ...seed,
-            imageUrl: seed.imageUrl || item.imageUrl,
-            imageCaption: seed.imageCaption || item.imageCaption,
-          };
-        }
-        return item;
-      });
+      return parsed
+        .filter((item: CommunityUpdate) => !deletedIds.has(item.id))
+        .map((item: CommunityUpdate) => {
+          if (seedMap.has(item.id)) {
+            const seed = seedMap.get(item.id)!;
+            return {
+              ...item,
+              ...seed,
+              imageUrl: seed.imageUrl || item.imageUrl,
+              imageCaption: seed.imageCaption || item.imageCaption,
+            };
+          }
+          return item;
+        });
     }
-    return SEED_COMMUNITY_UPDATES;
+    return SEED_COMMUNITY_UPDATES.filter((u) => !deletedIds.has(u.id));
   } catch {
     return SEED_COMMUNITY_UPDATES;
   }
@@ -203,6 +227,7 @@ export function updateCommunityUpdateModeration(
 
 export function deleteCommunityUpdate(updateId: string): CommunityUpdate[] {
   try {
+    markUpdateAsDeleted(updateId);
     const current = getStoredCommunityUpdates();
     const updated = current.filter((u) => u.id !== updateId);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));

@@ -15,6 +15,7 @@ import { BusinessAdSuite } from './BusinessAdSuite';
 import { PromoteShopModal } from './PromoteShopModal';
 import { MerchantUnlockModal } from './MerchantUnlockModal';
 import { ContactUnlockModal } from './ContactUnlockModal';
+import { copyToClipboard } from '../../lib/clipboard';
 
 interface BusinessDetailModalProps {
   business: Business | null;
@@ -104,11 +105,11 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
         }
       }
     } else {
-      try {
-        await navigator.clipboard.writeText(shareText);
+      const copied = await copyToClipboard(shareText);
+      if (copied) {
         setShowToast('Listing link & details copied to clipboard!');
         setTimeout(() => setShowToast(null), 3500);
-      } catch {
+      } else {
         window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
       }
     }

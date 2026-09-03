@@ -34,6 +34,7 @@ import {
   generateEmergencyWhatsAppAlertCard,
   formatPhoneForDisplay,
 } from '../../../lib/phoneUtils';
+import { copyToClipboard } from '../../../lib/clipboard';
 
 interface SubmitUpdateModalProps {
   isOpen: boolean;
@@ -223,13 +224,12 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
     onClose();
   };
 
-  const handleCopyAlertCard = () => {
+  const handleCopyAlertCard = async () => {
     if (!submittedUpdate) return;
     const cardText = generateEmergencyWhatsAppAlertCard(submittedUpdate);
-    navigator.clipboard.writeText(cardText).then(() => {
-      setHasCopiedCard(true);
-      setTimeout(() => setHasCopiedCard(false), 3000);
-    });
+    await copyToClipboard(cardText);
+    setHasCopiedCard(true);
+    setTimeout(() => setHasCopiedCard(false), 3000);
   };
 
   const moderatorPhone = getModeratorEmergencyPhone();

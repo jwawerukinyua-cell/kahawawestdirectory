@@ -25,6 +25,7 @@ import {
   Check,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { copyToClipboard } from '../../lib/clipboard';
 
 interface AdEnquiryModalProps {
   isOpen: boolean;
@@ -59,8 +60,8 @@ export const AdEnquiryModal: React.FC<AdEnquiryModalProps> = ({ isOpen, onClose 
   const creativeFee = needCreativeServices ? CREATIVE_DESIGN_FEE_KSH : 0;
   const totalPayableKsh = currentPkg.price + creativeFee;
 
-  const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
+  const handleCopy = async (text: string, field: string) => {
+    await copyToClipboard(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
   };

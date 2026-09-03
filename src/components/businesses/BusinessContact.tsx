@@ -4,6 +4,7 @@ import { Business } from '../../types';
 import { trackBusinessInteraction } from '../../lib/tracking';
 import { formatKenyanPhoneForTel, getWhatsAppChatUrl, formatPhoneForDisplay } from '../../lib/phoneUtils';
 import { isBusinessContactGated, HOUSING_CONTACT_UNLOCK_FEE, maskPhoneNumber, unlockBusinessContact } from '../../lib/contactGating';
+import { copyToClipboard } from '../../lib/clipboard';
 
 interface BusinessContactProps {
   business: Business;
@@ -19,8 +20,8 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business, onUn
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCopy = (text: string, type: 'mpesa' | 'phone') => {
-    navigator.clipboard.writeText(text);
+  const handleCopy = async (text: string, type: 'mpesa' | 'phone') => {
+    await copyToClipboard(text);
     if (type === 'mpesa') {
       setCopiedMpesa(true);
       setTimeout(() => setCopiedMpesa(false), 2000);

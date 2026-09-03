@@ -74,6 +74,7 @@ import {
 } from '../../../lib/phoneUtils';
 import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
+import { copyToClipboard } from '../../../lib/clipboard';
 
 interface EditorialReviewModalProps {
   isOpen: boolean;
@@ -150,13 +151,12 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
     setIsEditingPhone(false);
   };
 
-  const handleCopyUpdateAlertCard = (up: CommunityUpdate) => {
+  const handleCopyUpdateAlertCard = async (up: CommunityUpdate) => {
     const cardText = generateEmergencyWhatsAppAlertCard(up);
-    navigator.clipboard.writeText(cardText).then(() => {
-      setCopiedAlertId(up.id);
-      showToast('WhatsApp emergency alert card copied to clipboard!');
-      setTimeout(() => setCopiedAlertId(null), 3000);
-    });
+    await copyToClipboard(cardText);
+    setCopiedAlertId(up.id);
+    showToast('WhatsApp emergency alert card copied to clipboard!');
+    setTimeout(() => setCopiedAlertId(null), 3000);
   };
 
   // Ad Campaigns Queue & Moderation State
@@ -471,9 +471,9 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
     return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (kahawawestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
   };
 
-  const handleCopyPitch = (business: Business) => {
+  const handleCopyPitch = async (business: Business) => {
     const text = getWhatsAppPitchCopy(business);
-    navigator.clipboard.writeText(text);
+    await copyToClipboard(text);
     setCopiedPitchId(business.id);
     setTimeout(() => setCopiedPitchId(null), 3000);
   };
@@ -566,7 +566,7 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
     });
   }, [adCampaigns, adCampaignsSubTab, campaignZoneFilter, campaignSearchQuery]);
 
-  const handleCopySql = () => {
+  const handleCopySql = async () => {
     const sqlCode = `-- Kahawa West Directory: Unified Database Schema for Supabase
 
 -- 1. COMMUNITY STORIES TABLE
@@ -642,7 +642,7 @@ CREATE POLICY "Public can submit stories" ON public.community_stories FOR INSERT
 CREATE POLICY "Public can submit updates" ON public.community_updates FOR INSERT WITH CHECK (status = 'pending_review');
 CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WITH CHECK (status = 'pending');
 `;
-    navigator.clipboard.writeText(sqlCode);
+    await copyToClipboard(sqlCode);
     setCopiedSql(true);
     setTimeout(() => setCopiedSql(false), 2500);
   };

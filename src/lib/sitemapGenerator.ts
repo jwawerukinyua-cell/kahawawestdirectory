@@ -10,6 +10,7 @@
 
 import { Business, EstateZone, CommunityStory } from '../types';
 import { CATEGORIES } from '../data/categories';
+import { copyToClipboard } from './clipboard';
 
 export interface SitemapUrlEntry {
   loc: string;
@@ -339,11 +340,5 @@ export function downloadTextFile(content: string, filename: string, mimeType = '
  * Helper to copy sitemap XML to clipboard.
  */
 export async function copySitemapToClipboard(xml: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(xml);
-    return true;
-  } catch (err) {
-    console.error('Failed to copy to clipboard:', err);
-    return false;
-  }
+  return await copyToClipboard(xml);
 }

@@ -10,9 +10,13 @@ import {
   Sparkles,
   Share2,
   Check,
+  ThumbsUp,
+  ThumbsDown,
+  MessageSquare,
 } from 'lucide-react';
 import { CommunityStory } from '../../../types';
 import { ListingImage } from '../../ui/ListingImage';
+import { copyToClipboard } from '../../../lib/clipboard';
 
 interface CommunitySpotlightProps {
   stories: CommunityStory[];
@@ -58,12 +62,12 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
     }
   };
 
-  const copyShareLink = (story: CommunityStory) => {
+  const copyShareLink = async (story: CommunityStory) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const storyKey = story.slug || story.id;
     const shareUrl = `${origin}/?view=stories&story=${encodeURIComponent(storyKey)}`;
     const shareText = `${story.title} - Read this inspiring Kahawa West community story on KWEST Directory\n${shareUrl}`;
-    navigator.clipboard.writeText(shareText);
+    await copyToClipboard(shareText);
     setCopiedStoryId(story.id);
     setTimeout(() => setCopiedStoryId(null), 2500);
   };
@@ -181,11 +185,33 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
             {featuredStory ? featuredStory.title : 'This Space Belongs to the Community'}
           </h3>
 
-          <p className="text-stone-300 text-xs sm:text-base leading-relaxed max-w-3xl mb-6">
+          <p className="text-stone-300 text-xs sm:text-base leading-relaxed max-w-3xl mb-4">
             {featuredStory?.subtitle ||
               featuredStory?.excerpt ||
               'Every positive story deserves to be celebrated, from neighbourhood clean-ups to students earning recognition and local businesses making a difference.'}
           </p>
+
+          {/* Reader Feedback Indicators */}
+          {featuredStory && (
+            <div className="flex flex-wrap items-center gap-3 mb-6 text-xs text-stone-400">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800/40 text-emerald-300 font-semibold">
+                <ThumbsUp className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{featuredStory.likes || 58} Applauds</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-900 border border-stone-700 text-stone-300 font-medium">
+                <ThumbsDown className="w-3.5 h-3.5 text-stone-400" />
+                <span>{featuredStory.dislikes || 0} Dislikes</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => onReadStory(featuredStory)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 hover:text-white transition cursor-pointer"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Comments & Discussion</span>
+              </button>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">

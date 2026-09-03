@@ -35,30 +35,30 @@ Local business owners have enthusiastically backed the initiative, with hardware
     likes: 42,
   },
   {
-    id: 'story-02',
+    id: 'story-1788342289836',
     slug: 'kahawa-pride-fc',
-    title: "Kahawa Pride FC: From a Grassroots Soccer Academy to Kahawa West's Football Pride",
-    subtitle: "How dedicated local coaches, community elders and neighborhood shopkeepers turned a dusty pitch into a beacon of youth football talent and academic mentorship.",
+    title: 'From a grassroots soccer academy to a club with big ambitions, Kahawa Pride FC is putting Kahawa West on the national map',
+    subtitle: 'If you have ever been around Kahawa Station Road or Mahiga Primary School on matchday, you have probably seen the colours, heard the cheers and felt the energy.',
     category: 'Youth & Sports',
-    zone: 'Mahiga',
-    excerpt: 'Every weekend, hundreds of families gather at the Mahiga grounds to cheer on Kahawa Pride FC, fostering youth discipline, athletic excellence, and academic support across the sub-county.',
-    content: `Sports have long been the beating heart of weekend social life in Kahawa West. Among the estate teams lighting up our neighborhood, **Kahawa Pride FC** stands out as a shining example of grassroots passion transforming lives.
+    zone: 'Kamiti Road',
+    excerpt: 'If you have ever been around Kahawa Station Road or Mahiga Primary School on matchday, you have probably seen the colours, heard the cheers and felt the energy. What started as a simple desire to keep estate youth engaged has evolved into a structured academy.',
+    content: `If you have ever been around Kahawa Station Road or Mahiga Primary School on matchday, you have probably seen the colours, heard the cheers and felt the energy. What started as a grassroots soccer academy has grown into a club with big ambitions, putting Kahawa West on the national football map.
 
-Founded on the dusty grounds near Mahiga and Bima Road, the academy started with just 14 young boys and two second-hand leather balls. Today, Kahawa Pride FC has grown into a structured youth talent hub featuring Under-13, Under-17, and Senior squads competing across the Nairobi County League.
+Coach Baba Brian and the dedicated technical bench have turned our local dirt grounds into a structured arena for athletic excellence, discipline, and community pride.
 
 ### Building Discipline On and Off the Pitch
-Coach Baba Brian and the technical bench recognized early on that football is a catalyst for life skills and community unity:
+Kahawa Pride FC is more than just ninety minutes of football on the weekend:
 
-1. **Mandatory Academic Study Hall:** Before Saturday training sessions, senior players and volunteer university students run a 90-minute homework clinic and mentorship circle for primary and secondary schoolers.
-2. **Community Kit & Equipment Support:** Local pharmacies, hardware stores, and barber shops across Kahawa West have generously sponsored match jerseys, shin guards, and first aid kits.
-3. **Talent Pathway & High School Scholarships:** Over the past two years, six academy graduates have secured academic and sports bursaries in prestigious national secondary schools.
+1. **Mandatory Academic Study Hall:** Before weekend training sessions, players attend a 90-minute homework clinic and mentorship circle led by volunteer university scholars.
+2. **Community Kit & Equipment Sponsorship:** Local pharmacies, hardware stores, and neighborhood businesses across Kamiti Road, Mahiga, and Station Road have sponsored match jerseys, boots, and first aid kits.
+3. **High School & College Bursaries:** Over the past two seasons, several talented academy graduates have earned academic and sports scholarships at top national secondary institutions.
 
 ### Estate Unity on Match Days
-"When Kahawa Pride FC steps onto the pitch, our entire community stands united," says Coach Baba Brian. "Mothers selling boiled maize and water, elders sharing stories on the sidelines, and youth channeling their energy into positive sportsmanship."
+"When Kahawa Pride FC steps onto the pitch, our entire community stands united," says Coach Baba Brian. "Mothers cheering on the touchlines, local shopkeepers closing briefly to catch the second half, and our youth channeling their energy into positive sportsmanship."
 
-The club is currently preparing for the upcoming Nairobi North Inter-Subcounty Championship, carrying the hopes and pride of all Kahawa West residents.`,
-    imageUrl: '/kahawa-pride-fc.jpg',
-    imageCaption: 'Kahawa Pride FC squad and captain celebrating with coaches, young trainees, and community supporters at Mahiga Grounds (Photo by Mfalme Ukweli).',
+The club represents the relentless grit, community solidarity, and rising talent of Kahawa West.`,
+    imageUrl: '/kahawa-pride-real.jpg',
+    imageCaption: 'Kahawa Pride FC coaching staff and youth squad celebrating at Mahiga grounds along Kamiti Road (Photo by Mfalme Ukweli).',
     isRealPhotoConfirmed: true,
     authorName: 'Mfalme Ukweli',
     authorEmail: 'ukweliproducts@gmail.com',
@@ -69,6 +69,7 @@ The club is currently preparing for the upcoming Nairobi North Inter-Subcounty C
     featured: true,
     status: 'published',
     likes: 58,
+    dislikes: 0,
   },
   {
     id: 'story-03',
@@ -99,21 +100,69 @@ What began as a small table-banking group has now grown into a registered cooper
 ];
 
 const LOCAL_STORAGE_STORIES_KEY = 'kwest_community_stories_v1';
+const DELETED_STORIES_STORAGE_KEY = 'kwest_deleted_story_ids_v1';
+
+export function getDeletedStoryIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(DELETED_STORIES_STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function markStoryAsDeleted(storyId: string): void {
+  try {
+    const deletedSet = getDeletedStoryIds();
+    deletedSet.add(storyId);
+    // If deleting the old generic story ID, mark it permanently
+    if (storyId === 'story-02') {
+      deletedSet.add('story-02');
+    }
+    localStorage.setItem(DELETED_STORIES_STORAGE_KEY, JSON.stringify(Array.from(deletedSet)));
+  } catch (err) {
+    console.warn('Error marking story as deleted:', err);
+  }
+}
 
 export function getStoredCommunityStories(): CommunityStory[] {
   try {
+    const deletedIds = getDeletedStoryIds();
     const raw = localStorage.getItem(LOCAL_STORAGE_STORIES_KEY);
-    if (!raw) return INITIAL_COMMUNITY_STORIES;
+    
+    // If no local storage exists yet, filter INITIAL_COMMUNITY_STORIES against any deletedIds
+    if (!raw) {
+      return INITIAL_COMMUNITY_STORIES.filter((s) => !deletedIds.has(s.id) && s.id !== 'story-02');
+    }
+
     const parsed = JSON.parse(raw) as CommunityStory[];
-    if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_COMMUNITY_STORIES;
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return INITIAL_COMMUNITY_STORIES.filter((s) => !deletedIds.has(s.id) && s.id !== 'story-02');
+    }
 
     // Merge updated initial stories (like Kahawa Pride FC) with any locally added stories
     const initialMap = new Map(INITIAL_COMMUNITY_STORIES.map((s) => [s.id, s]));
     const result: CommunityStory[] = [];
     const seenIds = new Set<string>();
 
-    // First add parsed stories with updated initial fields if they are seed stories
+    // First process parsed stories (skipping any deleted or old generic story-02)
     for (const p of parsed) {
+      // If deleted by user, skip completely
+      if (deletedIds.has(p.id)) continue;
+      
+      // If it's the old generic story-02, upgrade it to story-1788342289836 or drop if already present
+      if (p.id === 'story-02') {
+        if (deletedIds.has('story-02')) continue;
+        // Upgrade to the authentic story-1788342289836
+        const realSeed = initialMap.get('story-1788342289836')!;
+        result.push(realSeed);
+        seenIds.add('story-1788342289836');
+        seenIds.add('story-02');
+        continue;
+      }
+
       if (initialMap.has(p.id)) {
         const seed = initialMap.get(p.id)!;
         result.push({
@@ -133,6 +182,7 @@ export function getStoredCommunityStories(): CommunityStory[] {
           isRealPhotoConfirmed: seed.isRealPhotoConfirmed,
           status: 'published',
           likes: Math.max(seed.likes || 0, p.likes || 0),
+          dislikes: Math.max(seed.dislikes || 0, p.dislikes || 0),
         });
       } else {
         result.push(p);
@@ -140,11 +190,18 @@ export function getStoredCommunityStories(): CommunityStory[] {
       seenIds.add(p.id);
     }
 
-    // Ensure all seed stories exist
+    // Ensure all seed stories exist UNLESS they were deleted by the user or are obsolete
     for (const init of INITIAL_COMMUNITY_STORIES) {
-      if (!seenIds.has(init.id)) {
+      if (init.id === 'story-02') continue; // obsolete generic
+      if (!seenIds.has(init.id) && !deletedIds.has(init.id)) {
         result.push(init);
       }
+    }
+
+    // Make sure story-1788342289836 is present and featured if not deleted
+    if (!deletedIds.has('story-1788342289836') && !result.some((s) => s.id === 'story-1788342289836')) {
+      const realStory = INITIAL_COMMUNITY_STORIES.find((s) => s.id === 'story-1788342289836');
+      if (realStory) result.unshift(realStory);
     }
 
     return result;
@@ -174,7 +231,7 @@ export function updateStoryModerationStatus(
   try {
     const current = getStoredCommunityStories();
     const updated = current.map((s) => {
-      if (s.id === storyId) {
+      if (s.id === storyId || (storyId === 'story-02' && s.id === 'story-1788342289836')) {
         return {
           ...s,
           status,
@@ -200,8 +257,13 @@ export const updateStoryModeration = updateStoryModerationStatus;
 
 export function deleteCommunityStory(storyId: string): CommunityStory[] {
   try {
+    // Permanently record deletion so seed stories never resurrect
+    markStoryAsDeleted(storyId);
+    if (storyId === 'story-02') {
+      markStoryAsDeleted('story-1788342289836');
+    }
     const current = getStoredCommunityStories();
-    const updated = current.filter((s) => s.id !== storyId);
+    const updated = current.filter((s) => s.id !== storyId && (storyId !== 'story-02' || s.id !== 'story-02'));
     localStorage.setItem(LOCAL_STORAGE_STORIES_KEY, JSON.stringify(updated));
     return updated;
   } catch (err) {

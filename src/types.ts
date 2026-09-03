@@ -212,8 +212,20 @@ export interface CommunityStory {
   featured?: boolean;
   status: 'published' | 'pending_review' | 'archived' | 'rejected';
   likes?: number;
+  dislikes?: number;
+  commentsCount?: number;
   submittedAt?: string;
   rejectionReason?: string;
+}
+
+export interface StoryComment {
+  id: string;
+  storyId: string;
+  authorName: string;
+  authorRole?: string;
+  content: string;
+  createdAt: string;
+  likes?: number;
 }
 
 export interface BusinessApplication {

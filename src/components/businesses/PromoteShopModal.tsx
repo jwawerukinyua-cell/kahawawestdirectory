@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Business, EstateZone, BusinessAdCampaign, AdCampaignStatus } from '../../types';
 import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
+import { copyToClipboard } from '../../lib/clipboard';
 
 export type AdFormatType = 'billboard' | 'resident_deal' | 'category_pin' | 'whatsapp_broadcast';
 
@@ -152,8 +153,8 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
   const creativeFee = requestCustomDesign ? AD_CREATION_FEE_KSH : 0;
   const totalAmountKsh = currentPkg.price + creativeFee;
 
-  const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
+  const handleCopy = async (text: string, field: string) => {
+    await copyToClipboard(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
   };

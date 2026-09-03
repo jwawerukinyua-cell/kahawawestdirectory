@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Share2, Check, Copy, MessageCircle, Twitter, Facebook, Instagram, Video, X } from 'lucide-react';
+import { copyToClipboard } from '../../lib/clipboard';
 
 export const FloatingShareButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,22 +61,9 @@ export const FloatingShareButton: React.FC = () => {
 
   const handleCopyLink = async () => {
     const url = getShareUrl();
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-      } else {
-        const textArea = document.createElement('textarea');
-        textArea.value = url;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-      }
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch (e) {
-      console.error(e);
-    }
+    await copyToClipboard(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const handleWhatsAppShare = () => {
