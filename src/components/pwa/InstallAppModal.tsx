@@ -81,6 +81,11 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
       setInstallSuccess(true);
       setDeferredPrompt(null);
       window.__kwestInstallPrompt = null;
+      try {
+        localStorage.setItem('kwest_pwa_installed', 'true');
+      } catch (e) {
+        console.error(e);
+      }
       setTimeout(() => {
         onClose();
       }, 1800);

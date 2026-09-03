@@ -133,18 +133,8 @@ export default function App() {
     };
     window.addEventListener('kwest_notifications_updated', handleNotifUpdate);
 
-    // Initial toast notification preview after 3.5 seconds
-    const timer = setTimeout(() => {
-      const all = getStoredNotifications();
-      const unread = all.find((n) => !n.isRead);
-      if (unread) {
-        setActiveToastNotification(unread);
-      }
-    }, 3500);
-
     return () => {
       window.removeEventListener('kwest_notifications_updated', handleNotifUpdate);
-      clearTimeout(timer);
     };
   }, []);
 
@@ -158,37 +148,6 @@ export default function App() {
     window.addEventListener('beforeinstallprompt', handlePrompt);
     return () => window.removeEventListener('beforeinstallprompt', handlePrompt);
   }, []);
-
-  // Automatic trigger: show install prompt modal when someone visits the site
-  useEffect(() => {
-    const isAppStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-
-    // Trigger prompt on each visit if not already launched in standalone mode
-    if (!isAppStandalone) {
-      const promptTimer = setTimeout(() => {
-        setIsInstallAppOpen(true);
-      }, 2200);
-
-      return () => clearTimeout(promptTimer);
-    }
-  }, []);
-
-  // Track search queries and check for matching community notices
-  useEffect(() => {
-    if (searchQuery.trim().length >= 3 || selectedZone !== 'all' || selectedCategory !== 'all') {
-      const timeout = setTimeout(() => {
-        trackSearchQuery(searchQuery, selectedZone, selectedCategory);
-        const match = generateSearchMatchAlerts(updates);
-        if (match) {
-          setActiveToastNotification(match);
-        }
-      }, 700);
-      return () => clearTimeout(timeout);
-    }
-  }, [searchQuery, selectedZone, selectedCategory, updates]);
-
 
   // 3b. Businesses with active special resident offers
   const businessesWithOffers = useMemo(() => {
@@ -665,6 +624,13 @@ export default function App() {
     }
   };
 
+  const scrollToDirectory = () => {
+    const el = document.getElementById('directory-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const scrollToSearch = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     const input = document.querySelector('input[type="text"]') as HTMLInputElement;
@@ -696,11 +662,14 @@ export default function App() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onListBusinessClick={() => setIsListBusinessOpen(true)}
-          onExploreClick={scrollToSearch}
+          onExploreClick={scrollToDirectory}
           businessCount={businesses.length}
           categories={CATEGORIES}
           selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
+          onSelectCategory={(catId) => {
+            setSelectedCategory(catId);
+            setTimeout(scrollToDirectory, 100);
+          }}
           categoryCounts={categoryCounts}
         />
 
@@ -884,7 +853,7 @@ export default function App() {
 
       {/* 5. Mobile Fixed Bottom Navigation */}
       <MobileBottomNav
-        onSearchClick={scrollToSearch}
+        onSearchClick={scrollToDirectory}
         onZonesClick={() => setIsMobileZoneOpen(true)}
         onListBusinessClick={() => setIsListBusinessOpen(true)}
         onNoticeboardClick={scrollToNoticeboard}

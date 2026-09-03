@@ -117,43 +117,9 @@ export function clearNotifications(): AppNotification[] {
   return [];
 }
 
-// Generate smart contextual alerts based on user search history
-export function generateSearchMatchAlerts(communityUpdates: CommunityUpdate[]): AppNotification | null {
-  const recentSearches = getRecentSearches();
-  if (recentSearches.length === 0) return null;
-
-  const topSearch = recentSearches[0];
-  const query = topSearch.query.toLowerCase();
-  const zone = topSearch.zone;
-
-  // Check if any recent update matches this search query or zone
-  const matchingUpdate = communityUpdates.find((u) => {
-    const text = `${u.title} ${u.content} ${u.location}`.toLowerCase();
-    const matchesQuery = query && text.includes(query);
-    const matchesZone = zone && (u.zone === zone || u.location.toLowerCase().includes(zone.toLowerCase()));
-    return matchesQuery || matchesZone;
-  });
-
-  if (matchingUpdate) {
-    const alertId = `search-match-${matchingUpdate.id}-${query}`;
-    const all = getStoredNotifications();
-    if (all.some((n) => n.id === alertId)) return null;
-
-    const notif: AppNotification = {
-      id: alertId,
-      title: `💡 Matching your search "${topSearch.query || topSearch.zone}"`,
-      body: `${matchingUpdate.title}: ${matchingUpdate.timeInfo} in ${matchingUpdate.location}`,
-      type: 'search_match',
-      time: 'Just now',
-      badge: 'Suggested for You',
-      isRead: false,
-      relatedZone: matchingUpdate.zone as string,
-    };
-
-    saveNotification(notif);
-    return notif;
-  }
-
+// Smart contextual alerts - search term alerts disabled per user specification
+export function generateSearchMatchAlerts(_communityUpdates: CommunityUpdate[]): AppNotification | null {
+  // Disabled: Do not echo search words (e.g. Bima) into the notification center
   return null;
 }
 

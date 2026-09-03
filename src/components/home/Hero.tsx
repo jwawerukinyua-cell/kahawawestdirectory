@@ -39,6 +39,7 @@ import {
   ChevronUp,
   Star,
   PlusCircle,
+  ArrowDown,
 } from 'lucide-react';
 import { SearchBar } from '../directory/SearchBar';
 import { Category } from '../../types';
@@ -67,7 +68,16 @@ export const Hero: React.FC<HeroProps> = ({
   onSelectCategory,
   categoryCounts = {},
 }) => {
-  const [heroImgError, setHeroImgError] = useState(false);
+  const [currentHeroSrc, setCurrentHeroSrc] = useState('/hero.webp');
+
+  const handleHeroImgError = () => {
+    if (currentHeroSrc === '/hero.webp') {
+      setCurrentHeroSrc('/hero.jpg');
+    } else if (currentHeroSrc === '/hero.jpg') {
+      setCurrentHeroSrc('/hero-opt.jpg');
+    }
+  };
+
   const [isMoreCategoriesOpen, setIsMoreCategoriesOpen] = useState(false);
 
   // Top 4 High-Demand Pinned Category IDs (Housing, Food, Health, Mama Fua)
@@ -167,28 +177,20 @@ export const Hero: React.FC<HeroProps> = ({
       id="home-hero-banner"
       className="relative bg-[#3B0202] text-white rounded-3xl overflow-hidden shadow-2xl mb-8 border border-[#630303]"
     >
-      {/* Background Image: Optimized WebP + JPG fallback with high LCP priority */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        {!heroImgError ? (
-          <picture>
-            <source srcSet="/hero.webp" type="image/webp" />
-            <img
-              src="/hero.jpg"
-              alt={generateBrandAltText('hero-landmark')}
-              title="Kahawa West Landmark - Bypass Roundabout Intersection"
-              className="w-full h-full object-cover object-center opacity-95 transition-all duration-300 transform scale-100 filter brightness-105 contrast-105"
-              referrerPolicy="no-referrer"
-              fetchPriority="high"
-              loading="eager"
-              decoding="async"
-              width="1200"
-              height="600"
-              onError={() => setHeroImgError(true)}
-            />
-          </picture>
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#630303] via-[#3B0202] to-[#0D6E44]" />
-        )}
+      {/* Background Image: High Priority Landmark Photo */}
+      <div className="absolute inset-0 z-0 overflow-hidden bg-[#240101]">
+        <img
+          src={currentHeroSrc}
+          alt={generateBrandAltText('hero-landmark')}
+          title="Kahawa West Landmark - Bypass Roundabout Intersection"
+          className="w-full h-full object-cover object-center opacity-95 transition-all duration-300 transform scale-100 filter brightness-105 contrast-105"
+          fetchPriority="high"
+          loading="eager"
+          decoding="async"
+          width="1200"
+          height="600"
+          onError={handleHeroImgError}
+        />
 
         {/* Lightweight translucent dark gradient overlay calibrated so the roundabout landmark is clearly visible */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#1F0101]/95 via-[#2E0202]/50 to-[#2E0202]/30" />
@@ -230,12 +232,31 @@ export const Hero: React.FC<HeroProps> = ({
 
           {/* Search Controls & Sleek Action Button */}
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 shadow-2xl">
-            <div className="flex-1 w-full">
-              <SearchBar
-                value={searchQuery}
-                onChange={onSearchChange}
-                placeholder="Search 'Mama Fua', 'Plumber', 'Chemist', 'Super Metro', 'Mbuzi Choma'..."
-              />
+            <div className="flex-1 w-full flex items-center gap-2">
+              <div className="flex-1">
+                <SearchBar
+                  value={searchQuery}
+                  onChange={(val) => {
+                    onSearchChange(val);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      onExploreClick();
+                    }
+                  }}
+                  placeholder="Search 'Mama Fua', 'Plumber', 'Chemist', 'Super Metro', 'Mbuzi Choma'..."
+                />
+              </div>
+              <button
+                type="button"
+                id="hero-search-submit-btn"
+                onClick={onExploreClick}
+                className="px-4 py-2.5 rounded-2xl bg-[#630303] hover:bg-[#7D0404] active:scale-95 text-white font-sans font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md border border-rose-400/40 backdrop-blur-md transition whitespace-nowrap flex-shrink-0 cursor-pointer"
+                title="Search and show results"
+              >
+                <Search className="w-4 h-4 text-rose-200" />
+                <span>Find</span>
+              </button>
             </div>
             {onListBusinessClick && (
               <button
@@ -246,7 +267,7 @@ export const Hero: React.FC<HeroProps> = ({
                 title="Add your business to Kahawa West Directory"
               >
                 <PlusCircle className="w-4 h-4 text-emerald-300 stroke-[2.5]" />
-                <span>List Business</span>
+                <span>List Your Business</span>
               </button>
             )}
           </div>
@@ -268,7 +289,10 @@ export const Hero: React.FC<HeroProps> = ({
                   return (
                     <button
                       key={z}
-                      onClick={() => onSearchChange(isActive ? '' : z)}
+                      onClick={() => {
+                        onSearchChange(isActive ? '' : z);
+                        onExploreClick();
+                      }}
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 flex-shrink-0 active:scale-95 flex items-center gap-1 border ${
                         isActive
                           ? 'bg-emerald-600 text-white border-emerald-400 shadow-md ring-2 ring-emerald-400/40'
@@ -517,6 +541,30 @@ export const Hero: React.FC<HeroProps> = ({
               )}
             </div>
           )}
+        </div>
+
+        {/* Smart Downward Indicator Leading Visitors to the Next Step / Directory */}
+        <div className="mt-6 pt-4 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-stone-200 text-xs font-medium">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span>{businessCount} Local Businesses & Specialists Active</span>
+          </div>
+
+          <button
+            type="button"
+            id="hero-scroll-down-btn"
+            onClick={onExploreClick}
+            className="group px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 border border-white/25 hover:border-white/40 text-stone-100 text-xs font-bold flex items-center gap-2.5 transition-all shadow-sm cursor-pointer backdrop-blur-sm"
+            title="Scroll down to view full directory and filter tools"
+          >
+            <span>Browse All Businesses Below</span>
+            <div className="w-5 h-5 rounded-full bg-emerald-500/30 text-emerald-300 flex items-center justify-center group-hover:translate-y-0.5 transition-transform duration-200">
+              <ArrowDown className="w-3.5 h-3.5 animate-bounce" />
+            </div>
+          </button>
         </div>
       </div>
     </div>

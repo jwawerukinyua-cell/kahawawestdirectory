@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kwest-cache-v3';
+const CACHE_NAME = 'kwest-cache-v4';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -14,14 +14,20 @@ const PRECACHE_ASSETS = [
   '/icon-maskable-512x512.png',
   '/kwest-logo.png',
   '/kwest-logo.webp',
+  '/kwest-icon.png',
+  '/kwest-icon.webp',
   '/hero.webp',
+  '/hero.jpg',
+  '/hero-opt.jpg',
+  '/kahawa-pride.jpg',
+  '/kahawa-pride-fc.jpg',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('Pre-cache failed for some assets:', err);
+        console.warn('Pre-cache warning for some assets:', err);
       });
     })
   );
@@ -50,30 +56,37 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
+      // Return cached asset immediately if available
       if (cachedResponse) {
-        // Fetch fresh in background
-        fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, networkResponse.clone());
-              });
-            }
-          })
-          .catch(() => {});
+        // Refresh cache in background for local origin requests
+        if (url.origin === self.location.origin) {
+          fetch(event.request)
+            .then((networkResponse) => {
+              if (networkResponse && networkResponse.status === 200) {
+                caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(event.request, networkResponse.clone());
+                });
+              }
+            })
+            .catch(() => {});
+        }
         return cachedResponse;
       }
 
+      // If not in cache, fetch over network
       return fetch(event.request)
         .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          if (!networkResponse || networkResponse.status !== 200) {
             return networkResponse;
           }
 
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          // Cache valid local assets
+          if (url.origin === self.location.origin) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
 
           return networkResponse;
         })
@@ -88,6 +101,8 @@ self.addEventListener('fetch', (event) => {
               return offlineFallback || caches.match('/index.html');
             });
           }
+          // Return empty response rather than undefined to prevent browser fetch exceptions
+          return new Response('', { status: 408, statusText: 'Network Timeout' });
         });
     })
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import { EstateZone } from '../../types';
+import { HorizontalScrollContainer } from '../ui/HorizontalScrollContainer';
 
 interface ZoneFilterProps {
   selectedZone: string;
@@ -31,11 +32,16 @@ export const ZoneFilter: React.FC<ZoneFilterProps> = ({
   zoneCounts = {},
 }) => {
   return (
-    <div id="zone-filter-scroll" className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 flex-shrink-0 mr-1">
-        <MapPin className="w-3.5 h-3.5 text-emerald-600" /> Zones:
-      </span>
-
+    <HorizontalScrollContainer
+      id="zone-filter-scroll"
+      className="mt-1 font-sans"
+      step={240}
+      leftPrefix={
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 flex-shrink-0 mr-1 select-none">
+          <MapPin className="w-3.5 h-3.5 text-emerald-600" /> Zones:
+        </span>
+      }
+    >
       {ZONES.map((z) => {
         const isSelected = selectedZone === z.id;
         const count = z.id === 'all' ? undefined : zoneCounts[z.id];
@@ -44,7 +50,7 @@ export const ZoneFilter: React.FC<ZoneFilterProps> = ({
           <button
             key={z.id}
             onClick={() => onSelectZone(z.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 flex-shrink-0 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
               isSelected
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
@@ -63,6 +69,6 @@ export const ZoneFilter: React.FC<ZoneFilterProps> = ({
           </button>
         );
       })}
-    </div>
+    </HorizontalScrollContainer>
   );
 };

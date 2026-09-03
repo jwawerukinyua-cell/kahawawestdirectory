@@ -150,14 +150,14 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         phone: phone,
         whatsapp: whatsapp ? whatsapp.replace(/[^0-9]/g, '') : phone.replace(/[^0-9]/g, ''),
         email: email || undefined,
-        isVerified: true,
-        isClaimed: true,
+        isVerified: false,
+        isClaimed: false,
         claimedBy: isListingOnBehalf
           ? `${applicantName || 'Agent'} (On Behalf of ${ownerFullName || 'Owner'})`
           : `${applicantName || 'Proprietor'} (${applicantRole})`,
         claimedAt: new Date().toISOString().split('T')[0],
-        rating: 5.0,
-        reviewCount: 1,
+        rating: 0,
+        reviewCount: 0,
         priceLevel: 'Moderate',
         heroImage: photos[0],
         galleryImages: photos,

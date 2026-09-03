@@ -4,12 +4,14 @@ import { Search, X } from 'lucide-react';
 interface SearchBarProps {
   value: string;
   onChange: (val: string) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   placeholder?: string;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   value,
   onChange,
+  onKeyDown,
   placeholder = 'Search by business name, fundi, clinic, mbuzi choma, or estate spot...',
 }) => {
   return (
@@ -19,6 +21,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
         placeholder={placeholder}
         className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-white border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-sm text-slate-900 placeholder:text-slate-400 shadow-xs"
       />

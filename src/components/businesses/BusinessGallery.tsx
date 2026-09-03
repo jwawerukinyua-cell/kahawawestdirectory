@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { Camera, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
+import { Business } from '../../types';
 import { ListingImage } from '../ui/ListingImage';
 import { generateBusinessAltText } from '../../lib/seoAltUtils';
 
 interface BusinessGalleryProps {
   images: string[];
   businessName: string;
+  business?: Partial<Business>;
 }
 
-export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, businessName }) => {
+export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, businessName, business }) => {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   
   const fallbackList = [
@@ -23,7 +25,7 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
     ? images.filter((img) => typeof img === 'string' && img.trim() !== '')
     : [];
 
-  const gallery = validImages.length > 0 ? validImages : fallbackList;
+  const gallery = validImages.length > 0 ? validImages : (business?.galleryImages || fallbackList);
 
   const mainPhoto = gallery[0] || fallbackList[0];
   const additionalPhotos = gallery.slice(1, 5);
@@ -40,6 +42,8 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
     setSelectedIdx((selectedIdx + 1) % gallery.length);
   };
 
+  const bizObj = business || { name: businessName };
+
   return (
     <div id="business-gallery-section" className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm mb-6">
       <div className="flex items-center justify-between mb-4">
@@ -54,12 +58,12 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 h-auto md:h-72">
         {/* Main Large Photo (Takes 2 cols & 2 rows on desktop) */}
         <div
-          className="md:col-span-2 relative group overflow-hidden rounded-xl cursor-pointer bg-slate-100 min-h-[200px]"
+          className="md:col-span-2 relative group overflow-hidden rounded-xl cursor-pointer bg-stone-100 min-h-[200px]"
           onClick={() => setSelectedIdx(0)}
         >
           <ListingImage
             src={mainPhoto}
-            business={{ name: businessName }}
+            business={bizObj}
             imageType="gallery"
             index={1}
             className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
@@ -79,12 +83,12 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
           {additionalPhotos.map((img, idx) => (
             <div
               key={idx}
-              className="relative group overflow-hidden rounded-xl cursor-pointer bg-slate-100 h-32 md:h-[138px]"
+              className="relative group overflow-hidden rounded-xl cursor-pointer bg-stone-100 h-32 md:h-[138px]"
               onClick={() => setSelectedIdx(idx + 1)}
             >
               <ListingImage
                 src={img}
-                business={{ name: businessName }}
+                business={bizObj}
                 imageType="gallery"
                 index={idx + 2}
                 className="w-full h-full object-cover group-hover:scale-105 transition duration-300"

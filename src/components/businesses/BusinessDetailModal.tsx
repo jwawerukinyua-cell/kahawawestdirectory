@@ -240,6 +240,7 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
             ).filter((img: any): img is string => typeof img === 'string' && img.trim() !== '')
             }
             businessName={business.name}
+            business={business}
           />
 
           {/* 3. Special Resident Discount / Offer */}

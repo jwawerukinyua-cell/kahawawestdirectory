@@ -883,18 +883,80 @@ function generateAdditionalBusinesses(): Business[] {
     });
   });
 
+  // Category image dictionary for authentic matching trade photos
+  const CATEGORY_IMAGE_SETS: Record<string, string[]> = {
+    'hardware-construction': [
+      'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1530629013299-6cb10d168419?auto=format&fit=crop&w=800&q=80',
+    ],
+    'restaurants-cafes': [
+      'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80',
+    ],
+    'food-fresh': [
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1506617420156-8e4536971650?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1516594798947-e65505dbb29d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1579113800032-c38bd7635818?auto=format&fit=crop&w=800&q=80',
+    ],
+    'health-wellness': [
+      'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80',
+    ],
+    'beauty-personal-care': [
+      'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&w=800&q=80',
+    ],
+    'automotive': [
+      'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1509749837427-ac94a2553d0e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1494515843206-f3117d3f51b7?auto=format&fit=crop&w=800&q=80',
+    ],
+    'electronics-tech': [
+      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=800&q=80',
+    ],
+    'home-rentals': [
+      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80',
+    ],
+  };
+
+  const defaultSeeds = [
+    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80',
+  ];
+
   // Now create the rest to reach 50 businesses
   const startIndex = results.length + 16;
   businessNames.forEach((item, idx) => {
     const bizId = `kw-biz-${startIndex + idx}`;
     const zone = zones[(idx + 3) % zones.length];
-    const imageSeeds = [
-      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80',
-    ];
+    const imageSeeds = CATEGORY_IMAGE_SETS[item.cat] || defaultSeeds;
 
     results.push({
       id: bizId,
@@ -912,16 +974,16 @@ function generateAdditionalBusinesses(): Business[] {
       isVerified: item.name.includes('Furniture') || item.name.includes('Ukweli'),
       isClaimed: item.name.includes('Furniture') || item.name.includes('Ukweli'),
       claimedBy: item.name.includes('Furniture') || item.name.includes('Ukweli') ? 'Ukweli Products (Owner)' : undefined,
-      rating: item.name.includes('Furniture') || item.name.includes('Ukweli') ? 4.9 : 0,
-      reviewCount: item.name.includes('Furniture') || item.name.includes('Ukweli') ? 14 : 0,
+      rating: 0,
+      reviewCount: 0,
       priceLevel: idx % 2 === 0 ? 'Budget' : 'Moderate',
-      heroImage: imageSeeds[idx % imageSeeds.length],
+      heroImage: imageSeeds[0],
       galleryImages: [
-        imageSeeds[idx % imageSeeds.length],
-        imageSeeds[(idx + 1) % imageSeeds.length],
-        imageSeeds[(idx + 2) % imageSeeds.length],
-        imageSeeds[(idx + 3) % imageSeeds.length],
-        imageSeeds[(idx + 4) % imageSeeds.length],
+        imageSeeds[0],
+        imageSeeds[1] || imageSeeds[0],
+        imageSeeds[2] || imageSeeds[0],
+        imageSeeds[3] || imageSeeds[0],
+        imageSeeds[4] || imageSeeds[0],
       ],
       description: `${item.name} is a dedicated local provider in ${zone}, Kahawa West offering reliable ${item.sub.toLowerCase()} services to estate residents and commercial clients with fast communication and direct M-Pesa payment options.`,
       services: ['Direct Service on Call', 'Estate Pickup / Delivery', 'M-Pesa Supported', 'Satisfaction Guaranteed'],

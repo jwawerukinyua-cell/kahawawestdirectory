@@ -32,6 +32,7 @@ import {
   Handshake,
 } from 'lucide-react';
 import { Category } from '../../types';
+import { HorizontalScrollContainer } from '../ui/HorizontalScrollContainer';
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -111,7 +112,11 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x touch-pan-x font-sans">
+    <HorizontalScrollContainer
+      id="category-filter-scroll"
+      className="mb-2 font-sans"
+      step={320}
+    >
       <button
         onClick={() => onSelectCategory('all')}
         className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ease-out flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
@@ -152,6 +157,6 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
           </button>
         );
       })}
-    </div>
+    </HorizontalScrollContainer>
   );
 };

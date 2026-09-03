@@ -184,7 +184,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         phone_number: phoneNumber,
         email: email,
         business_role: effectiveRole,
-        status: 'verified', // Instant verification for active editing & live preview
+        status: 'pending', // Pending editorial verification
         notes: isListingOnBehalf
           ? `[On Behalf of Owner: ${ownerFullName} (${ownerPhoneNumber})] ${notes}`
           : notes,
@@ -219,11 +219,11 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         landmark: customLandmark,
         description: customDescription,
         services: servicesList,
-        isVerified: true,
-        isClaimed: true,
+        isVerified: business.isVerified, // Preserves verification until admin approves claim
+        isClaimed: false, // Remains pending until admin verifies claim in Editorial Review
         claimedBy: isListingOnBehalf
-          ? `${fullName} (On Behalf of ${ownerFullName || 'Owner'})`
-          : `${fullName} (${businessRole})`,
+          ? `${fullName} (Pending Verification - On Behalf of ${ownerFullName || 'Owner'})`
+          : `${fullName} (Pending Verification - ${businessRole})`,
         claimedAt: new Date().toISOString().split('T')[0],
         heroImage: photos[0] || business.heroImage,
         galleryImages: photos,
