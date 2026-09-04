@@ -3,29 +3,46 @@ import { deleteUpdateFromSupabase } from '../lib/supabase';
 
 export const SEED_COMMUNITY_UPDATES: CommunityUpdate[] = [
   {
-    id: 'up-01',
-    type: 'alert',
-    title: 'Scheduled Water Interruption',
-    timeInfo: 'Tomorrow • 9:00 AM - 4:00 PM',
+    id: 'up-iebc-voter-reg-2026',
+    type: 'business',
+    title: '🗳️ Voter Registration Update — Kahawa West',
+    timeInfo: '09-04-2026',
     location: 'Kahawa West',
     zone: 'Kamiti Road',
-    content: 'Nairobi City Water and Sewerage Company routine maintenance along the main Kamiti Road pipeline feeder. Low water pressure is anticipated in parts of Jacaranda and Roundabout. Residents are advised to store adequate water.',
-    author: 'NCWSC Area Liaison',
-    authorPhone: '+254700123456',
-    authorEmail: 'watercare@nairobiwater.co.ke',
-    authorRole: 'Public Utility Officer',
-    imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80',
-    imageCaption: 'Pipe maintenance notice area on Kamiti Road feeder',
+    content: `Are you 18 or older and not yet registered as a voter?
+
+Voter registration is available through the IEBC as Kenya prepares for the 2027 General Election.
+
+Residents of Kahawa West can visit the relevant IEBC registration office or centre to register, transfer their vote, or update their voter details.
+
+📍 Kahawa West — Roysambu Constituency
+
+Before heading out, confirm the current registration arrangements with IEBC.
+
+Your vote is your voice. Make sure it counts.
+
+Official IEBC information: IEBC Voter Registration https://www.iebc.or.ke/
+
+Submitted by
+James Kinyua
+(Local Resident / Neighbor)
+Call 0764405842`,
+    author: 'James Kinyua',
+    authorPhone: '0764405842',
+    authorEmail: 'ukweliproducts@gmail.com',
+    authorRole: 'Local Resident / Neighbor',
+    imageUrl: '/iebc-logo.png',
+    imageCaption: 'Independent Electoral and Boundaries Commission (IEBC) voter registration notice',
     isAccountabilityConfirmed: true,
-    urgencyLevel: 'high',
-    date: 'Tomorrow',
+    urgencyLevel: 'standard',
+    date: '09-04-2026',
     status: 'published',
-    badge: 'Alert',
-    contact: '0700123456',
+    badge: 'Public Notice',
+    contact: '0764405842',
   },
 ];
 
-export const PURGED_UPDATE_IDS = new Set(['up-02', 'up-03', 'up-04', 'up-05', 'up-06']);
+export const PURGED_UPDATE_IDS = new Set(['up-01', 'up-02', 'up-03', 'up-04', 'up-05', 'up-06']);
 
 export const COMMUNITY_UPDATES = SEED_COMMUNITY_UPDATES;
 
@@ -63,20 +80,32 @@ export function getStoredCommunityUpdates(): CommunityUpdate[] {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
       const seedMap = new Map(SEED_COMMUNITY_UPDATES.map((u) => [u.id, u]));
-      return parsed
-        .filter((item: CommunityUpdate) => !deletedIds.has(item.id) && !PURGED_UPDATE_IDS.has(item.id))
-        .map((item: CommunityUpdate) => {
-          if (seedMap.has(item.id)) {
-            const seed = seedMap.get(item.id)!;
-            return {
-              ...item,
-              ...seed,
-              imageUrl: seed.imageUrl || item.imageUrl,
-              imageCaption: seed.imageCaption || item.imageCaption,
-            };
-          }
-          return item;
-        });
+      const seenIds = new Set<string>();
+      const result: CommunityUpdate[] = [];
+
+      for (const item of parsed) {
+        if (deletedIds.has(item.id) || PURGED_UPDATE_IDS.has(item.id)) continue;
+        if (seedMap.has(item.id)) {
+          const seed = seedMap.get(item.id)!;
+          result.push({
+            ...item,
+            ...seed,
+            imageUrl: seed.imageUrl || item.imageUrl,
+            imageCaption: seed.imageCaption || item.imageCaption,
+          });
+        } else {
+          result.push(item);
+        }
+        seenIds.add(item.id);
+      }
+
+      for (const init of SEED_COMMUNITY_UPDATES) {
+        if (!seenIds.has(init.id) && !deletedIds.has(init.id)) {
+          result.push(init);
+        }
+      }
+
+      return result.length > 0 ? result : SEED_COMMUNITY_UPDATES.filter((u) => !deletedIds.has(u.id));
     }
     return SEED_COMMUNITY_UPDATES.filter((u) => !deletedIds.has(u.id));
   } catch {

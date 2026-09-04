@@ -39,13 +39,14 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
     return u.type === selectedType;
   });
 
-  const getDotColor = (type: UpdateType) => {
+  const getDotColor = (type: UpdateType | string) => {
     switch (type) {
       case 'alert':
         return 'bg-amber-500';
       case 'event':
         return 'bg-blue-500';
       case 'business':
+      case 'public_notice':
         return 'bg-emerald-400';
       case 'community':
         return 'bg-rose-400';
@@ -54,13 +55,14 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
     }
   };
 
-  const getBadgeText = (type: UpdateType) => {
+  const getBadgeText = (type: UpdateType | string) => {
     switch (type) {
       case 'alert':
         return 'ALERT';
       case 'event':
         return 'EVENT';
       case 'business':
+      case 'public_notice':
         return 'PUBLIC NOTICE';
       case 'community':
         return 'COMMUNITY';
@@ -69,13 +71,14 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
     }
   };
 
-  const getBadgeTextColor = (type: UpdateType) => {
+  const getBadgeTextColor = (type: UpdateType | string) => {
     switch (type) {
       case 'alert':
         return 'text-amber-400';
       case 'event':
         return 'text-blue-400';
       case 'business':
+      case 'public_notice':
         return 'text-emerald-400';
       case 'community':
         return 'text-rose-400';

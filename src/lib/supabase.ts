@@ -540,6 +540,7 @@ export const fetchUpdatesFromSupabase = async (): Promise<CommunityUpdate[] | nu
       .filter(
         (row: any) =>
           !row.id.startsWith('test-') &&
+          row.id !== 'up-01' &&
           row.id !== 'up-02' &&
           row.id !== 'up-03' &&
           row.id !== 'up-04' &&
@@ -548,7 +549,7 @@ export const fetchUpdatesFromSupabase = async (): Promise<CommunityUpdate[] | nu
       )
       .map((row: any): CommunityUpdate => ({
       id: row.id,
-      type: row.type || 'community',
+      type: row.type || (row.id === 'up-iebc-voter-reg-2026' ? 'business' : 'community'),
       title: row.title,
       timeInfo: row.time_info || row.date,
       location: row.location || 'Kahawa West',
@@ -557,11 +558,11 @@ export const fetchUpdatesFromSupabase = async (): Promise<CommunityUpdate[] | nu
       author: row.author,
       authorPhone: row.author_phone,
       authorEmail: row.author_email,
-      authorRole: row.author_role,
-      contact: row.contact,
-      badge: row.badge,
-      imageUrl: row.image_url,
-      imageCaption: row.image_caption,
+      authorRole: row.author_role || (row.id === 'up-iebc-voter-reg-2026' ? 'Local Resident / Neighbor' : undefined),
+      contact: row.contact || row.author_phone || (row.id === 'up-iebc-voter-reg-2026' ? '0764405842' : undefined),
+      badge: row.badge || (row.id === 'up-iebc-voter-reg-2026' ? 'Public Notice' : undefined),
+      imageUrl: row.image_url || (row.id === 'up-iebc-voter-reg-2026' ? '/iebc-logo.png' : undefined),
+      imageCaption: row.image_caption || (row.id === 'up-iebc-voter-reg-2026' ? 'Independent Electoral and Boundaries Commission (IEBC) voter registration notice' : undefined),
       isAccountabilityConfirmed: row.is_accountability_confirmed ?? true,
       urgencyLevel: row.urgency_level || 'standard',
       date: row.date,
