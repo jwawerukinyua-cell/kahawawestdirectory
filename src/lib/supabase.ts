@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Business, BusinessClaim, CommunityFeedback, BusinessApplication } from '../types';
+import { Business, BusinessClaim, CommunityFeedback, BusinessApplication, CommunityStory, CommunityUpdate } from '../types';
 
 // The user's Supabase project URL and anon key
 const rawUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://wfsqnhujjqldcxnhnzvf.supabase.co';
@@ -328,7 +328,31 @@ export const getStoredFeedback = (businessId?: string): CommunityFeedback[] => {
 export const saveBusinessApplication = async (app: BusinessApplication): Promise<boolean> => {
   try {
     if (supabase && isSupabaseConfigured) {
-      await supabase.from('applications').insert([app]);
+      const { error } = await supabase.from('applications').insert([
+        {
+          name: app.name,
+          category: app.category,
+          operation_type: app.operationType || null,
+          zone: app.zone,
+          landmark: app.landmark,
+          phone: app.phone,
+          whatsapp: app.whatsapp || null,
+          email: app.email || null,
+          description: app.description,
+          services: app.services || [],
+          mpesa_type: app.mpesaType || null,
+          mpesa_number: app.mpesaNumber || null,
+          hero_image: app.heroImage || null,
+          gallery_images: app.galleryImages || [],
+          applicant_name: app.applicantName,
+          applicant_phone: app.applicantPhone,
+          applicant_role: app.applicantRole,
+          notes: app.notes || null,
+          status: 'pending',
+          created_at: app.created_at || new Date().toISOString(),
+        }
+      ]);
+      if (error) console.warn('Supabase application insert warning:', error.message);
     }
     const existing: BusinessApplication[] = JSON.parse(localStorage.getItem(APPLICATIONS_STORAGE_KEY) || '[]');
     existing.unshift(app);
@@ -339,10 +363,10 @@ export const saveBusinessApplication = async (app: BusinessApplication): Promise
   }
 };
 
-export const syncStoryToSupabase = async (story: any): Promise<boolean> => {
+export const syncStoryToSupabase = async (story: CommunityStory): Promise<boolean> => {
   try {
     if (supabase && isSupabaseConfigured) {
-      await supabase.from('community_stories').upsert([
+      const { error } = await supabase.from('community_stories').upsert([
         {
           id: story.id,
           title: story.title,
@@ -366,6 +390,10 @@ export const syncStoryToSupabase = async (story: any): Promise<boolean> => {
           likes: story.likes || 0,
         },
       ]);
+      if (error) {
+        console.warn('Supabase community story sync error:', error.message);
+        return false;
+      }
       return true;
     }
     return false;
@@ -373,5 +401,230 @@ export const syncStoryToSupabase = async (story: any): Promise<boolean> => {
     console.warn('Supabase community story sync error:', err);
     return false;
   }
+};
+
+export const fetchStoriesFromSupabase = async (): Promise<CommunityStory[] | null> => {
+  try {
+    if (!supabase || !isSupabaseConfigured) return null;
+    const { data, error } = await supabase
+      .from('community_stories')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error || !data) {
+      if (error) console.warn('Supabase fetch stories warning:', error.message);
+      return null;
+    }
+
+    return data.map((row: any): CommunityStory => ({
+      id: row.id,
+      slug: row.slug || (row.id === 'story-1788450086647' || row.id === 'story-1788342289836' ? 'kahawa-pride-fc' : row.id),
+      title: row.title,
+      subtitle: row.subtitle,
+      category: row.category,
+      zone: row.zone,
+      content: row.content,
+      excerpt: row.excerpt || row.content.slice(0, 160) + '...',
+      imageUrl: row.image_url,
+      imageCaption: row.image_caption,
+      isRealPhotoConfirmed: Boolean(row.is_real_photo_confirmed),
+      authorName: row.author_name,
+      authorRole: row.author_role,
+      authorEmail: row.author_email,
+      authorPhone: row.author_phone,
+      date: row.date,
+      readTimeMinutes: row.read_time_minutes || 3,
+      featured: Boolean(row.featured),
+      status: row.status || 'published',
+      rejectionReason: row.rejection_reason,
+      likes: row.likes || 0,
+    }));
+  } catch (err) {
+    console.warn('Failed to fetch stories from Supabase:', err);
+    return null;
+  }
+};
+
+export const deleteStoryFromSupabase = async (storyId: string): Promise<boolean> => {
+  try {
+    if (supabase && isSupabaseConfigured) {
+      const { error } = await supabase.from('community_stories').delete().eq('id', storyId);
+      if (error) console.warn('Supabase delete story warning:', error.message);
+      return !error;
+    }
+    return false;
+  } catch (err) {
+    console.warn('Supabase delete story error:', err);
+    return false;
+  }
+};
+
+export const deleteUpdateFromSupabase = async (updateId: string): Promise<boolean> => {
+  try {
+    if (supabase && isSupabaseConfigured) {
+      const { error } = await supabase.from('community_updates').delete().eq('id', updateId);
+      if (error) console.warn('Supabase delete update warning:', error.message);
+      return !error;
+    }
+    return false;
+  } catch (err) {
+    console.warn('Supabase delete update error:', err);
+    return false;
+  }
+};
+
+export const syncUpdateToSupabase = async (update: CommunityUpdate): Promise<boolean> => {
+  try {
+    if (supabase && isSupabaseConfigured) {
+      const { error } = await supabase.from('community_updates').upsert([
+        {
+          id: update.id,
+          title: update.title,
+          type: update.type,
+          time_info: update.timeInfo,
+          location: update.location,
+          zone: update.zone || null,
+          content: update.content,
+          author: update.author,
+          author_phone: update.authorPhone || null,
+          author_email: update.authorEmail || null,
+          author_role: update.authorRole || null,
+          contact: update.contact || null,
+          badge: update.badge || null,
+          image_url: update.imageUrl || null,
+          image_caption: update.imageCaption || null,
+          is_accountability_confirmed: update.isAccountabilityConfirmed ?? true,
+          urgency_level: update.urgencyLevel || 'standard',
+          date: update.date || new Date().toISOString().split('T')[0],
+          status: update.status || 'pending_review',
+          rejection_reason: update.rejectionReason || null,
+        },
+      ]);
+      if (error) {
+        console.warn('Supabase community update sync warning:', error.message);
+        return false;
+      }
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn('Supabase community update sync error:', err);
+    return false;
+  }
+};
+
+export const fetchUpdatesFromSupabase = async (): Promise<CommunityUpdate[] | null> => {
+  try {
+    if (!supabase || !isSupabaseConfigured) return null;
+    const { data, error } = await supabase
+      .from('community_updates')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      if (error) console.warn('Supabase fetch updates warning:', error.message);
+      return null;
+    }
+
+    return data.map((row: any): CommunityUpdate => ({
+      id: row.id,
+      type: row.type || 'community',
+      title: row.title,
+      timeInfo: row.time_info || row.date,
+      location: row.location || 'Kahawa West',
+      zone: row.zone,
+      content: row.content,
+      author: row.author,
+      authorPhone: row.author_phone,
+      authorEmail: row.author_email,
+      authorRole: row.author_role,
+      contact: row.contact,
+      badge: row.badge,
+      imageUrl: row.image_url,
+      imageCaption: row.image_caption,
+      isAccountabilityConfirmed: row.is_accountability_confirmed ?? true,
+      urgencyLevel: row.urgency_level || 'standard',
+      date: row.date,
+      status: row.status || 'published',
+      rejectionReason: row.rejection_reason,
+    }));
+  } catch (err) {
+    console.warn('Failed to fetch updates from Supabase:', err);
+    return null;
+  }
+};
+
+export interface SupabaseSyncReport {
+  connected: boolean;
+  storiesTableAccessible: boolean;
+  updatesTableAccessible: boolean;
+  businessesTableAccessible: boolean;
+  claimsTableAccessible: boolean;
+  businessesInsertable: boolean;
+  message: string;
+  sqlToRun?: string;
+}
+
+export const testSupabaseSyncStatus = async (): Promise<SupabaseSyncReport> => {
+  if (!supabase || !isSupabaseConfigured) {
+    return {
+      connected: false,
+      storiesTableAccessible: false,
+      updatesTableAccessible: false,
+      businessesTableAccessible: false,
+      claimsTableAccessible: false,
+      businessesInsertable: false,
+      message: 'Supabase credentials are not configured.',
+    };
+  }
+
+  let storiesTableAccessible = false;
+  let updatesTableAccessible = false;
+  let businessesTableAccessible = false;
+  let claimsTableAccessible = false;
+  let businessesInsertable = false;
+  let errorMessages: string[] = [];
+
+  // 1. Test stories SELECT
+  const storiesCheck = await supabase.from('community_stories').select('id').limit(1);
+  if (!storiesCheck.error) {
+    storiesTableAccessible = true;
+  } else {
+    errorMessages.push(`Stories: ${storiesCheck.error.message}`);
+  }
+
+  // 2. Test updates SELECT
+  const updatesCheck = await supabase.from('community_updates').select('id').limit(1);
+  if (!updatesCheck.error) {
+    updatesTableAccessible = true;
+  } else {
+    errorMessages.push(`Updates: ${updatesCheck.error.message}`);
+  }
+
+  // 3. Test businesses SELECT
+  const bizCheck = await supabase.from('businesses').select('id').limit(1);
+  if (!bizCheck.error) {
+    businessesTableAccessible = true;
+  } else {
+    errorMessages.push(`Businesses: ${bizCheck.error.message}`);
+  }
+
+  // 4. Test claims SELECT
+  const claimsCheck = await supabase.from('claims').select('id').limit(1);
+  if (!claimsCheck.error) {
+    claimsTableAccessible = true;
+  } else {
+    errorMessages.push(`Claims: ${claimsCheck.error.message}`);
+  }
+
+  return {
+    connected: true,
+    storiesTableAccessible,
+    updatesTableAccessible,
+    businessesTableAccessible,
+    claimsTableAccessible,
+    businessesInsertable,
+    message: errorMessages.length > 0 ? errorMessages.join(' | ') : 'All tables accessible and syncing.',
+  };
 };
 

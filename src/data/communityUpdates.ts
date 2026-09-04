@@ -1,4 +1,5 @@
 import { CommunityUpdate } from '../types';
+import { deleteUpdateFromSupabase } from '../lib/supabase';
 
 export const SEED_COMMUNITY_UPDATES: CommunityUpdate[] = [
   {
@@ -228,6 +229,7 @@ export function updateCommunityUpdateModeration(
 export function deleteCommunityUpdate(updateId: string): CommunityUpdate[] {
   try {
     markUpdateAsDeleted(updateId);
+    deleteUpdateFromSupabase(updateId).catch(() => {});
     const current = getStoredCommunityUpdates();
     const updated = current.filter((u) => u.id !== updateId);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));

@@ -75,6 +75,7 @@ import {
 import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
 import { copyToClipboard } from '../../../lib/clipboard';
+import { testSupabaseSyncStatus, SupabaseSyncReport } from '../../../lib/supabase';
 
 interface EditorialReviewModalProps {
   isOpen: boolean;
@@ -515,6 +516,28 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false);
 
   const [copiedSql, setCopiedSql] = useState(false);
+  const [syncReport, setSyncReport] = useState<SupabaseSyncReport | null>(null);
+  const [isTestingSync, setIsTestingSync] = useState(false);
+
+  const handleTestSync = async () => {
+    setIsTestingSync(true);
+    try {
+      const report = await testSupabaseSyncStatus();
+      setSyncReport(report);
+    } catch (err) {
+      setSyncReport({
+        connected: false,
+        storiesTableAccessible: false,
+        updatesTableAccessible: false,
+        businessesTableAccessible: false,
+        claimsTableAccessible: false,
+        businessesInsertable: false,
+        message: String(err),
+      });
+    } finally {
+      setIsTestingSync(false);
+    }
+  };
 
   // Lockout countdown timer
   useEffect(() => {
@@ -567,11 +590,90 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   }, [adCampaigns, adCampaignsSubTab, campaignZoneFilter, campaignSearchQuery]);
 
   const handleCopySql = async () => {
-    const sqlCode = `-- Kahawa West Directory: Unified Database Schema for Supabase
+    const sqlCode = `-- Kahawa West Directory: Unified Complete Production Schema for Supabase
 
--- 1. COMMUNITY STORIES TABLE
-CREATE TABLE IF NOT EXISTS public.community_stories (
+-- 1. GRANT USAGE & FULL ACCESS TO PUBLIC API ROLES
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated;
+
+-- 2. BUSINESSES TABLE (Listings, Customizations, Claimed Edits)
+CREATE TABLE IF NOT EXISTS public.businesses (
+    id TEXT PRIMARY KEY,
+    slug TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    tagline TEXT,
+    category TEXT NOT NULL,
+    sub_category TEXT,
+    zone TEXT NOT NULL,
+    landmark TEXT,
+    phone TEXT NOT NULL,
+    whatsapp TEXT NOT NULL,
+    email TEXT,
+    is_verified BOOLEAN DEFAULT true,
+    is_claimed BOOLEAN DEFAULT false,
+    claimed_by TEXT,
+    claimed_at TEXT,
+    rating NUMERIC(2,1) DEFAULT 0.0,
+    review_count INT DEFAULT 0,
+    price_level TEXT DEFAULT 'Moderate',
+    hero_image TEXT,
+    gallery_images JSONB DEFAULT '[]'::jsonb,
+    description TEXT,
+    services JSONB DEFAULT '[]'::jsonb,
+    features JSONB DEFAULT '[]'::jsonb,
+    mpesa JSONB,
+    social_links JSONB,
+    special_offer JSONB,
+    opening_hours JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+);
+
+-- 3. BUSINESS CLAIMS TABLE (When an owner claims an existing business)
+CREATE TABLE IF NOT EXISTS public.claims (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    business_id TEXT NOT NULL,
+    business_name TEXT,
+    full_name TEXT NOT NULL,
+    phone_number TEXT NOT NULL,
+    email TEXT NOT NULL,
+    business_role TEXT NOT NULL,
+    national_id TEXT,
+    notes TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'verified', 'rejected')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 4. BUSINESS APPLICATIONS TABLE (When a resident or owner lists a new business)
+CREATE TABLE IF NOT EXISTS public.applications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    operation_type TEXT,
+    zone TEXT NOT NULL,
+    landmark TEXT,
+    phone TEXT NOT NULL,
+    whatsapp TEXT,
+    email TEXT,
+    description TEXT,
+    services JSONB DEFAULT '[]'::jsonb,
+    mpesa_type TEXT,
+    mpesa_number TEXT,
+    hero_image TEXT,
+    gallery_images JSONB DEFAULT '[]'::jsonb,
+    applicant_name TEXT,
+    applicant_phone TEXT,
+    applicant_role TEXT,
+    notes TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 5. COMMUNITY STORIES TABLE
+CREATE TABLE IF NOT EXISTS public.community_stories (
+    id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     subtitle TEXT,
     category TEXT NOT NULL,
@@ -593,12 +695,13 @@ CREATE TABLE IF NOT EXISTS public.community_stories (
     likes INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+ALTER TABLE IF EXISTS public.community_stories ALTER COLUMN id TYPE TEXT;
 
--- 2. COMMUNITY UPDATES TABLE (Alerts, Events, Business Openings, Community Drives)
+-- 6. COMMUNITY UPDATES TABLE (Alerts, Events, Notices)
 CREATE TABLE IF NOT EXISTS public.community_updates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
-    type TEXT NOT NULL CHECK (type IN ('alert', 'event', 'business', 'community', 'notice')),
+    type TEXT NOT NULL,
     time_info TEXT NOT NULL,
     location TEXT NOT NULL,
     zone TEXT,
@@ -606,41 +709,86 @@ CREATE TABLE IF NOT EXISTS public.community_updates (
     author TEXT NOT NULL,
     author_phone TEXT,
     author_email TEXT,
+    author_role TEXT,
     contact TEXT,
     badge TEXT,
     image_url TEXT,
+    image_caption TEXT,
+    is_accountability_confirmed BOOLEAN DEFAULT TRUE,
+    urgency_level TEXT DEFAULT 'standard',
     status TEXT DEFAULT 'pending_review' CHECK (status IN ('pending_review', 'published', 'rejected')),
     rejection_reason TEXT,
     date DATE DEFAULT CURRENT_DATE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+ALTER TABLE IF EXISTS public.community_updates ALTER COLUMN id TYPE TEXT;
 
--- 3. BUSINESS CLAIMS TABLE
-CREATE TABLE IF NOT EXISTS public.claims (
+-- 7. BUSINESS FEEDBACK / REVIEWS TABLE
+CREATE TABLE IF NOT EXISTS public.business_feedback (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     business_id TEXT NOT NULL,
-    full_name TEXT NOT NULL,
-    phone_number TEXT NOT NULL,
-    email TEXT NOT NULL,
-    business_role TEXT NOT NULL,
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'verified', 'rejected')),
-    notes TEXT,
+    reviewer_name TEXT NOT NULL,
+    reviewer_phone TEXT,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT NOT NULL,
+    verified_visit BOOLEAN DEFAULT true,
+    visit_date TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- ENABLE ROW LEVEL SECURITY
+ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.claims ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_stories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_updates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.claims ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.business_feedback ENABLE ROW LEVEL SECURITY;
 
--- PUBLIC READ POLICIES
-CREATE POLICY "Public can view published stories" ON public.community_stories FOR SELECT USING (status = 'published');
-CREATE POLICY "Public can view published updates" ON public.community_updates FOR SELECT USING (status = 'published');
+-- POLICIES FOR BUSINESSES (Read, Insert, Update)
+DROP POLICY IF EXISTS "Public can view businesses" ON public.businesses;
+CREATE POLICY "Public can view businesses" ON public.businesses FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can insert businesses" ON public.businesses;
+CREATE POLICY "Public can insert businesses" ON public.businesses FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update businesses" ON public.businesses;
+CREATE POLICY "Public can update businesses" ON public.businesses FOR UPDATE USING (true);
 
--- PUBLIC INSERT POLICIES (Submissions start as pending_review)
-CREATE POLICY "Public can submit stories" ON public.community_stories FOR INSERT WITH CHECK (status = 'pending_review');
-CREATE POLICY "Public can submit updates" ON public.community_updates FOR INSERT WITH CHECK (status = 'pending_review');
-CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WITH CHECK (status = 'pending');
+-- POLICIES FOR CLAIMS
+DROP POLICY IF EXISTS "Public can view claims" ON public.claims;
+CREATE POLICY "Public can view claims" ON public.claims FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can submit business claims" ON public.claims;
+CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update claims" ON public.claims;
+CREATE POLICY "Public can update claims" ON public.claims FOR UPDATE USING (true);
+
+-- POLICIES FOR APPLICATIONS
+DROP POLICY IF EXISTS "Public can view applications" ON public.applications;
+CREATE POLICY "Public can view applications" ON public.applications FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can submit applications" ON public.applications;
+CREATE POLICY "Public can submit applications" ON public.applications FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update applications" ON public.applications;
+CREATE POLICY "Public can update applications" ON public.applications FOR UPDATE USING (true);
+
+-- POLICIES FOR STORIES
+DROP POLICY IF EXISTS "Public can view published stories" ON public.community_stories;
+CREATE POLICY "Public can view published stories" ON public.community_stories FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can insert stories" ON public.community_stories;
+CREATE POLICY "Public can insert stories" ON public.community_stories FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update stories" ON public.community_stories;
+CREATE POLICY "Public can update stories" ON public.community_stories FOR UPDATE USING (true);
+
+-- POLICIES FOR UPDATES
+DROP POLICY IF EXISTS "Public can view updates" ON public.community_updates;
+CREATE POLICY "Public can view updates" ON public.community_updates FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can insert updates" ON public.community_updates;
+CREATE POLICY "Public can insert updates" ON public.community_updates FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update updates" ON public.community_updates;
+CREATE POLICY "Public can update updates" ON public.community_updates FOR UPDATE USING (true);
+
+-- POLICIES FOR FEEDBACK
+DROP POLICY IF EXISTS "Public can view feedback" ON public.business_feedback;
+CREATE POLICY "Public can view feedback" ON public.business_feedback FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can submit feedback" ON public.business_feedback;
+CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSERT WITH CHECK (true);
 `;
     await copyToClipboard(sqlCode);
     setCopiedSql(true);
@@ -2416,33 +2564,74 @@ CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WI
                         Copy & execute in your Supabase SQL editor for persistent multi-device storage.
                       </p>
                     </div>
-                    <button
-                      onClick={handleCopySql}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition"
-                    >
-                      {copiedSql ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      <span>{copiedSql ? 'Copied SQL!' : 'Copy SQL Schema'}</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleTestSync}
+                        disabled={isTestingSync}
+                        className="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold text-xs flex items-center gap-1.5 transition border border-stone-700 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isTestingSync ? 'animate-spin' : ''}`} />
+                        <span>{isTestingSync ? 'Checking...' : 'Test Live Connection'}</span>
+                      </button>
+                      <button
+                        onClick={handleCopySql}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
+                      >
+                        {copiedSql ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        <span>{copiedSql ? 'Copied SQL!' : 'Copy SQL Schema'}</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <pre className="bg-[#0D0F12] text-emerald-300 p-4 rounded-2xl text-xs font-mono overflow-x-auto border border-stone-800 leading-relaxed max-h-96">
-{`-- Kahawa West Directory: Production Supabase Schema
--- 1. Business Claims Table (Stores visitors claiming businesses)
-CREATE TABLE IF NOT EXISTS public.claims (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    business_id TEXT NOT NULL,
-    business_name TEXT,
-    full_name TEXT NOT NULL,
-    phone_number TEXT NOT NULL,
-    email TEXT NOT NULL,
-    business_role TEXT NOT NULL,
-    national_id TEXT,
-    notes TEXT,
-    status TEXT DEFAULT 'pending', -- 'pending', 'verified', 'rejected'
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
-);
+                  {syncReport && (
+                    <div
+                      className={`p-4 rounded-xl border text-xs leading-relaxed ${
+                        syncReport.storiesTableAccessible && syncReport.updatesTableAccessible
+                          ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'
+                          : 'bg-amber-950/40 border-amber-800/60 text-amber-300'
+                      }`}
+                    >
+                      <div className="font-bold flex items-center gap-1.5 mb-1 text-sm">
+                        {syncReport.storiesTableAccessible && syncReport.updatesTableAccessible ? (
+                          <>
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            <span>Supabase Live Sync Active & Configured!</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShieldAlert className="w-4 h-4 text-amber-400" />
+                            <span>Supabase SQL Setup Required</span>
+                          </>
+                        )}
+                      </div>
+                      <p className="text-stone-300 mb-2">{syncReport.message}</p>
+                      {(!syncReport.storiesTableAccessible || !syncReport.updatesTableAccessible) && (
+                        <p className="text-stone-400">
+                          <strong>Quick Fix:</strong> Click <em>"Copy SQL Schema"</em> above, open your{' '}
+                          <a
+                            href="https://supabase.com/dashboard"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline text-amber-200 hover:text-white"
+                          >
+                            Supabase SQL Editor
+                          </a>
+                          , paste and click <strong>Run</strong>. Then click <em>"Test Live Connection"</em> again!
+                        </p>
+                      )}
+                    </div>
+                  )}
 
--- 2. Customized / Claimed Businesses & Visitor Submissions
+                  <pre className="bg-[#0D0F12] text-emerald-300 p-4 rounded-2xl text-xs font-mono overflow-x-auto border border-stone-800 leading-relaxed max-h-96">
+{`-- Kahawa West Directory: Unified Complete Production Schema for Supabase
+
+-- 1. GRANT USAGE & FULL ACCESS TO PUBLIC API ROLES
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated;
+
+-- 2. BUSINESSES TABLE (Listings, Customizations, Claimed Edits)
 CREATE TABLE IF NOT EXISTS public.businesses (
     id TEXT PRIMARY KEY,
     slug TEXT NOT NULL UNIQUE,
@@ -2470,40 +2659,82 @@ CREATE TABLE IF NOT EXISTS public.businesses (
     mpesa JSONB,
     social_links JSONB,
     special_offer JSONB,
+    opening_hours JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
 
--- 3. Community Spotlight Stories
-CREATE TABLE IF NOT EXISTS public.community_stories (
+-- 3. BUSINESS CLAIMS TABLE (When an owner claims an existing business)
+CREATE TABLE IF NOT EXISTS public.claims (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    business_id TEXT NOT NULL,
+    business_name TEXT,
+    full_name TEXT NOT NULL,
+    phone_number TEXT NOT NULL,
+    email TEXT NOT NULL,
+    business_role TEXT NOT NULL,
+    national_id TEXT,
+    notes TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'verified', 'rejected')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 4. BUSINESS APPLICATIONS TABLE (When a resident or owner lists a new business)
+CREATE TABLE IF NOT EXISTS public.applications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    operation_type TEXT,
+    zone TEXT NOT NULL,
+    landmark TEXT,
+    phone TEXT NOT NULL,
+    whatsapp TEXT,
+    email TEXT,
+    description TEXT,
+    services JSONB DEFAULT '[]'::jsonb,
+    mpesa_type TEXT,
+    mpesa_number TEXT,
+    hero_image TEXT,
+    gallery_images JSONB DEFAULT '[]'::jsonb,
+    applicant_name TEXT,
+    applicant_phone TEXT,
+    applicant_role TEXT,
+    notes TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 5. COMMUNITY STORIES TABLE
+CREATE TABLE IF NOT EXISTS public.community_stories (
+    id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     subtitle TEXT,
     category TEXT NOT NULL,
     zone TEXT NOT NULL,
-    excerpt TEXT,
     content TEXT NOT NULL,
+    excerpt TEXT,
     image_url TEXT,
     image_caption TEXT,
-    is_real_photo_confirmed BOOLEAN DEFAULT true,
+    is_real_photo_confirmed BOOLEAN DEFAULT TRUE,
     author_name TEXT NOT NULL,
     author_role TEXT NOT NULL,
     author_email TEXT NOT NULL,
     author_phone TEXT NOT NULL,
-    date TEXT NOT NULL,
-    read_time_minutes INT DEFAULT 3,
-    featured BOOLEAN DEFAULT false,
-    status TEXT DEFAULT 'pending_review', -- 'pending_review', 'published', 'rejected'
+    date DATE DEFAULT CURRENT_DATE,
+    read_time_minutes INTEGER DEFAULT 3,
+    featured BOOLEAN DEFAULT FALSE,
+    status TEXT DEFAULT 'pending_review' CHECK (status IN ('pending_review', 'published', 'archived', 'rejected')),
     rejection_reason TEXT,
-    likes INT DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+    likes INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+ALTER TABLE IF EXISTS public.community_stories ALTER COLUMN id TYPE TEXT;
 
--- 4. Community Updates & Notices
+-- 6. COMMUNITY UPDATES TABLE (Alerts, Events, Notices)
 CREATE TABLE IF NOT EXISTS public.community_updates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    type TEXT NOT NULL, -- 'alert', 'event', 'business', 'community'
+    id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
+    type TEXT NOT NULL,
     time_info TEXT NOT NULL,
     location TEXT NOT NULL,
     zone TEXT,
@@ -2511,13 +2742,21 @@ CREATE TABLE IF NOT EXISTS public.community_updates (
     author TEXT NOT NULL,
     author_phone TEXT,
     author_email TEXT,
-    date TEXT,
-    status TEXT DEFAULT 'pending_review', -- 'pending_review', 'published', 'rejected'
+    author_role TEXT,
+    contact TEXT,
+    badge TEXT,
+    image_url TEXT,
+    image_caption TEXT,
+    is_accountability_confirmed BOOLEAN DEFAULT TRUE,
+    urgency_level TEXT DEFAULT 'standard',
+    status TEXT DEFAULT 'pending_review' CHECK (status IN ('pending_review', 'published', 'rejected')),
     rejection_reason TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+    date DATE DEFAULT CURRENT_DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+ALTER TABLE IF EXISTS public.community_updates ALTER COLUMN id TYPE TEXT;
 
--- 5. Verified Resident Reviews & Feedback
+-- 7. BUSINESS FEEDBACK / REVIEWS TABLE
 CREATE TABLE IF NOT EXISTS public.business_feedback (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     business_id TEXT NOT NULL,
@@ -2527,25 +2766,62 @@ CREATE TABLE IF NOT EXISTS public.business_feedback (
     comment TEXT NOT NULL,
     verified_visit BOOLEAN DEFAULT true,
     visit_date TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable Row Level Security (RLS) & Public Policies
-ALTER TABLE public.claims ENABLE ROW LEVEL SECURITY;
+-- ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.claims ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_stories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.business_feedback ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read on businesses" ON public.businesses FOR SELECT USING (true);
-CREATE POLICY "Allow public insert on claims" ON public.claims FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public read claims" ON public.claims FOR SELECT USING (true);
-CREATE POLICY "Allow public read published stories" ON public.community_stories FOR SELECT USING (true);
-CREATE POLICY "Allow public insert stories" ON public.community_stories FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public read published updates" ON public.community_updates FOR SELECT USING (true);
-CREATE POLICY "Allow public insert updates" ON public.community_updates FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public insert feedback" ON public.business_feedback FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public read feedback" ON public.business_feedback FOR SELECT USING (true);`}
+-- POLICIES FOR BUSINESSES (Read, Insert, Update)
+DROP POLICY IF EXISTS "Public can view businesses" ON public.businesses;
+CREATE POLICY "Public can view businesses" ON public.businesses FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can insert businesses" ON public.businesses;
+CREATE POLICY "Public can insert businesses" ON public.businesses FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update businesses" ON public.businesses;
+CREATE POLICY "Public can update businesses" ON public.businesses FOR UPDATE USING (true);
+
+-- POLICIES FOR CLAIMS
+DROP POLICY IF EXISTS "Public can view claims" ON public.claims;
+CREATE POLICY "Public can view claims" ON public.claims FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can submit business claims" ON public.claims;
+CREATE POLICY "Public can submit business claims" ON public.claims FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update claims" ON public.claims;
+CREATE POLICY "Public can update claims" ON public.claims FOR UPDATE USING (true);
+
+-- POLICIES FOR APPLICATIONS
+DROP POLICY IF EXISTS "Public can view applications" ON public.applications;
+CREATE POLICY "Public can view applications" ON public.applications FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can submit applications" ON public.applications;
+CREATE POLICY "Public can submit applications" ON public.applications FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update applications" ON public.applications;
+CREATE POLICY "Public can update applications" ON public.applications FOR UPDATE USING (true);
+
+-- POLICIES FOR STORIES
+DROP POLICY IF EXISTS "Public can view published stories" ON public.community_stories;
+CREATE POLICY "Public can view published stories" ON public.community_stories FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can insert stories" ON public.community_stories;
+CREATE POLICY "Public can insert stories" ON public.community_stories FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update stories" ON public.community_stories;
+CREATE POLICY "Public can update stories" ON public.community_stories FOR UPDATE USING (true);
+
+-- POLICIES FOR UPDATES
+DROP POLICY IF EXISTS "Public can view updates" ON public.community_updates;
+CREATE POLICY "Public can view updates" ON public.community_updates FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can insert updates" ON public.community_updates;
+CREATE POLICY "Public can insert updates" ON public.community_updates FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can update updates" ON public.community_updates;
+CREATE POLICY "Public can update updates" ON public.community_updates FOR UPDATE USING (true);
+
+-- POLICIES FOR FEEDBACK
+DROP POLICY IF EXISTS "Public can view feedback" ON public.business_feedback;
+CREATE POLICY "Public can view feedback" ON public.business_feedback FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can submit feedback" ON public.business_feedback;
+CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSERT WITH CHECK (true);`}
                   </pre>
                 </div>
               )}

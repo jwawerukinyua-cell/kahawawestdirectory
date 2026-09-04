@@ -1,4 +1,5 @@
 import { CommunityStory } from '../types';
+import { deleteStoryFromSupabase } from '../lib/supabase';
 
 export const INITIAL_COMMUNITY_STORIES: CommunityStory[] = [
   {
@@ -35,30 +36,30 @@ Local business owners have enthusiastically backed the initiative, with hardware
     likes: 42,
   },
   {
-    id: 'story-1788342289836',
+    id: 'story-1788450086647',
     slug: 'kahawa-pride-fc',
-    title: 'From a grassroots soccer academy to a club with big ambitions, Kahawa Pride FC is putting Kahawa West on the national map',
-    subtitle: 'If you have ever been around Kahawa Station Road or Mahiga Primary School on matchday, you have probably seen the colours, heard the cheers and felt the energy.',
+    title: "Kahawa Pride FC: From a Grassroots Soccer Academy to Kahawa West's Football Pride",
+    subtitle: 'Kahawa West is proud to be represented by Kahawa Pride FC',
     category: 'Youth & Sports',
-    zone: 'Kamiti Road',
-    excerpt: 'If you have ever been around Kahawa Station Road or Mahiga Primary School on matchday, you have probably seen the colours, heard the cheers and felt the energy. What started as a simple desire to keep estate youth engaged has evolved into a structured academy.',
+    zone: 'Roundabout',
+    excerpt: "Kahawa West is proud to be represented by Kahawa Pride FC. What started as a grassroots soccer academy has grown into a club with big ambitions, putting Kahawa West on the national football map.",
     content: `If you have ever been around Kahawa Station Road or Mahiga Primary School on matchday, you have probably seen the colours, heard the cheers and felt the energy. What started as a grassroots soccer academy has grown into a club with big ambitions, putting Kahawa West on the national football map.
 
-Coach Baba Brian and the dedicated technical bench have turned our local dirt grounds into a structured arena for athletic excellence, discipline, and community pride.
+Coach Baba Brian and the dedicated technical bench have turned our local grounds into a structured arena for athletic excellence, discipline, and community pride.
 
 ### Building Discipline On and Off the Pitch
 Kahawa Pride FC is more than just ninety minutes of football on the weekend:
 
 1. **Mandatory Academic Study Hall:** Before weekend training sessions, players attend a 90-minute homework clinic and mentorship circle led by volunteer university scholars.
-2. **Community Kit & Equipment Sponsorship:** Local pharmacies, hardware stores, and neighborhood businesses across Kamiti Road, Mahiga, and Station Road have sponsored match jerseys, boots, and first aid kits.
+2. **Community Kit & Equipment Sponsorship:** Local pharmacies, hardware stores, and neighborhood businesses across Roundabout, Mahiga, and Station Road have sponsored match jerseys, boots, and first aid kits.
 3. **High School & College Bursaries:** Over the past two seasons, several talented academy graduates have earned academic and sports scholarships at top national secondary institutions.
 
 ### Estate Unity on Match Days
 "When Kahawa Pride FC steps onto the pitch, our entire community stands united," says Coach Baba Brian. "Mothers cheering on the touchlines, local shopkeepers closing briefly to catch the second half, and our youth channeling their energy into positive sportsmanship."
 
 The club represents the relentless grit, community solidarity, and rising talent of Kahawa West.`,
-    imageUrl: '/kahawa-pride-real.jpg',
-    imageCaption: 'Kahawa Pride FC coaching staff and youth squad celebrating at Mahiga grounds along Kamiti Road (Photo by Mfalme Ukweli).',
+    imageUrl: '/Kahawa -pride_fc.jpg',
+    imageCaption: 'Kahawa Pride FC coaching staff and youth squad celebrating at the pitch (Photo by Mfalme Ukweli).',
     isRealPhotoConfirmed: true,
     authorName: 'Mfalme Ukweli',
     authorEmail: 'ukweliproducts@gmail.com',
@@ -68,7 +69,7 @@ The club represents the relentless grit, community solidarity, and rising talent
     readTimeMinutes: 4,
     featured: true,
     status: 'published',
-    likes: 58,
+    likes: 1,
     dislikes: 0,
   },
   {
@@ -152,12 +153,12 @@ export function getStoredCommunityStories(): CommunityStory[] {
       // If deleted by user, skip completely
       if (deletedIds.has(p.id)) continue;
       
-      // If it's the old generic story-02, upgrade it to story-1788342289836 or drop if already present
-      if (p.id === 'story-02') {
-        if (deletedIds.has('story-02')) continue;
-        // Upgrade to the authentic story-1788342289836
-        const realSeed = initialMap.get('story-1788342289836')!;
+      // If it's an older generic ID (story-02 or story-1788342289836), upgrade it to story-1788450086647
+      if (p.id === 'story-02' || p.id === 'story-1788342289836') {
+        if (deletedIds.has('story-1788450086647') || deletedIds.has('story-02')) continue;
+        const realSeed = initialMap.get('story-1788450086647')!;
         result.push(realSeed);
+        seenIds.add('story-1788450086647');
         seenIds.add('story-1788342289836');
         seenIds.add('story-02');
         continue;
@@ -198,9 +199,9 @@ export function getStoredCommunityStories(): CommunityStory[] {
       }
     }
 
-    // Make sure story-1788342289836 is present and featured if not deleted
-    if (!deletedIds.has('story-1788342289836') && !result.some((s) => s.id === 'story-1788342289836')) {
-      const realStory = INITIAL_COMMUNITY_STORIES.find((s) => s.id === 'story-1788342289836');
+    // Make sure story-1788450086647 is present and featured if not deleted
+    if (!deletedIds.has('story-1788450086647') && !result.some((s) => s.id === 'story-1788450086647')) {
+      const realStory = INITIAL_COMMUNITY_STORIES.find((s) => s.id === 'story-1788450086647');
       if (realStory) result.unshift(realStory);
     }
 
@@ -261,6 +262,11 @@ export function deleteCommunityStory(storyId: string): CommunityStory[] {
     markStoryAsDeleted(storyId);
     if (storyId === 'story-02') {
       markStoryAsDeleted('story-1788342289836');
+    }
+    // Also delete from Supabase if connected
+    deleteStoryFromSupabase(storyId).catch(() => {});
+    if (storyId === 'story-02' || storyId === 'story-1788342289836') {
+      deleteStoryFromSupabase('story-1788450086647').catch(() => {});
     }
     const current = getStoredCommunityStories();
     const updated = current.filter((s) => s.id !== storyId && (storyId !== 'story-02' || s.id !== 'story-02'));

@@ -20,12 +20,14 @@ import {
   saveCommunityUpdate,
   updateCommunityUpdateModeration,
   deleteCommunityUpdate,
+  getDeletedUpdateIds,
 } from './data/communityUpdates';
 import {
   getStoredCommunityStories,
   saveCommunityStory,
   updateStoryModeration,
   deleteCommunityStory,
+  getDeletedStoryIds,
   INITIAL_COMMUNITY_STORIES,
 } from './data/communityStories';
 import {
@@ -33,6 +35,9 @@ import {
   saveCustomizedBusiness,
   getStoredFeedback,
   syncStoryToSupabase,
+  fetchStoriesFromSupabase,
+  syncUpdateToSupabase,
+  fetchUpdatesFromSupabase,
   getSavedClaims,
   generateBusinessSlug,
 } from './lib/supabase';
@@ -149,6 +154,31 @@ export default function App() {
     return () => window.removeEventListener('beforeinstallprompt', handlePrompt);
   }, []);
 
+  // Fetch latest community stories & updates from Supabase on mount
+  useEffect(() => {
+    fetchStoriesFromSupabase().then((remoteStories) => {
+      if (remoteStories && remoteStories.length > 0) {
+        const deletedIds = getDeletedStoryIds();
+        const activeRemote = remoteStories.filter((s) => !deletedIds.has(s.id));
+        setStories((prev) => {
+          const remoteMap = new Map(activeRemote.map((s) => [s.id, s]));
+          return activeRemote.concat(prev.filter((p) => !remoteMap.has(p.id) && !deletedIds.has(p.id)));
+        });
+      }
+    });
+
+    fetchUpdatesFromSupabase().then((remoteUpdates) => {
+      if (remoteUpdates && remoteUpdates.length > 0) {
+        const deletedIds = getDeletedUpdateIds();
+        const activeRemote = remoteUpdates.filter((u) => !deletedIds.has(u.id));
+        setUpdates((prev) => {
+          const remoteMap = new Map(activeRemote.map((u) => [u.id, u]));
+          return activeRemote.concat(prev.filter((p) => !remoteMap.has(p.id) && !deletedIds.has(p.id)));
+        });
+      }
+    });
+  }, []);
+
   // 3b. Businesses with active special resident offers
   const businessesWithOffers = useMemo(() => {
     return businesses.filter((b) => Boolean(b.specialOffer));
@@ -216,8 +246,9 @@ export default function App() {
               targetStoryKey.includes('pride') ||
               targetStoryKey.includes('soccer') ||
               targetStoryKey.includes('football') ||
+              targetStoryKey.includes('1788450086647') ||
               targetStoryKey.includes('1788342289836')) &&
-            (s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
+            (s.id === 'story-1788450086647' || s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
           const fuzzyCongo =
             targetStoryKey.includes('congo') &&
             (s.id === 'story-01' || s.slug?.includes('congo') || s.title.toLowerCase().includes('congo'));
@@ -247,8 +278,8 @@ export default function App() {
           const titleNormalized = s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           const titleMatch = titleNormalized === cleanHash || titleNormalized.includes(cleanHash);
           const fuzzyKahawaPride =
-            (cleanHash.includes('pride') || cleanHash.includes('kahawa-pride') || cleanHash.includes('football') || cleanHash.includes('soccer') || cleanHash.includes('1788342289836')) &&
-            (s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
+            (cleanHash.includes('pride') || cleanHash.includes('kahawa-pride') || cleanHash.includes('football') || cleanHash.includes('soccer') || cleanHash.includes('1788450086647') || cleanHash.includes('1788342289836')) &&
+            (s.id === 'story-1788450086647' || s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
           const fuzzyCongo =
             cleanHash.includes('congo') &&
             (s.id === 'story-01' || s.slug?.includes('congo') || s.title.toLowerCase().includes('congo'));
@@ -573,6 +604,7 @@ export default function App() {
   // Handlers for Community Updates
   const handleUpdateSubmitted = (newUpdate: CommunityUpdate) => {
     saveCommunityUpdate(newUpdate);
+    syncUpdateToSupabase(newUpdate);
     setUpdates(getStoredCommunityUpdates());
 
     const isUrgent = newUpdate.urgencyLevel === 'critical' || newUpdate.urgencyLevel === 'high' || newUpdate.type === 'alert';
@@ -602,11 +634,19 @@ export default function App() {
   const handleApproveUpdate = (updateId: string) => {
     const updated = updateCommunityUpdateModeration(updateId, 'published');
     setUpdates(updated);
+    const item = updated.find((u) => u.id === updateId);
+    if (item) {
+      syncUpdateToSupabase(item);
+    }
   };
 
   const handleRejectUpdate = (updateId: string, reason: string) => {
     const updated = updateCommunityUpdateModeration(updateId, 'rejected', reason);
     setUpdates(updated);
+    const item = updated.find((u) => u.id === updateId);
+    if (item) {
+      syncUpdateToSupabase(item);
+    }
   };
 
   const handleDeleteUpdate = (updateId: string) => {

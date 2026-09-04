@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { CommunityUpdate, EstateZone, UpdateType } from '../../../types';
 import { Button } from '../../ui/Button';
+import { compressImageFile, validateImageFile } from '../../../lib/imageCompression';
 import {
   getModeratorEmergencyPhone,
   getWhatsAppChatUrl,
@@ -104,34 +105,27 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file (JPG, PNG, WebP).');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image file size must be less than 5MB.');
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setError(validation.error || 'Please select a valid image file (JPG, PNG, WebP).');
       return;
     }
 
     setIsProcessingImage(true);
     setError(null);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (typeof event.target?.result === 'string') {
-        setImageUrl(event.target.result);
-      }
+    try {
+      const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+      setImageUrl(dataUrl);
+    } catch (err) {
+      console.error('Failed to compress update image:', err);
+      setError('Failed to process image. Please try another image.');
+    } finally {
       setIsProcessingImage(false);
-    };
-    reader.onerror = () => {
-      setError('Failed to read image file. Please try another image.');
-      setIsProcessingImage(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleRemoveImage = () => {
