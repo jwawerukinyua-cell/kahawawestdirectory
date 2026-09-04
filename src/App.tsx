@@ -21,6 +21,7 @@ import {
   updateCommunityUpdateModeration,
   deleteCommunityUpdate,
   getDeletedUpdateIds,
+  PURGED_UPDATE_IDS,
 } from './data/communityUpdates';
 import {
   getStoredCommunityStories,
@@ -159,10 +160,29 @@ export default function App() {
     fetchStoriesFromSupabase().then((remoteStories) => {
       if (remoteStories && remoteStories.length > 0) {
         const deletedIds = getDeletedStoryIds();
-        const activeRemote = remoteStories.filter((s) => !deletedIds.has(s.id));
+        const activeRemote = remoteStories.filter(
+          (s) =>
+            !deletedIds.has(s.id) &&
+            !s.id.startsWith('test-') &&
+            s.id !== 'story-1788450086647' &&
+            s.id !== 'story-02' &&
+            s.id !== 'story-01' &&
+            s.id !== 'story-03'
+        );
         setStories((prev) => {
           const remoteMap = new Map(activeRemote.map((s) => [s.id, s]));
-          return activeRemote.concat(prev.filter((p) => !remoteMap.has(p.id) && !deletedIds.has(p.id)));
+          return activeRemote.concat(
+            prev.filter(
+              (p) =>
+                !remoteMap.has(p.id) &&
+                !deletedIds.has(p.id) &&
+                p.id !== 'story-1788450086647' &&
+                p.id !== 'story-02' &&
+                p.id !== 'story-01' &&
+                p.id !== 'story-03' &&
+                !p.id.startsWith('test-')
+            )
+          );
         });
       }
     });
@@ -170,10 +190,16 @@ export default function App() {
     fetchUpdatesFromSupabase().then((remoteUpdates) => {
       if (remoteUpdates && remoteUpdates.length > 0) {
         const deletedIds = getDeletedUpdateIds();
-        const activeRemote = remoteUpdates.filter((u) => !deletedIds.has(u.id));
+        const activeRemote = remoteUpdates.filter(
+          (u) => !deletedIds.has(u.id) && !PURGED_UPDATE_IDS.has(u.id)
+        );
         setUpdates((prev) => {
           const remoteMap = new Map(activeRemote.map((u) => [u.id, u]));
-          return activeRemote.concat(prev.filter((p) => !remoteMap.has(p.id) && !deletedIds.has(p.id)));
+          return activeRemote.concat(
+            prev.filter(
+              (p) => !remoteMap.has(p.id) && !deletedIds.has(p.id) && !PURGED_UPDATE_IDS.has(p.id)
+            )
+          );
         });
       }
     });
@@ -246,9 +272,10 @@ export default function App() {
               targetStoryKey.includes('pride') ||
               targetStoryKey.includes('soccer') ||
               targetStoryKey.includes('football') ||
+              targetStoryKey.includes('1788508956440') ||
               targetStoryKey.includes('1788450086647') ||
               targetStoryKey.includes('1788342289836')) &&
-            (s.id === 'story-1788450086647' || s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
+            (s.id === 'story-1788508956440' || s.id === 'story-1788450086647' || s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
           const fuzzyCongo =
             targetStoryKey.includes('congo') &&
             (s.id === 'story-01' || s.slug?.includes('congo') || s.title.toLowerCase().includes('congo'));
@@ -278,8 +305,8 @@ export default function App() {
           const titleNormalized = s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           const titleMatch = titleNormalized === cleanHash || titleNormalized.includes(cleanHash);
           const fuzzyKahawaPride =
-            (cleanHash.includes('pride') || cleanHash.includes('kahawa-pride') || cleanHash.includes('football') || cleanHash.includes('soccer') || cleanHash.includes('1788450086647') || cleanHash.includes('1788342289836')) &&
-            (s.id === 'story-1788450086647' || s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
+            (cleanHash.includes('pride') || cleanHash.includes('kahawa-pride') || cleanHash.includes('football') || cleanHash.includes('soccer') || cleanHash.includes('1788508956440') || cleanHash.includes('1788450086647') || cleanHash.includes('1788342289836')) &&
+            (s.id === 'story-1788508956440' || s.id === 'story-1788450086647' || s.id === 'story-1788342289836' || s.id === 'story-02' || s.slug?.includes('pride') || s.title.toLowerCase().includes('pride'));
           const fuzzyCongo =
             cleanHash.includes('congo') &&
             (s.id === 'story-01' || s.slug?.includes('congo') || s.title.toLowerCase().includes('congo'));

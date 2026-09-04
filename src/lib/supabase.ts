@@ -416,7 +416,17 @@ export const fetchStoriesFromSupabase = async (): Promise<CommunityStory[] | nul
       return null;
     }
 
-    return data.map((row: any): CommunityStory => ({
+    return data
+      .filter(
+        (row: any) =>
+          !row.id.startsWith('test-') &&
+          row.id !== 'story-01' &&
+          row.id !== 'story-02' &&
+          row.id !== 'story-03' &&
+          row.id !== 'story-1788450086647' &&
+          row.id !== 'story-1788342289836'
+      )
+      .map((row: any): CommunityStory => ({
       id: row.id,
       slug: row.slug || (row.id === 'story-1788450086647' || row.id === 'story-1788342289836' ? 'kahawa-pride-fc' : row.id),
       title: row.title,
@@ -526,7 +536,17 @@ export const fetchUpdatesFromSupabase = async (): Promise<CommunityUpdate[] | nu
       return null;
     }
 
-    return data.map((row: any): CommunityUpdate => ({
+    return data
+      .filter(
+        (row: any) =>
+          !row.id.startsWith('test-') &&
+          row.id !== 'up-02' &&
+          row.id !== 'up-03' &&
+          row.id !== 'up-04' &&
+          row.id !== 'up-05' &&
+          row.id !== 'up-06'
+      )
+      .map((row: any): CommunityUpdate => ({
       id: row.id,
       type: row.type || 'community',
       title: row.title,

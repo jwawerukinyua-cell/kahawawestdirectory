@@ -3,100 +3,68 @@ import { deleteStoryFromSupabase } from '../lib/supabase';
 
 export const INITIAL_COMMUNITY_STORIES: CommunityStory[] = [
   {
-    id: 'story-01',
-    slug: 'congo-stage-youth-urban-nursery',
-    title: 'How Congo Stage Youth Turned an Abandoned Plot into a Thriving Urban Nursery',
-    subtitle: 'Over 4,500 tree seedlings distributed across Bima Road and Jacaranda Estate in six months.',
-    category: 'Environment & Clean-up',
-    zone: 'Congo',
-    excerpt: 'A grassroots team of twelve young residents collaborated with neighborhood shopkeepers to green local avenues, reduce roadside dust, and train high schoolers in horticulture.',
-    content: `What started as an informal Saturday morning clean-up by a dozen youth around Congo Stage has evolved into one of Kahawa West's most impactful green corridors.
-
-In early 2026, the group approached local estate elders and business operators with a practical proposal: instead of letting the open ground near the bypass accumulate packaging waste, they would cultivate indigenous acacia, eucalyptus, and fruit seedlings suited to Nairobi's soil.
-
-"We noticed that during the dry season, dust from unpaved feeder roads was affecting both shopkeepers and pedestrians," explains Kevin Mwangi, 24, one of the founding members. "By planting ground cover and distributing fruit tree saplings to compound owners in Jacaranda and Soweto, we created a tangible environmental shield."
-
-### Concrete Community Impact
-1. **4,500+ Seedlings Distributed:** Free saplings provided to over 60 compound landlords and 4 local primary schools.
-2. **Weekly Dust Reduction Patrols:** Water harvesting from roadside runoff diverted to maintain urban flower beds along Congo and Bima Road.
-3. **Youth Skills Workshop:** 18 high school students on school break trained in grafting, composting organic vegetable waste from nearby grocery stalls, and basic bookkeeping.
-
-Local business owners have enthusiastically backed the initiative, with hardware stores providing wheelbarrows and watering cans. The group plans to expand their tree-canopy drive toward Mahiga and the Railway siding in coming months.`,
-    imageUrl: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1200&q=80',
-    imageCaption: 'Youth volunteers preparing organic compost and indigenous tree saplings near Congo Stage.',
-    isRealPhotoConfirmed: true,
-    authorName: 'Kevin Mwangi & Congo Greening Team',
-    authorEmail: 'congo.green@kwest.org',
-    authorPhone: '+254721334455',
-    authorRole: 'Youth Environmental Leader & Resident',
-    date: '2026-08-22',
-    readTimeMinutes: 3,
-    featured: false,
-    status: 'published',
-    likes: 42,
-  },
-  {
-    id: 'story-1788450086647',
-    slug: 'kahawa-pride-fc',
-    title: "Kahawa Pride FC: From a Grassroots Soccer Academy to Kahawa West's Football Pride",
-    subtitle: 'Kahawa West is proud to be represented by Kahawa Pride FC',
+    id: 'story-1788508956440',
+    slug: 'kahawa-pride-fc-grassroots-success',
+    title: 'Kahawa Pride FC Is More Than A Football Club. It Is A Grassroots Success Story',
+    subtitle: '⚽ Kahawa Pride FC: Football with Kahawa West at Heart',
     category: 'Youth & Sports',
     zone: 'Roundabout',
-    excerpt: "Kahawa West is proud to be represented by Kahawa Pride FC. What started as a grassroots soccer academy has grown into a club with big ambitions, putting Kahawa West on the national football map.",
-    content: `If you have ever been around Kahawa Station Road or Mahiga Primary School on matchday, you have probably seen the colours, heard the cheers and felt the energy. What started as a grassroots soccer academy has grown into a club with big ambitions, putting Kahawa West on the national football map.
+    excerpt: 'Originally founded as Kahawa Sportive Soccer Academy, the club started with a simple mission: to give young people in the community an opportunity to develop their football skills while building discipline, confidence and a sense of belonging.',
+    content: `Originally founded as Kahawa Sportive Soccer Academy, the club started with a simple mission: to give young people in the community an opportunity to develop their football skills while building discipline, confidence and a sense of belonging.
 
-Coach Baba Brian and the dedicated technical bench have turned our local grounds into a structured arena for athletic excellence, discipline, and community pride.
+In 2022, the academy took a major step forward, rebranding as Kahawa Pride FC and adopting its now-recognisable lion identity. Since then, the club has continued to grow both on and off the pitch, with ambitions that reach far beyond local football.
 
-### Building Discipline On and Off the Pitch
-Kahawa Pride FC is more than just ninety minutes of football on the weekend:
+### 🦁 More Than the Alphas
+Kahawa Pride has grown into a football family with several teams:
+- **Alphas** — the men's first team competing in the FKF Nairobi East Regional League.
+- **Lionesses** — the women's team creating more opportunities for female footballers.
+- **Cubs** — the youth academy developing the next generation of players.
+- **Mapogo** — another team within the growing Kahawa Pride family.
 
-1. **Mandatory Academic Study Hall:** Before weekend training sessions, players attend a 90-minute homework clinic and mentorship circle led by volunteer university scholars.
-2. **Community Kit & Equipment Sponsorship:** Local pharmacies, hardware stores, and neighborhood businesses across Roundabout, Mahiga, and Station Road have sponsored match jerseys, boots, and first aid kits.
-3. **High School & College Bursaries:** Over the past two seasons, several talented academy graduates have earned academic and sports scholarships at top national secondary institutions.
+The club has also expanded its footprint with **Kakuma Pride**, taking the spirit of Kahawa Pride beyond its original home.
 
-### Estate Unity on Match Days
-"When Kahawa Pride FC steps onto the pitch, our entire community stands united," says Coach Baba Brian. "Mothers cheering on the touchlines, local shopkeepers closing briefly to catch the second half, and our youth channeling their energy into positive sportsmanship."
+### 🏟️ Matchday in Kahawa West
+Home matches are played at **Mahiga Primary School Grounds**, where football becomes a community affair. Players, families, friends and supporters come together to cheer, celebrate and experience local football right on their doorstep.
 
-The club represents the relentless grit, community solidarity, and rising talent of Kahawa West.`,
+But Kahawa Pride's impact doesn't end when the referee blows the final whistle. The club has been involved in community initiatives including health and education activities, environmental clean-ups and food drives.
+
+Behind the scenes, the club has also invested in player welfare, including accommodation, meals and gym facilities—ambitious steps for a grassroots club working its way up the Kenyan football pyramid.
+
+### 📈 From Grassroots to Greater Ambitions
+Kahawa Pride's journey shows what can happen when local talent meets serious ambition. The club has attracted partnerships and support from organisations including JerseyBird, AVA by CR7 and Betway Scores, while remaining firmly connected to its community roots.
+
+The long-term dream? To keep climbing the Kenyan football pyramid and ultimately compete at the highest level.
+
+### 📍 Proudly Kahawa
+For residents of Kahawa West, Kahawa Pride FC is something worth paying attention to—not simply because of the results, but because it represents something bigger:
+
+**Local people. Local talent. Local ambition.**
+
+Whether you're a lifelong football fan, a parent looking for opportunities for your child, or simply someone who loves seeing Kahawa businesses, organisations and people doing great things, Kahawa Pride is part of the story of this community.
+
+Follow the journey. Support the teams. Show up for Kahawa. 🦁⚽
+
+**Home Ground:** Mahiga Primary School Grounds, Kahawa West  
+**Based:** Kahawa Station Road, Githurai, Nairobi
+
+**Follow Kahawa Pride FC:**  
+- **Website:** kahawapridefc.com  
+- **Facebook:** @kahawapridefc  
+- **Instagram:** @kahawapridefc  
+- **YouTube:** @kahawapridefc`,
     imageUrl: '/Kahawa -pride_fc.jpg',
-    imageCaption: 'Kahawa Pride FC coaching staff and youth squad celebrating at the pitch (Photo by Mfalme Ukweli).',
+    imageCaption: 'Photo courtesy of kahawapridefc.com - Kahawa West Community Spotlight',
     isRealPhotoConfirmed: true,
     authorName: 'Mfalme Ukweli',
-    authorEmail: 'ukweliproducts@gmail.com',
-    authorPhone: '+254712998877',
-    authorRole: 'Founder & Community Chronicler',
-    date: '2026-08-28',
-    readTimeMinutes: 4,
+    authorEmail: 'info@mfalmeukweli.co.ke',
+    authorPhone: '+254727405842',
+    authorRole: 'Podcast Host-ArtTheworkshop',
+    date: '2026-09-04',
+    readTimeMinutes: 3,
     featured: true,
     status: 'published',
     likes: 1,
     dislikes: 0,
-  },
-  {
-    id: 'story-03',
-    slug: 'jacaranda-women-artisans',
-    title: 'Jacaranda Estate Women Artisans Expand Woven Baskets to Regional Markets',
-    subtitle: 'A self-help group of 28 mothers turns sisal and recycled materials into sustainable livelihoods.',
-    category: 'Local Business & Artisan',
-    zone: 'Jacaranda Estate',
-    excerpt: 'Combining traditional weaving heritage with contemporary designs, the Jacaranda Weavers Collective is putting Kahawa West craftmanship on the regional trade map.',
-    content: `Tucked inside Jacaranda Court 3, a circle of vibrant women meet every Wednesday to weave high-grade sisal shopping bags (kiondo), decorative storage baskets, and table runners.
-
-What began as a small table-banking group has now grown into a registered cooperative that supplies eco-friendly shopping bags to bakeries and boutique stores across Nairobi.
-
-"We wanted to provide durable alternatives to single-use plastics while earning a respectable household income," says Mama Faith, the group chairlady. "Through the KWEST directory, neighboring residents have hired us for custom wedding gifts and bulk corporate orders."`,
-    imageUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=1200&q=80',
-    imageCaption: 'Handcrafted sisal products woven by the Jacaranda Weavers Collective.',
-    isRealPhotoConfirmed: true,
-    authorName: 'Mama Faith',
-    authorEmail: 'jacaranda.weavers@gmail.com',
-    authorPhone: '+254733445566',
-    authorRole: 'Chairlady, Jacaranda Weavers Self-Help Group',
-    date: '2026-08-15',
-    readTimeMinutes: 3,
-    featured: false,
-    status: 'published',
-    likes: 35,
   },
 ];
 
@@ -153,11 +121,17 @@ export function getStoredCommunityStories(): CommunityStory[] {
       // If deleted by user, skip completely
       if (deletedIds.has(p.id)) continue;
       
-      // If it's an older generic ID (story-02 or story-1788342289836), upgrade it to story-1788450086647
-      if (p.id === 'story-02' || p.id === 'story-1788342289836') {
-        if (deletedIds.has('story-1788450086647') || deletedIds.has('story-02')) continue;
-        const realSeed = initialMap.get('story-1788450086647')!;
-        result.push(realSeed);
+      // If it's an older generic/obsolete ID, skip or upgrade
+      if (p.id === 'story-01' || p.id === 'story-03') {
+        continue;
+      }
+      if (p.id === 'story-02' || p.id === 'story-1788342289836' || p.id === 'story-1788450086647') {
+        if (deletedIds.has('story-1788508956440') || deletedIds.has('story-02')) continue;
+        const realSeed = initialMap.get('story-1788508956440')!;
+        if (realSeed) {
+          result.push(realSeed);
+          seenIds.add('story-1788508956440');
+        }
         seenIds.add('story-1788450086647');
         seenIds.add('story-1788342289836');
         seenIds.add('story-02');
@@ -199,9 +173,9 @@ export function getStoredCommunityStories(): CommunityStory[] {
       }
     }
 
-    // Make sure story-1788450086647 is present and featured if not deleted
-    if (!deletedIds.has('story-1788450086647') && !result.some((s) => s.id === 'story-1788450086647')) {
-      const realStory = INITIAL_COMMUNITY_STORIES.find((s) => s.id === 'story-1788450086647');
+    // Make sure story-1788508956440 is present and featured if not deleted
+    if (!deletedIds.has('story-1788508956440') && !result.some((s) => s.id === 'story-1788508956440')) {
+      const realStory = INITIAL_COMMUNITY_STORIES.find((s) => s.id === 'story-1788508956440');
       if (realStory) result.unshift(realStory);
     }
 
