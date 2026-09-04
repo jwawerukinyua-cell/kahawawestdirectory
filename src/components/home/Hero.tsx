@@ -269,7 +269,7 @@ export const Hero: React.FC<HeroProps> = ({
           {/* Main Title */}
           <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white mb-3 sm:mb-4 leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
             Find Verified Local Businesses in{' '}
-            <span className="text-rose-400 font-black">
+            <span style={{ color: '#630303' }} className="font-black">
               Kahawa West
             </span>
           </h1>
