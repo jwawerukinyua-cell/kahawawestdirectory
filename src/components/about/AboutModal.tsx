@@ -152,7 +152,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
           <div className="pt-2 border-t border-stone-200 text-xs text-stone-500 flex flex-wrap items-center justify-between gap-2">
             <span>Official Domain: <strong>kahawawestdirectory.co.ke</strong></span>
-            <span>Platform Alias: <strong>kahawawestdirectory</strong></span>
+            <span>Platform Alias: <strong>kwest</strong></span>
           </div>
         </div>
 
