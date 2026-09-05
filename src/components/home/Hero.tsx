@@ -258,14 +258,6 @@ export const Hero: React.FC<HeroProps> = ({
       <div className="relative z-10 p-5 sm:p-8 lg:p-10">
         {/* Top Header & Search Area */}
         <div className="max-w-3xl mx-auto text-center mb-8 sm:mb-10">
-          {/* Brand Directory Title */}
-          <div className="mb-3 sm:mb-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-sans font-semibold text-emerald-300 bg-black/60 border border-emerald-400/40 backdrop-blur-md shadow-sm">
-              <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-              Official Kahawa West Business Directory
-            </span>
-          </div>
-
           {/* Main Title */}
           <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white mb-3 sm:mb-4 leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
             Find Verified Local Businesses in{' '}
@@ -405,7 +397,7 @@ export const Hero: React.FC<HeroProps> = ({
                   }`}
                 >
                   {isPinned && !isSelected && (
-                    <span className="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-amber-400 text-stone-950 flex items-center gap-0.5 shadow-sm">
+                    <span className="absolute bottom-2.5 right-2.5 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-amber-400 text-stone-950 flex items-center gap-0.5 shadow-sm pointer-events-none">
                       <Star className="w-2.5 h-2.5 fill-stone-950" />
                       <span>Top</span>
                     </span>
