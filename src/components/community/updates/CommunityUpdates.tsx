@@ -17,6 +17,8 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { CommunityUpdate, UpdateType } from '../../../types';
+import { formatKenyanPhoneForTel, formatKenyanPhoneForWhatsApp, getWhatsAppChatUrl } from '../../../lib/phoneUtils';
+import { MessageSquare } from 'lucide-react';
 
 interface CommunityUpdatesProps {
   updates: CommunityUpdate[];
@@ -297,13 +299,27 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
                   </div>
 
                   {selectedUpdateForDetail.contact && (
-                    <a
-                      href={`tel:${selectedUpdateForDetail.contact}`}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm"
-                    >
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>Call {selectedUpdateForDetail.contact}</span>
-                    </a>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`tel:${formatKenyanPhoneForTel(selectedUpdateForDetail.contact)}`}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm active:scale-95"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        <span>Call {selectedUpdateForDetail.contact}</span>
+                      </a>
+                      <a
+                        href={getWhatsAppChatUrl(
+                          selectedUpdateForDetail.contact,
+                          `Hello ${selectedUpdateForDetail.author}, I am reaching out regarding your update "${selectedUpdateForDetail.title}" on the Kahawa West Community Noticeboard.`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-emerald-400 font-bold text-xs transition border border-emerald-900/40 active:scale-95"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>WhatsApp</span>
+                      </a>
+                    </div>
                   )}
                 </div>
 

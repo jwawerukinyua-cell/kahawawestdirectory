@@ -5,7 +5,7 @@ export const SEED_COMMUNITY_UPDATES: CommunityUpdate[] = [
   {
     id: 'up-iebc-voter-reg-2026',
     type: 'business',
-    title: '🗳️ Voter Registration Update — Kahawa West',
+    title: 'Are you 18 or older and not yet registered as a voter?',
     timeInfo: '09-04-2026',
     location: 'Kahawa West',
     zone: 'Kamiti Road',

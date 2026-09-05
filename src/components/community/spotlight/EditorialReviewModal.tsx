@@ -49,7 +49,7 @@ import {
   RotateCcw,
   History,
 } from 'lucide-react';
-import { CommunityStory, CommunityUpdate, BusinessClaim, Business, UpdateType, BusinessAdCampaign, AdCampaignStatus } from '../../../types';
+import { CommunityStory, CommunityUpdate, BusinessClaim, Business, UpdateType, BusinessAdCampaign, AdCampaignStatus, BusinessApplication } from '../../../types';
 import {
   calculateAdExpiresAt,
   getAdTimeRemaining,
@@ -83,6 +83,7 @@ interface EditorialReviewModalProps {
   stories: CommunityStory[];
   updates?: CommunityUpdate[];
   claims?: BusinessClaim[];
+  applications?: BusinessApplication[];
   businesses?: Business[];
   onApproveStory: (storyId: string, featured?: boolean) => void;
   onRejectStory: (storyId: string, reason: string) => void;
@@ -95,7 +96,11 @@ interface EditorialReviewModalProps {
   onApproveClaim?: (businessId: string) => void;
   onRejectClaim?: (businessId: string, reason?: string) => void;
   onDeleteClaim?: (businessId: string) => void;
+  onApproveApplication?: (app: BusinessApplication) => void;
+  onRejectApplication?: (appId: string, reason?: string) => void;
+  onDeleteApplication?: (appId: string) => void;
   onEditBusiness?: (business: Business) => void;
+  onToggleVerifyBusiness?: (business: Business) => void;
   onOpenSubmitModal: () => void;
   onOpenSubmitUpdateModal?: () => void;
 }
@@ -113,6 +118,7 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   stories,
   updates = [],
   claims = [],
+  applications = [],
   businesses = [],
   onApproveStory,
   onRejectStory,
@@ -125,14 +131,18 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   onApproveClaim,
   onRejectClaim,
   onDeleteClaim,
+  onApproveApplication,
+  onRejectApplication,
+  onDeleteApplication,
   onEditBusiness,
+  onToggleVerifyBusiness,
   onOpenSubmitModal,
   onOpenSubmitUpdateModal,
 }) => {
   const [activeMainTab, setActiveMainTab] = useState<'stories' | 'updates' | 'claims' | 'ad_campaigns' | 'ad_sales' | 'supabase_guide'>('stories');
   const [storySubTab, setStorySubTab] = useState<'pending' | 'published'>('pending');
   const [updateSubTab, setUpdateSubTab] = useState<'pending' | 'published'>('pending');
-  const [claimsSubTab, setClaimsSubTab] = useState<'pending_claims' | 'all_listings'>('pending_claims');
+  const [claimsSubTab, setClaimsSubTab] = useState<'pending_claims' | 'pending_applications' | 'all_listings'>('pending_claims');
   const [adCampaignsSubTab, setAdCampaignsSubTab] = useState<'pending' | 'active' | 'changes_requested' | 'expired' | 'all'>('pending');
   const [directorySearchQuery, setDirectorySearchQuery] = useState('');
   const [directoryZoneFilter, setDirectoryZoneFilter] = useState('all');
@@ -1095,9 +1105,9 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
               >
                 <Building className="w-3.5 h-3.5" />
                 <span>🏢 Claims &amp; Directory</span>
-                {claims.filter((c) => c.status === 'pending').length > 0 && (
+                {(claims.filter((c) => c.status === 'pending').length + applications.filter((a) => a.status === 'pending').length) > 0 && (
                   <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-black text-[10px] font-black">
-                    {claims.filter((c) => c.status === 'pending').length}
+                    {claims.filter((c) => c.status === 'pending').length + applications.filter((a) => a.status === 'pending').length}
                   </span>
                 )}
               </button>
@@ -1562,6 +1572,17 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                         <span>Claims Queue ({claims.length})</span>
                       </button>
                       <button
+                        onClick={() => setClaimsSubTab('pending_applications')}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                          claimsSubTab === 'pending_applications'
+                            ? 'bg-[#630303] text-white'
+                            : 'text-stone-400 hover:text-white'
+                        }`}
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <span>New Listings ({applications.length})</span>
+                      </button>
+                      <button
                         onClick={() => setClaimsSubTab('all_listings')}
                         className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                           claimsSubTab === 'all_listings'
@@ -1704,6 +1725,141 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                         </div>
                       )}
                     </div>
+                  ) : claimsSubTab === 'pending_applications' ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-display font-bold text-white text-base">
+                            New Business Listing Applications
+                          </h4>
+                          <p className="text-xs text-stone-400">
+                            Merchant listings submitted via &quot;List Your Business&quot;. Gated in the Supabase <code>applications</code> queue until verified by the Editorial Desk.
+                          </p>
+                        </div>
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#260101] text-rose-300 border border-rose-800">
+                          Total: {applications.length} {applications.length === 1 ? 'Application' : 'Applications'}
+                        </span>
+                      </div>
+
+                      {applications.length === 0 ? (
+                        <div className="py-12 text-center text-stone-400 text-sm bg-[#181B20] rounded-2xl border border-stone-800">
+                          No pending business applications in queue. When a merchant submits a new listing, it will appear here for verification.
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {applications.map((app, idx) => (
+                            <div
+                              key={app.id || idx}
+                              className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                            >
+                              <div className="space-y-1.5 flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h5 className="font-bold text-white text-base">{app.name}</h5>
+                                  <span
+                                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                      app.status === 'approved'
+                                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                                        : app.status === 'rejected'
+                                        ? 'bg-rose-950 text-rose-300 border border-rose-700'
+                                        : 'bg-amber-950 text-amber-300 border border-amber-700'
+                                    }`}
+                                  >
+                                    {app.status || 'Pending'}
+                                  </span>
+                                  <span className="text-[11px] text-stone-400 bg-stone-900 px-2 py-0.5 rounded-md border border-stone-800">
+                                    {app.category} • {app.zone}
+                                  </span>
+                                  <span className="text-[11px] text-stone-500 font-mono">
+                                    ID: {app.id}
+                                  </span>
+                                </div>
+
+                                <p className="text-xs text-stone-300">
+                                  Applicant: <strong className="text-white">{app.applicantName}</strong>{' '}
+                                  <span className="text-stone-400">({app.applicantRole || 'Owner'})</span>
+                                  {app.applicantPhone && <span> • 📞 {app.applicantPhone}</span>}
+                                </p>
+
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-400">
+                                  <span>📍 Landmark: <strong className="text-stone-200">{app.landmark}</strong></span>
+                                  <span>📞 Biz Phone: <strong className="text-stone-200">{app.phone}</strong></span>
+                                  {app.whatsapp && <span>💬 WhatsApp: <strong className="text-stone-200">{app.whatsapp}</strong></span>}
+                                  {app.email && <span>✉️ Email: <strong className="text-stone-200">{app.email}</strong></span>}
+                                  {app.mpesaNumber && <span>💳 M-Pesa: {app.mpesaType || 'Till'} {app.mpesaNumber}</span>}
+                                  {app.created_at && (
+                                    <span>📅 Submitted: {new Date(app.created_at).toLocaleDateString()}</span>
+                                  )}
+                                </div>
+
+                                {app.description && (
+                                  <p className="text-xs text-stone-300 line-clamp-2 bg-stone-900/60 p-2 rounded-xl border border-stone-800">
+                                    {app.description}
+                                  </p>
+                                )}
+
+                                {app.services && app.services.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 pt-1">
+                                    {app.services.map((svc, sIdx) => (
+                                      <span key={sIdx} className="text-[10px] bg-stone-800 text-stone-300 px-2 py-0.5 rounded-md">
+                                        {svc}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {app.notes && (
+                                  <div className="mt-1 p-2 rounded-xl bg-amber-950/30 border border-amber-800/40 text-xs text-amber-300">
+                                    <span className="font-semibold">Notes: </span>
+                                    {app.notes}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Actions */}
+                              <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-center">
+                                {app.status !== 'approved' && onApproveApplication && (
+                                  <button
+                                    onClick={() => onApproveApplication(app)}
+                                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                                    title="Approve and publish business directly to directory"
+                                  >
+                                    <CheckCircle className="w-4 h-4" />
+                                    <span>Approve &amp; Publish</span>
+                                  </button>
+                                )}
+
+                                {app.status !== 'rejected' && onRejectApplication && (
+                                  <button
+                                    onClick={() => {
+                                      const reason = prompt('Enter rejection reason (optional):') || 'Listing did not meet directory verification guidelines';
+                                      onRejectApplication(app.id, reason);
+                                    }}
+                                    className="px-3 py-2 rounded-xl bg-stone-800 hover:bg-rose-900/60 text-stone-300 hover:text-rose-200 border border-stone-700 font-medium text-xs flex items-center gap-1.5 transition"
+                                  >
+                                    <XCircle className="w-3.5 h-3.5" />
+                                    <span>Reject</span>
+                                  </button>
+                                )}
+
+                                {onDeleteApplication && (
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Delete application for "${app.name}"?`)) {
+                                        onDeleteApplication(app.id);
+                                      }
+                                    }}
+                                    className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition"
+                                    title="Delete application record"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     /* Directory Listings Manager with Direct Edit Button */
                     <div className="space-y-4">
@@ -1757,15 +1913,31 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
 
                             <div className="pt-2 border-t border-stone-800/80 flex items-center justify-between">
                               <span className="text-[11px] text-stone-500 font-mono">ID: {b.id}</span>
-                              {onEditBusiness && (
-                                <button
-                                  onClick={() => onEditBusiness(b)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#4D0202] hover:bg-[#630303] text-white text-xs font-bold transition shadow-xs border border-rose-800/40 cursor-pointer"
-                                >
-                                  <Edit3 className="w-3.5 h-3.5 text-amber-400" />
-                                  <span>Edit Listing</span>
-                                </button>
-                              )}
+                              <div className="flex items-center gap-2">
+                                {onToggleVerifyBusiness && (
+                                  <button
+                                    onClick={() => onToggleVerifyBusiness(b)}
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs border cursor-pointer ${
+                                      b.isVerified
+                                        ? 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-800'
+                                        : 'bg-stone-800 hover:bg-emerald-950/60 text-stone-300 hover:text-emerald-300 border-stone-700'
+                                    }`}
+                                    title={b.isVerified ? 'Click to unverify business' : 'Click to verify and publish business'}
+                                  >
+                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span>{b.isVerified ? 'Verified' : 'Verify'}</span>
+                                  </button>
+                                )}
+                                {onEditBusiness && (
+                                  <button
+                                    onClick={() => onEditBusiness(b)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#4D0202] hover:bg-[#630303] text-white text-xs font-bold transition shadow-xs border border-rose-800/40 cursor-pointer"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>Edit Listing</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}

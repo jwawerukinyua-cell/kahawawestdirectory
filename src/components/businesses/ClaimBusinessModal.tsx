@@ -34,7 +34,8 @@ interface ClaimBusinessModalProps {
   business: Business;
   isOpen: boolean;
   onClose: () => void;
-  onClaimSuccess: (updatedBusiness: Business, claim: BusinessClaim) => void;
+  onClaimSuccess?: (updatedBusiness: Business, claim: BusinessClaim) => void;
+  onClaimSubmitted?: (claim: BusinessClaim) => void;
 }
 
 export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
@@ -42,6 +43,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   isOpen,
   onClose,
   onClaimSuccess,
+  onClaimSubmitted,
 }) => {
   const [activeTab, setActiveTab] = useState<'claimant' | 'customize'>('claimant');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -175,58 +177,20 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      // 1. Prepare Claim record matching Supabase schema
+      // 1. Prepare Claim details and record matching Supabase schema
       const effectiveRole = isListingOnBehalf ? 'Listing on Behalf of Owner' : businessRole;
-      const claimRecord: BusinessClaim = {
-        business_id: business.id,
-        business_name: customName || business.name,
-        full_name: fullName,
-        phone_number: phoneNumber,
-        email: email,
-        business_role: effectiveRole,
-        status: 'pending', // Pending editorial verification
-        notes: isListingOnBehalf
-          ? `[On Behalf of Owner: ${ownerFullName} (${ownerPhoneNumber})] ${notes}`
-          : notes,
-        created_at: new Date().toISOString(),
-      };
-
-      // 2. Register Merchant Account PIN & Device Session
-      registerMerchantAccount({
-        businessId: business.id,
-        businessName: customName || business.name,
-        pin: merchantPin || '1234',
-        phone: phoneNumber,
-        applicantName: fullName,
-        role: effectiveRole,
-        isListingOnBehalf,
-        ownerName: isListingOnBehalf ? ownerFullName : undefined,
-        ownerPhone: isListingOnBehalf ? ownerPhoneNumber : undefined,
-      });
-
-      // 3. Prepare Updated Business Record
-      const newSlug = customName ? generateBusinessSlug(customName) : business.slug;
-      const updatedBusinessRecord: Business = {
-        ...business,
-        slug: newSlug,
-        name: customName,
-        tagline: customTagline,
-        operationType: customOperationType,
-        phone: customPhone,
-        whatsapp: customWhatsapp.replace(/[^0-9]/g, ''),
-        email: customEmail,
-        zone: customZone,
-        landmark: customLandmark,
-        description: customDescription,
+      const claimedDetails = {
+        customName: customName || business.name,
+        customTagline,
+        customOperationType,
+        customPhone,
+        customWhatsapp: customWhatsapp ? customWhatsapp.replace(/[^0-9]/g, '') : '',
+        customEmail,
+        customZone,
+        customLandmark,
+        customDescription,
         services: servicesList,
-        isVerified: business.isVerified, // Preserves verification until admin approves claim
-        isClaimed: false, // Remains pending until admin verifies claim in Editorial Review
-        claimedBy: isListingOnBehalf
-          ? `${fullName} (Pending Verification - On Behalf of ${ownerFullName || 'Owner'})`
-          : `${fullName} (Pending Verification - ${businessRole})`,
-        claimedAt: new Date().toISOString().split('T')[0],
-        heroImage: photos[0] || business.heroImage,
-        galleryImages: photos,
+        photos,
         mpesa: mpesaNumber
           ? {
               type: mpesaType,
@@ -248,19 +212,42 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
               badgeText: 'Resident Deal',
             }
           : undefined,
-        updatedAt: new Date().toISOString(),
+        merchantPin: merchantPin || '1234',
+        isListingOnBehalf,
+        ownerFullName,
+        ownerPhoneNumber,
       };
 
-      // 3. Persist to Supabase and local storage
+      const claimRecord: BusinessClaim = {
+        id: `claim-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+        business_id: business.id,
+        business_name: customName || business.name,
+        full_name: fullName,
+        phone_number: phoneNumber,
+        whatsapp_number: customWhatsapp || phoneNumber,
+        email: email,
+        business_role: effectiveRole,
+        status: 'pending', // Strictly Pending editorial verification
+        notes: isListingOnBehalf
+          ? `[On Behalf of Owner: ${ownerFullName} (${ownerPhoneNumber})] ${notes}`
+          : notes,
+        claimed_details: claimedDetails,
+        created_at: new Date().toISOString(),
+      };
+
+      // 2. Persist ONLY to claims queue in Supabase & local storage (Does NOT mutate live business until verified)
       await saveBusinessClaim(claimRecord);
-      await saveCustomizedBusiness(updatedBusinessRecord);
 
       setSuccessMode(true);
       setTimeout(() => {
         setIsSubmitting(false);
-        onClaimSuccess(updatedBusinessRecord, claimRecord);
+        if (onClaimSubmitted) {
+          onClaimSubmitted(claimRecord);
+        } else if (onClaimSuccess) {
+          onClaimSuccess(business, claimRecord);
+        }
         onClose();
-      }, 1800);
+      }, 2000);
     } catch (err) {
       console.error(err);
       setIsSubmitting(false);
@@ -348,15 +335,15 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         {/* Form Body */}
         {successMode ? (
           <div className="p-6 sm:p-12 text-center my-auto min-w-0">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 animate-bounce">
-              <CheckCircle2 className="w-10 h-10" />
+            <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4 animate-bounce">
+              <Clock className="w-10 h-10" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Claim & Updates Saved!</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Claim Submitted for Verification!</h3>
             <p className="text-slate-600 text-xs sm:text-sm max-w-md mx-auto mb-4">
-              Your claim record has been recorded and <strong>{customName}</strong> is now verified with your customized contacts, 5 photos, and Lipa na M-Pesa details.
+              Your claim for <strong>{customName || business.name}</strong> has been received and queued in the KWEST Editorial Review Desk. Our editorial team validates merchant credentials before changes take effect.
             </p>
-            <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
-              <CheckCircle2 className="w-4 h-4" /> Live on KWEST Directory
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
+              <Clock className="w-4 h-4 text-amber-600" /> Pending Editorial Desk Verification
             </div>
           </div>
         ) : (
@@ -365,7 +352,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
               <div className="space-y-4 min-w-0">
                 <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs sm:text-sm leading-relaxed">
                   <span className="font-bold block mb-1">Verify your relationship to this business:</span>
-                  Fill in your details below. Once submitted, your claim record is recorded and you gain verified management control over this listing.
+                  Fill in your details below. Once submitted, your claim enters the KWEST Editorial Desk queue for verification before appearing as verified on the live directory.
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 min-w-0">

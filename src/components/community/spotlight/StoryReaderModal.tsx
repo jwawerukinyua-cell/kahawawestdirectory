@@ -163,28 +163,28 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   return (
     <div
       id="story-reader-modal"
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto font-sans animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-5 overflow-y-auto overflow-x-hidden font-sans animate-in fade-in duration-200"
     >
       <div
-        className="bg-[#FAF8F5] w-full max-w-3xl rounded-3xl shadow-2xl border border-stone-300 overflow-hidden my-auto max-h-[92vh] flex flex-col text-stone-900"
+        className="bg-[#FAF8F5] w-full max-w-3xl rounded-2xl sm:rounded-3xl shadow-2xl border border-stone-300 overflow-hidden my-auto max-h-[92vh] flex flex-col text-stone-900 min-w-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <div className="bg-[#4D0202] text-white px-5 sm:px-7 py-4 flex items-center justify-between border-b border-[#630303] flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50">
+        <div className="bg-[#4D0202] text-white px-4 sm:px-7 py-3.5 sm:py-4 flex items-center justify-between border-b border-[#630303] flex-shrink-0 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50 truncate">
               {story.category}
             </span>
             {story.status === 'pending_review' && (
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-600/50">
-                Pending Editorial Review
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-600/50 truncate">
+                Pending Review
               </span>
             )}
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#630303] text-stone-200 hover:text-white transition active:scale-95"
+            className="p-1.5 sm:p-2 rounded-xl bg-[#630303] text-stone-200 hover:text-white transition active:scale-95 flex-shrink-0 ml-2"
             aria-label="Close Story"
           >
             <X className="w-5 h-5" />
@@ -192,14 +192,14 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
         </div>
 
         {/* Scrollable Story Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-6">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 space-y-6 min-w-0">
           {/* Title & Subtitle */}
-          <div>
-            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#630303] tracking-tight leading-tight mb-2">
+          <div className="min-w-0">
+            <h1 className="font-display text-xl sm:text-3xl md:text-4xl font-extrabold text-[#630303] tracking-tight leading-tight mb-2 break-words">
               {story.title}
             </h1>
             {story.subtitle && (
-              <p className="text-base sm:text-lg text-stone-600 font-medium leading-snug">
+              <p className="text-sm sm:text-lg text-stone-600 font-medium leading-snug break-words">
                 {story.subtitle}
               </p>
             )}
@@ -311,17 +311,17 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
             </div>
 
             {/* Reader Reactions (Like & Dislike Controls) */}
-            <div className="pt-3 border-t border-stone-200/80 flex flex-wrap items-center justify-between gap-3">
+            <div className="pt-3 border-t border-stone-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
               <div className="flex items-center gap-1.5 text-xs text-stone-500 font-medium">
                 <span>Reader Feedback:</span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
                 {/* Applaud / Like Button */}
                 <button
                   type="button"
                   onClick={handleLikeClick}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 cursor-pointer ${
                     reactionState.userReaction === 'like'
                       ? 'bg-emerald-100 text-emerald-900 border-emerald-400 shadow-xs'
                       : 'bg-stone-50 text-stone-700 hover:text-emerald-800 hover:bg-emerald-50/60 border-stone-200'
@@ -329,7 +329,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                   title="Applaud / Like this story"
                 >
                   <ThumbsUp
-                    className={`w-4 h-4 ${
+                    className={`w-3.5 h-3.5 ${
                       reactionState.userReaction === 'like' ? 'fill-emerald-700 text-emerald-700' : 'text-stone-500'
                     }`}
                   />
@@ -343,7 +343,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                 <button
                   type="button"
                   onClick={handleDislikeClick}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 cursor-pointer ${
                     reactionState.userReaction === 'dislike'
                       ? 'bg-rose-100 text-rose-900 border-rose-400 shadow-xs'
                       : 'bg-stone-50 text-stone-600 hover:text-rose-800 hover:bg-rose-50/60 border-stone-200'
@@ -351,7 +351,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                   title="Dislike this story or report concern"
                 >
                   <ThumbsDown
-                    className={`w-4 h-4 ${
+                    className={`w-3.5 h-3.5 ${
                       reactionState.userReaction === 'dislike' ? 'fill-rose-700 text-rose-700' : 'text-stone-400'
                     }`}
                   />
@@ -362,8 +362,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                 </button>
 
                 {/* Jump to Comments counter */}
-                <span className="text-stone-400 text-xs mx-1">•</span>
-                <span className="inline-flex items-center gap-1 text-xs text-stone-500 font-medium">
+                <span className="inline-flex items-center gap-1 text-xs text-stone-500 font-medium ml-1">
                   <MessageSquare className="w-3.5 h-3.5 text-stone-400" />
                   <span>{comments.length} comment{comments.length === 1 ? '' : 's'}</span>
                 </span>
@@ -372,23 +371,23 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           </div>
 
           {/* 4. Small Space for Comments */}
-          <div className="p-4 sm:p-6 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-[#630303]" />
-                <h3 className="font-display font-bold text-stone-900 text-sm sm:text-base">
+          <div className="p-4 sm:p-6 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-4 min-w-0 overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 pb-3 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <MessageSquare className="w-4 h-4 text-[#630303] flex-shrink-0" />
+                <h3 className="font-display font-bold text-stone-900 text-sm sm:text-base truncate">
                   Community Comments & Discussion
                 </h3>
               </div>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-stone-100 text-stone-700 border border-stone-200">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-stone-100 text-stone-700 border border-stone-200 flex-shrink-0">
                 {comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}
               </span>
             </div>
 
             {/* Comment Form */}
-            <form onSubmit={handlePostComment} className="space-y-3 bg-stone-50 p-3.5 sm:p-4 rounded-xl border border-stone-200">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                <div className="relative flex-1">
+            <form onSubmit={handlePostComment} className="space-y-3 bg-stone-50 p-3.5 sm:p-4 rounded-xl border border-stone-200 min-w-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 min-w-0">
+                <div className="relative flex-1 min-w-0">
                   <User className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-2.5" />
                   <input
                     type="text"
@@ -401,7 +400,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <textarea
                   value={commentTextInput}
                   onChange={(e) => setCommentTextInput(e.target.value)}
@@ -411,7 +410,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                   required
                 />
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span className="text-[11px] text-stone-500">
                     Keep community comments non-political and respectful.
                   </span>
@@ -419,7 +418,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                   <button
                     type="submit"
                     disabled={!commentTextInput.trim() || isPostingComment}
-                    className="px-3.5 py-1.5 rounded-lg bg-[#0D6E44] hover:bg-[#0B5C39] disabled:opacity-50 text-white text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-xs"
+                    className="px-3.5 py-1.5 rounded-lg bg-[#0D6E44] hover:bg-[#0B5C39] disabled:opacity-50 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-xs self-end sm:self-auto"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Post Comment</span>
@@ -435,7 +434,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
             </form>
 
             {/* List of Comments */}
-            <div className="space-y-3 pt-1">
+            <div className="space-y-3 pt-1 min-w-0">
               {comments.length === 0 ? (
                 <div className="text-center py-6 text-stone-500 text-xs">
                   <p>No comments yet. Leave the first thought or reaction above!</p>
@@ -444,22 +443,22 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                 comments.map((comment) => (
                   <div
                     key={comment.id}
-                    className="p-3.5 rounded-xl bg-stone-50/70 border border-stone-200 text-xs space-y-1.5"
+                    className="p-3.5 rounded-xl bg-stone-50/70 border border-stone-200 text-xs space-y-1.5 min-w-0 overflow-hidden"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#4D0202] text-white font-bold flex items-center justify-center text-[10px]">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                        <div className="w-6 h-6 rounded-full bg-[#4D0202] text-white font-bold flex items-center justify-center text-[10px] flex-shrink-0">
                           {comment.authorName.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-bold text-stone-900">{comment.authorName}</span>
+                        <span className="font-bold text-stone-900 truncate">{comment.authorName}</span>
                         {comment.authorRole && (
-                          <span className="text-[10px] text-stone-500 bg-white px-1.5 py-0.2 rounded-md border border-stone-200">
+                          <span className="text-[10px] text-stone-500 bg-white px-1.5 py-0.2 rounded-md border border-stone-200 truncate hidden xs:inline">
                             {comment.authorRole}
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <span className="text-[11px] text-stone-400">{comment.createdAt}</span>
                         <button
                           type="button"
@@ -472,7 +471,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                       </div>
                     </div>
 
-                    <p className="text-stone-700 text-xs leading-relaxed pl-8">
+                    <p className="text-stone-700 text-xs leading-relaxed pl-8 break-words">
                       {comment.content}
                     </p>
                   </div>
@@ -483,9 +482,11 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-stone-100 border-t border-stone-200 flex items-center justify-between text-xs text-stone-600 flex-shrink-0">
-          <span className="text-[11px]">Reviewed & approved by KWEST Community Editorial</span>
-          <Button variant="outline" size="sm" onClick={onClose}>
+        <div className="p-3.5 sm:p-4 bg-stone-100 border-t border-stone-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 text-xs text-stone-600 flex-shrink-0 min-w-0">
+          <span className="text-[11px] text-center sm:text-left text-stone-500">
+            Reviewed & approved by KWEST Community Editorial
+          </span>
+          <Button variant="outline" size="sm" onClick={onClose} className="w-full sm:w-auto">
             Close Article
           </Button>
         </div>

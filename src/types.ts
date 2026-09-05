@@ -110,6 +110,7 @@ export interface BusinessClaim {
   business_name?: string;
   full_name: string;
   phone_number: string;
+  whatsapp_number?: string;
   email: string;
   business_role:
     | 'Owner'
@@ -120,8 +121,10 @@ export interface BusinessClaim {
     | 'Agent / Listing on Behalf of Owner'
     | 'Listing on Behalf of Owner'
     | string;
+  national_id?: string;
   status: 'pending' | 'verified' | 'rejected';
   notes?: string;
+  claimed_details?: Record<string, any>;
   created_at: string;
 }
 
@@ -229,8 +232,10 @@ export interface StoryComment {
 }
 
 export interface BusinessApplication {
+  id?: string;
   name: string;
   category: string;
+  subCategory?: string;
   operationType?: OperationType;
   zone: EstateZone;
   landmark: string;
@@ -246,7 +251,9 @@ export interface BusinessApplication {
   applicantName: string;
   applicantPhone: string;
   applicantRole: string;
+  merchantPin?: string;
   notes?: string;
+  status?: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }
 

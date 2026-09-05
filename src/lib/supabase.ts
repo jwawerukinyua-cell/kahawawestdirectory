@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Business, BusinessClaim, CommunityFeedback, BusinessApplication, CommunityStory, CommunityUpdate } from '../types';
+import { DEFAULT_OPENING_HOURS } from '../data/defaultOpeningHours';
 
 // The user's Supabase project URL and anon key
 const rawUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://wfsqnhujjqldcxnhnzvf.supabase.co';
@@ -53,11 +54,15 @@ export const saveBusinessClaim = async (claim: BusinessClaim): Promise<{ success
       const { error } = await supabase.from('claims').insert([
         {
           business_id: claim.business_id,
+          business_name: claim.business_name || null,
           full_name: claim.full_name,
           phone_number: claim.phone_number,
+          whatsapp_number: claim.whatsapp_number || claim.phone_number,
           email: claim.email,
           business_role: claim.business_role,
+          notes: claim.notes || null,
           status: claim.status || 'pending',
+          claimed_details: claim.claimed_details || {},
           created_at: claim.created_at || new Date().toISOString(),
         }
       ]);
@@ -68,16 +73,18 @@ export const saveBusinessClaim = async (claim: BusinessClaim): Promise<{ success
 
     // 2. Persist locally to browser storage for instantaneous UI updates
     const existingClaims: BusinessClaim[] = JSON.parse(localStorage.getItem(CLAIMS_STORAGE_KEY) || '[]');
-    existingClaims.unshift(claim);
-    localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(existingClaims));
+    const filtered = existingClaims.filter((c) => c.business_id !== claim.business_id);
+    filtered.unshift(claim);
+    localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(filtered));
 
     return { success: true };
   } catch (err: any) {
     console.error('Error saving claim:', err);
     // Fallback save locally
     const existingClaims: BusinessClaim[] = JSON.parse(localStorage.getItem(CLAIMS_STORAGE_KEY) || '[]');
-    existingClaims.unshift(claim);
-    localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(existingClaims));
+    const filtered = existingClaims.filter((c) => c.business_id !== claim.business_id);
+    filtered.unshift(claim);
+    localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(filtered));
     return { success: true };
   }
 };
@@ -87,6 +94,91 @@ export const getSavedClaims = (): BusinessClaim[] => {
     return JSON.parse(localStorage.getItem(CLAIMS_STORAGE_KEY) || '[]');
   } catch {
     return [];
+  }
+};
+
+export const fetchClaimsFromSupabase = async (): Promise<BusinessClaim[] | null> => {
+  try {
+    if (!supabase || !isSupabaseConfigured) return null;
+    const { data, error } = await supabase
+      .from('claims')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      if (error) console.warn('Supabase fetch claims warning:', error.message);
+      return null;
+    }
+
+    const mapped: BusinessClaim[] = data.map((row: any): BusinessClaim => ({
+      id: row.id,
+      business_id: row.business_id,
+      business_name: row.business_name,
+      full_name: row.full_name,
+      phone_number: row.phone_number,
+      whatsapp_number: row.whatsapp_number,
+      email: row.email,
+      business_role: row.business_role,
+      national_id: row.national_id,
+      notes: row.notes,
+      status: row.status || 'pending',
+      claimed_details: row.claimed_details || {},
+      created_at: row.created_at,
+    }));
+
+    // Cache to local storage
+    localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(mapped));
+    return mapped;
+  } catch (err) {
+    console.warn('Failed to fetch claims from Supabase:', err);
+    return null;
+  }
+};
+
+export const updateClaimStatusInSupabase = async (
+  claimIdOrBizId: string,
+  status: 'pending' | 'verified' | 'rejected',
+  notes?: string
+): Promise<boolean> => {
+  try {
+    if (supabase && isSupabaseConfigured) {
+      const { error } = await supabase
+        .from('claims')
+        .update({ status, ...(notes ? { notes } : {}) })
+        .or(`id.eq.${claimIdOrBizId},business_id.eq.${claimIdOrBizId}`);
+      if (error) console.warn('Supabase update claim warning:', error.message);
+    }
+    const existing = getSavedClaims();
+    const updated = existing.map((c) =>
+      c.id === claimIdOrBizId || c.business_id === claimIdOrBizId
+        ? { ...c, status, ...(notes ? { notes } : {}) }
+        : c
+    );
+    localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(updated));
+    return true;
+  } catch (err) {
+    console.warn('Failed to update claim status:', err);
+    return false;
+  }
+};
+
+export const deleteClaimFromSupabase = async (claimIdOrBizId: string): Promise<boolean> => {
+  try {
+    if (supabase && isSupabaseConfigured) {
+      await supabase
+        .from('claims')
+        .delete()
+        .or(`id.eq.${claimIdOrBizId},business_id.eq.${claimIdOrBizId}`);
+    }
+    const existing = getSavedClaims();
+    const updated = existing.filter(
+      (c) => c.id !== claimIdOrBizId && c.business_id !== claimIdOrBizId
+    );
+    localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(updated));
+    return true;
+  } catch (err) {
+    console.warn('Failed to delete claim:', err);
+    return false;
   }
 };
 
@@ -112,23 +204,30 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
           id: normalizedBusiness.id,
           slug: normalizedBusiness.slug,
           name: normalizedBusiness.name,
-          tagline: normalizedBusiness.tagline,
+          tagline: normalizedBusiness.tagline || '',
           category: normalizedBusiness.category,
+          sub_category: normalizedBusiness.subCategory || null,
           zone: normalizedBusiness.zone,
-          landmark: normalizedBusiness.landmark,
+          landmark: normalizedBusiness.landmark || 'Kahawa West',
+          address_details: normalizedBusiness.addressDetails || null,
           phone: normalizedBusiness.phone,
-          whatsapp: normalizedBusiness.whatsapp,
-          email: normalizedBusiness.email,
-          is_claimed: true,
-          rating: normalizedBusiness.rating,
-          hero_image: normalizedBusiness.heroImage,
-          gallery_images: normalizedBusiness.galleryImages,
-          description: normalizedBusiness.description,
-          services: normalizedBusiness.services,
-          mpesa: normalizedBusiness.mpesa,
-          social_links: normalizedBusiness.socialLinks,
-          opening_hours: normalizedBusiness.openingHours,
-          special_offer: normalizedBusiness.specialOffer,
+          whatsapp: normalizedBusiness.whatsapp || normalizedBusiness.phone,
+          email: normalizedBusiness.email || null,
+          is_verified: normalizedBusiness.isVerified ?? true,
+          is_claimed: normalizedBusiness.isClaimed ?? true,
+          claimed_by: normalizedBusiness.claimedBy || null,
+          rating: normalizedBusiness.rating || 5.0,
+          review_count: normalizedBusiness.reviewCount || 1,
+          price_level: normalizedBusiness.priceLevel || 'Moderate',
+          hero_image: normalizedBusiness.heroImage || null,
+          gallery_images: normalizedBusiness.galleryImages || [],
+          description: normalizedBusiness.description || '',
+          services: normalizedBusiness.services || [],
+          features: normalizedBusiness.features || [],
+          mpesa: normalizedBusiness.mpesa || null,
+          social_links: normalizedBusiness.socialLinks || null,
+          special_offer: normalizedBusiness.specialOffer || null,
+          coordinates: normalizedBusiness.coordinates || null,
           updated_at: new Date().toISOString(),
         }
       ]);
@@ -152,6 +251,59 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
     existing[normalizedBusiness.id] = normalizedBusiness;
     localStorage.setItem(BUSINESSES_STORAGE_KEY, JSON.stringify(existing));
     return { success: true };
+  }
+};
+
+export const fetchBusinessesFromSupabase = async (): Promise<Business[] | null> => {
+  try {
+    if (!supabase || !isSupabaseConfigured) return null;
+    const { data, error } = await supabase
+      .from('businesses')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      if (error) console.warn('Supabase fetch businesses warning:', error.message);
+      return null;
+    }
+
+    return data.map((row: any): Business => ({
+      id: row.id,
+      slug: row.slug || generateBusinessSlug(row.name),
+      name: row.name,
+      tagline: row.tagline || `${row.name} in Kahawa West`,
+      category: row.category,
+      subCategory: row.sub_category,
+      zone: row.zone || 'Station / Railway',
+      landmark: row.landmark || 'Kahawa West',
+      addressDetails: row.address_details,
+      phone: row.phone,
+      whatsapp: row.whatsapp || row.phone,
+      email: row.email,
+      isVerified: Boolean(row.is_verified),
+      isClaimed: Boolean(row.is_claimed),
+      claimedBy: row.claimed_by,
+      rating: typeof row.rating === 'number' ? row.rating : 5.0,
+      reviewCount: typeof row.review_count === 'number' ? row.review_count : 1,
+      priceLevel: row.price_level || 'Moderate',
+      heroImage: row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+      galleryImages: Array.isArray(row.gallery_images) && row.gallery_images.length > 0
+        ? row.gallery_images
+        : [row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
+      description: row.description || `${row.name} in Kahawa West`,
+      services: Array.isArray(row.services) ? row.services : [],
+      features: Array.isArray(row.features) ? row.features : [],
+      mpesa: row.mpesa,
+      socialLinks: row.social_links,
+      openingHours: DEFAULT_OPENING_HOURS,
+      specialOffer: row.special_offer,
+      coordinates: row.coordinates || { lat: -1.1850, lng: 36.8850 },
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  } catch (err) {
+    console.warn('Failed to fetch businesses from Supabase:', err);
+    return null;
   }
 };
 
@@ -186,15 +338,18 @@ export const getStoredBusinesses = (seedBusinesses: Business[]): Business[] => {
       return seed;
     });
 
-    // 2. Also retrieve new custom listed businesses not in seeds
+    // 2. Only retrieve explicitly verified custom listed businesses not in seeds
     const newCustomListings: Business[] = [];
     Object.keys(custom).forEach((id) => {
       if (!seedMap.has(id)) {
         const item = custom[id];
-        newCustomListings.push({
-          ...item,
-          slug: item.slug || generateBusinessSlug(item.name),
-        });
+        // Strictly require verified status for custom businesses to be visible in the directory
+        if (item.isVerified === true) {
+          newCustomListings.push({
+            ...item,
+            slug: item.slug || generateBusinessSlug(item.name),
+          });
+        }
       }
     });
 
@@ -327,38 +482,137 @@ export const getStoredFeedback = (businessId?: string): CommunityFeedback[] => {
 
 export const saveBusinessApplication = async (app: BusinessApplication): Promise<boolean> => {
   try {
+    const appWithId: BusinessApplication = {
+      ...app,
+      id: app.id || `app-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      status: 'pending',
+    };
+
     if (supabase && isSupabaseConfigured) {
       const { error } = await supabase.from('applications').insert([
         {
-          name: app.name,
-          category: app.category,
-          operation_type: app.operationType || null,
-          zone: app.zone,
-          landmark: app.landmark,
-          phone: app.phone,
-          whatsapp: app.whatsapp || null,
-          email: app.email || null,
-          description: app.description,
-          services: app.services || [],
-          mpesa_type: app.mpesaType || null,
-          mpesa_number: app.mpesaNumber || null,
-          hero_image: app.heroImage || null,
-          gallery_images: app.galleryImages || [],
-          applicant_name: app.applicantName,
-          applicant_phone: app.applicantPhone,
-          applicant_role: app.applicantRole,
-          notes: app.notes || null,
+          name: appWithId.name,
+          category: appWithId.category,
+          operation_type: appWithId.operationType || null,
+          zone: appWithId.zone,
+          landmark: appWithId.landmark,
+          phone: appWithId.phone,
+          whatsapp: appWithId.whatsapp || null,
+          email: appWithId.email || null,
+          description: appWithId.description,
+          services: appWithId.services || [],
+          mpesa_type: appWithId.mpesaType || null,
+          mpesa_number: appWithId.mpesaNumber || null,
+          hero_image: appWithId.heroImage || null,
+          gallery_images: appWithId.galleryImages || [],
+          applicant_name: appWithId.applicantName,
+          applicant_phone: appWithId.applicantPhone,
+          applicant_role: appWithId.applicantRole,
+          notes: appWithId.notes || (appWithId.merchantPin ? `[PIN: ${appWithId.merchantPin}]` : null),
           status: 'pending',
-          created_at: app.created_at || new Date().toISOString(),
+          created_at: appWithId.created_at || new Date().toISOString(),
         }
       ]);
       if (error) console.warn('Supabase application insert warning:', error.message);
     }
     const existing: BusinessApplication[] = JSON.parse(localStorage.getItem(APPLICATIONS_STORAGE_KEY) || '[]');
-    existing.unshift(app);
+    existing.unshift(appWithId);
     localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(existing));
     return true;
   } catch {
+    return false;
+  }
+};
+
+export const getStoredApplications = (): BusinessApplication[] => {
+  try {
+    return JSON.parse(localStorage.getItem(APPLICATIONS_STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
+};
+
+export const fetchApplicationsFromSupabase = async (): Promise<BusinessApplication[] | null> => {
+  try {
+    if (!supabase || !isSupabaseConfigured) return null;
+    const { data, error } = await supabase
+      .from('applications')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      if (error) console.warn('Supabase fetch applications warning:', error.message);
+      return null;
+    }
+
+    const mapped: BusinessApplication[] = data.map((row: any): BusinessApplication => ({
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      operationType: row.operation_type,
+      zone: row.zone,
+      landmark: row.landmark,
+      phone: row.phone,
+      whatsapp: row.whatsapp,
+      email: row.email,
+      description: row.description,
+      services: Array.isArray(row.services) ? row.services : [],
+      mpesaType: row.mpesa_type,
+      mpesaNumber: row.mpesa_number,
+      heroImage: row.hero_image,
+      galleryImages: Array.isArray(row.gallery_images) ? row.gallery_images : [],
+      applicantName: row.applicant_name,
+      applicantPhone: row.applicant_phone,
+      applicantRole: row.applicant_role,
+      notes: row.notes,
+      status: row.status || 'pending',
+      created_at: row.created_at,
+    }));
+
+    localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(mapped));
+    return mapped;
+  } catch (err) {
+    console.warn('Failed to fetch applications from Supabase:', err);
+    return null;
+  }
+};
+
+export const updateApplicationStatusInSupabase = async (
+  appId: string,
+  status: 'pending' | 'approved' | 'rejected',
+  notes?: string
+): Promise<boolean> => {
+  try {
+    if (supabase && isSupabaseConfigured) {
+      const { error } = await supabase
+        .from('applications')
+        .update({ status, ...(notes ? { notes } : {}) })
+        .eq('id', appId);
+      if (error) console.warn('Supabase update application warning:', error.message);
+    }
+    const existing = getStoredApplications();
+    const updated = existing.map((a) =>
+      a.id === appId ? { ...a, status, ...(notes ? { notes } : {}) } : a
+    );
+    localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(updated));
+    return true;
+  } catch (err) {
+    console.warn('Failed to update application status:', err);
+    return false;
+  }
+};
+
+export const deleteApplicationFromSupabase = async (appId: string): Promise<boolean> => {
+  try {
+    if (supabase && isSupabaseConfigured) {
+      await supabase.from('applications').delete().eq('id', appId);
+    }
+    const existing = getStoredApplications();
+    const updated = existing.filter((a) => a.id !== appId);
+    localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(updated));
+    return true;
+  } catch (err) {
+    console.warn('Failed to delete application:', err);
     return false;
   }
 };

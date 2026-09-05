@@ -12,9 +12,10 @@ import {
   PhoneCall,
   SlidersHorizontal,
 } from 'lucide-react';
-import { Business, BusinessClaim, Category, CommunityFeedback, CommunityStory, CommunityUpdate } from './types';
+import { Business, BusinessClaim, BusinessApplication, Category, CommunityFeedback, CommunityStory, CommunityUpdate } from './types';
 import { SEED_50_BUSINESSES } from './data/businesses';
 import { CATEGORIES } from './data/categories';
+import { DEFAULT_OPENING_HOURS } from './data/defaultOpeningHours';
 import {
   getStoredCommunityUpdates,
   saveCommunityUpdate,
@@ -40,6 +41,16 @@ import {
   syncUpdateToSupabase,
   fetchUpdatesFromSupabase,
   getSavedClaims,
+  saveBusinessClaim,
+  fetchClaimsFromSupabase,
+  updateClaimStatusInSupabase,
+  deleteClaimFromSupabase,
+  getStoredApplications,
+  saveBusinessApplication,
+  fetchApplicationsFromSupabase,
+  updateApplicationStatusInSupabase,
+  deleteApplicationFromSupabase,
+  fetchBusinessesFromSupabase,
   generateBusinessSlug,
 } from './lib/supabase';
 
@@ -93,6 +104,7 @@ export default function App() {
   const [updates, setUpdates] = useState<CommunityUpdate[]>(() => getStoredCommunityUpdates());
   const [stories, setStories] = useState<CommunityStory[]>(() => getStoredCommunityStories());
   const [claims, setClaims] = useState<BusinessClaim[]>(() => getSavedClaims());
+  const [applications, setApplications] = useState<BusinessApplication[]>(() => getStoredApplications());
 
   // 2. Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -155,7 +167,7 @@ export default function App() {
     return () => window.removeEventListener('beforeinstallprompt', handlePrompt);
   }, []);
 
-  // Fetch latest community stories & updates from Supabase on mount
+  // Fetch latest community stories, updates, claims, applications & businesses from Supabase on mount
   useEffect(() => {
     fetchStoriesFromSupabase().then((remoteStories) => {
       if (remoteStories && remoteStories.length > 0) {
@@ -167,7 +179,8 @@ export default function App() {
             s.id !== 'story-1788450086647' &&
             s.id !== 'story-02' &&
             s.id !== 'story-01' &&
-            s.id !== 'story-03'
+            s.id !== 'story-03' &&
+            (s.id === 'story-1788508956440' || s.id.startsWith('story-user-') || s.id.startsWith('story-'))
         );
         setStories((prev) => {
           const remoteMap = new Map(activeRemote.map((s) => [s.id, s]));
@@ -180,7 +193,8 @@ export default function App() {
                 p.id !== 'story-02' &&
                 p.id !== 'story-01' &&
                 p.id !== 'story-03' &&
-                !p.id.startsWith('test-')
+                !p.id.startsWith('test-') &&
+                (p.id === 'story-1788508956440' || p.id.startsWith('story-user-') || p.id.startsWith('story-'))
             )
           );
         });
@@ -191,15 +205,59 @@ export default function App() {
       if (remoteUpdates && remoteUpdates.length > 0) {
         const deletedIds = getDeletedUpdateIds();
         const activeRemote = remoteUpdates.filter(
-          (u) => !deletedIds.has(u.id) && !PURGED_UPDATE_IDS.has(u.id)
+          (u) =>
+            !deletedIds.has(u.id) &&
+            !PURGED_UPDATE_IDS.has(u.id) &&
+            (u.id === 'up-iebc-voter-reg-2026' || u.id.startsWith('up-user-') || u.id.startsWith('update-'))
         );
         setUpdates((prev) => {
           const remoteMap = new Map(activeRemote.map((u) => [u.id, u]));
           return activeRemote.concat(
             prev.filter(
-              (p) => !remoteMap.has(p.id) && !deletedIds.has(p.id) && !PURGED_UPDATE_IDS.has(p.id)
+              (p) =>
+                !remoteMap.has(p.id) &&
+                !deletedIds.has(p.id) &&
+                !PURGED_UPDATE_IDS.has(p.id) &&
+                (p.id === 'up-iebc-voter-reg-2026' || p.id.startsWith('up-user-') || p.id.startsWith('update-'))
             )
           );
+        });
+      }
+    });
+
+    // Fetch latest claims from Supabase
+    fetchClaimsFromSupabase().then((remoteClaims) => {
+      if (remoteClaims && remoteClaims.length > 0) {
+        setClaims(remoteClaims);
+      }
+    });
+
+    // Fetch latest listing applications from Supabase
+    fetchApplicationsFromSupabase().then((remoteApps) => {
+      if (remoteApps && remoteApps.length > 0) {
+        setApplications(remoteApps);
+      }
+    });
+
+    // Fetch latest verified businesses from Supabase to sync across devices (laptop, mobile)
+    fetchBusinessesFromSupabase().then((remoteBusinesses) => {
+      if (remoteBusinesses && remoteBusinesses.length > 0) {
+        setBusinesses((prev) => {
+          const remoteMap = new Map(remoteBusinesses.map((b) => [b.id, b]));
+          const updatedPrev = prev.map((p) => {
+            if (remoteMap.has(p.id)) {
+              return {
+                ...p,
+                ...remoteMap.get(p.id)!,
+              };
+            }
+            return p;
+          });
+          const prevMap = new Map(updatedPrev.map((p) => [p.id, p]));
+          const newVerifiedRemote = remoteBusinesses.filter(
+            (b) => !prevMap.has(b.id) && b.isVerified === true
+          );
+          return [...updatedPrev, ...newVerifiedRemote];
         });
       }
     });
@@ -335,7 +393,24 @@ export default function App() {
             found = businesses.find((b) => b.name && generateBusinessSlug(b.name) === targetBiz);
           }
 
-          // 3. Fallback for seed business variants
+          // 3. Fallback for Kimondo Tech, Bonata Cleaners, Bewai Transporters
+          if (!found && (targetBiz.includes('kimondo') || targetBiz.includes('laptop-repair'))) {
+            found = businesses.find(
+              (b) => b.id === 'kw-biz-kimondo-tech' || b.slug?.includes('kimondo') || b.name.toLowerCase().includes('kimondo')
+            );
+          }
+          if (!found && targetBiz.includes('bonata')) {
+            found = businesses.find(
+              (b) => b.id === 'kw-biz-bonata-cleaners' || b.slug?.includes('bonata') || b.name.toLowerCase().includes('bonata')
+            );
+          }
+          if (!found && targetBiz.includes('bewai')) {
+            found = businesses.find(
+              (b) => b.id === 'kw-biz-bewai-transporters' || b.slug?.includes('bewai') || b.name.toLowerCase().includes('bewai')
+            );
+          }
+
+          // 4. Fallback for seed business variants
           if (!found && (targetBiz.includes('furniture-crafts') || targetBiz.includes('furniture'))) {
             found = businesses.find(
               (b) =>
@@ -471,70 +546,163 @@ export default function App() {
     saveCustomizedBusiness(updatedBusiness);
   };
 
-  const handleClaimSuccess = (updatedBusiness: Business, claim: BusinessClaim) => {
-    setBusinesses((prev) =>
-      prev.map((b) => (b.id === updatedBusiness.id ? updatedBusiness : b))
-    );
+  const handleClaimSubmitted = (claim: BusinessClaim) => {
     setClaims((prev) => {
-      const filtered = prev.filter((c) => c.business_id !== claim.business_id);
+      const filtered = prev.filter((c) => c.business_id !== claim.business_id && c.id !== claim.id);
       return [claim, ...filtered];
     });
-    if (selectedBusinessForDetails?.id === updatedBusiness.id) {
-      setSelectedBusinessForDetails(updatedBusiness);
-      if (updatedBusiness.slug) {
-        window.history.replaceState(null, '', `#${updatedBusiness.slug}`);
-      }
-    }
+    // The business stays strictly unverified and unclaimed in live directory until approved in Editorial Desk
   };
 
-  const handleApproveClaim = (businessId: string) => {
-    setClaims((prev) => {
-      const updated = prev.map((c) =>
-        c.business_id === businessId ? { ...c, status: 'verified' as const } : c
-      );
-      try {
-        localStorage.setItem('kwest_directory_claims', JSON.stringify(updated));
-      } catch (e) {
-        console.error(e);
-      }
-      return updated;
+  const handleApplicationSubmitted = (application: BusinessApplication) => {
+    setApplications((prev) => {
+      const filtered = prev.filter((a) => a.id !== application.id);
+      return [application, ...filtered];
     });
-    setBusinesses((prev) =>
-      prev.map((b) => (b.id === businessId ? { ...b, isClaimed: true } : b))
+    // The new listing application stays strictly in pending queue until approved in Editorial Desk
+  };
+
+  const handleApproveClaim = async (businessId: string) => {
+    await updateClaimStatusInSupabase(businessId, 'verified');
+    const claimRecord = claims.find((c) => c.business_id === businessId || c.id === businessId);
+
+    setClaims((prev) =>
+      prev.map((c) =>
+        c.business_id === businessId || c.id === businessId
+          ? { ...c, status: 'verified' as const }
+          : c
+      )
+    );
+
+    setBusinesses((prev) => {
+      return prev.map((b) => {
+        if (b.id === businessId || b.slug === businessId) {
+          const details = claimRecord?.claimed_details || {};
+          const verifiedBiz: Business = {
+            ...b,
+            ...details,
+            id: b.id,
+            slug: b.slug,
+            isVerified: true,
+            isClaimed: true,
+            claimedBy: claimRecord
+              ? `${claimRecord.full_name} (${claimRecord.business_role || 'Owner'})`
+              : b.claimedBy || 'Verified Owner',
+            phone: claimRecord?.phone_number || details.phone || b.phone,
+            whatsapp: claimRecord?.whatsapp_number || details.whatsapp || b.whatsapp,
+            email: claimRecord?.email || details.email || b.email,
+          };
+          saveCustomizedBusiness(verifiedBiz);
+          if (selectedBusinessForDetails?.id === b.id) {
+            setSelectedBusinessForDetails(verifiedBiz);
+          }
+          return verifiedBiz;
+        }
+        return b;
+      });
+    });
+  };
+
+  const handleRejectClaim = async (businessId: string, reason?: string) => {
+    await updateClaimStatusInSupabase(businessId, 'rejected');
+    setClaims((prev) =>
+      prev.map((c) =>
+        c.business_id === businessId || c.id === businessId
+          ? { ...c, status: 'rejected' as const, notes: reason ? `${c.notes || ''} [Rejected: ${reason}]` : c.notes }
+          : c
+      )
     );
   };
 
-  const handleRejectClaim = (businessId: string, reason?: string) => {
-    setClaims((prev) => {
-      const updated = prev.map((c) =>
-        c.business_id === businessId
-          ? { ...c, status: 'rejected' as const, notes: reason ? `${c.notes || ''} [Rejected: ${reason}]` : c.notes }
-          : c
-      );
-      try {
-        localStorage.setItem('kwest_directory_claims', JSON.stringify(updated));
-      } catch (e) {
-        console.error(e);
-      }
-      return updated;
-    });
+  const handleDeleteClaim = async (businessId: string) => {
+    await deleteClaimFromSupabase(businessId);
+    setClaims((prev) => prev.filter((c) => c.business_id !== businessId && c.id !== businessId));
   };
 
-  const handleDeleteClaim = (businessId: string) => {
-    setClaims((prev) => {
-      const updated = prev.filter((c) => c.business_id !== businessId);
-      try {
-        localStorage.setItem('kwest_directory_claims', JSON.stringify(updated));
-      } catch (e) {
-        console.error(e);
-      }
-      return updated;
-    });
+  const handleApproveApplication = async (app: BusinessApplication) => {
+    await updateApplicationStatusInSupabase(app.id || '', 'approved');
+    setApplications((prev) =>
+      prev.map((a) => (a.id === app.id ? { ...a, status: 'approved' as const } : a))
+    );
+
+    // Convert approved application to fully verified and live directory Business
+    const newBizId = `kw-biz-${Date.now()}`;
+    const newSlug = generateBusinessSlug(app.name);
+    const approvedBusiness: Business = {
+      id: newBizId,
+      slug: newSlug,
+      name: app.name,
+      tagline: `${app.category} in ${app.zone}, Kahawa West`,
+      category: app.category,
+      subCategory: app.subCategory,
+      zone: app.zone,
+      landmark: app.landmark,
+      addressDetails: `${app.landmark}, ${app.zone}, Kahawa West`,
+      phone: app.phone,
+      whatsapp: app.whatsapp || app.phone,
+      email: app.email,
+      isVerified: true,
+      isClaimed: true,
+      claimedBy: `${app.applicantName} (${app.applicantRole || 'Owner'})`,
+      rating: 5.0,
+      reviewCount: 1,
+      priceLevel: 'Moderate',
+      heroImage: app.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+      galleryImages: app.galleryImages && app.galleryImages.length > 0 ? app.galleryImages : [app.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
+      description: app.description,
+      services: app.services || [],
+      features: ['Lipa na M-Pesa Available', 'Local Kahawa West Resident Owned', 'Verified Contact'],
+      mpesa: app.mpesaNumber
+        ? {
+            type: (app.mpesaType as 'Till' | 'Pochi la Biashara' | 'Paybill' | 'Send Money') || 'Till',
+            number: app.mpesaNumber,
+            accountName: app.name.toUpperCase(),
+          }
+        : undefined,
+      openingHours: DEFAULT_OPENING_HOURS,
+      coordinates: { lat: -1.1850, lng: 36.8850 },
+      createdAt: new Date().toISOString(),
+    };
+
+    await saveCustomizedBusiness(approvedBusiness);
+    setBusinesses((prev) => [approvedBusiness, ...prev]);
+  };
+
+  const handleRejectApplication = async (appId: string, reason?: string) => {
+    await updateApplicationStatusInSupabase(appId, 'rejected');
+    setApplications((prev) =>
+      prev.map((a) =>
+        a.id === appId
+          ? { ...a, status: 'rejected' as const, notes: reason ? `${a.notes || ''} [Rejected: ${reason}]` : a.notes }
+          : a
+      )
+    );
+  };
+
+  const handleDeleteApplication = async (appId: string) => {
+    await deleteApplicationFromSupabase(appId);
+    setApplications((prev) => prev.filter((a) => a.id !== appId));
+  };
+
+  const handleToggleVerifyBusiness = async (business: Business) => {
+    const updated: Business = {
+      ...business,
+      isVerified: !business.isVerified,
+    };
+    await saveCustomizedBusiness(updated);
+    setBusinesses((prev) => prev.map((b) => (b.id === business.id ? updated : b)));
+    if (selectedBusinessForDetails?.id === business.id) {
+      setSelectedBusinessForDetails(updated);
+    }
   };
 
   const handleBusinessAdded = (newBusiness: Business) => {
     setBusinesses((prev) => [newBusiness, ...prev]);
     setSelectedBusinessForDetails(newBusiness);
+  };
+
+  const handleClaimSuccess = (_updatedBusiness: Business, claim: BusinessClaim) => {
+    handleClaimSubmitted(claim);
   };
 
   const handleFeedbackSubmitted = (feedback: CommunityFeedback) => {
@@ -955,6 +1123,7 @@ export default function App() {
         stories={stories}
         updates={updates}
         claims={claims}
+        applications={applications}
         businesses={businesses}
         onApproveStory={handleApproveStory}
         onRejectStory={handleRejectStory}
@@ -966,7 +1135,11 @@ export default function App() {
         onApproveClaim={handleApproveClaim}
         onRejectClaim={handleRejectClaim}
         onDeleteClaim={handleDeleteClaim}
+        onApproveApplication={handleApproveApplication}
+        onRejectApplication={handleRejectApplication}
+        onDeleteApplication={handleDeleteApplication}
         onEditBusiness={handleOpenEditBusiness}
+        onToggleVerifyBusiness={handleToggleVerifyBusiness}
         onOpenSubmitModal={() => setIsSubmitStoryOpen(true)}
         onOpenSubmitUpdateModal={() => setIsSubmitUpdateOpen(true)}
       />
@@ -1029,6 +1202,7 @@ export default function App() {
           isOpen={Boolean(businessToClaim)}
           onClose={() => setBusinessToClaim(null)}
           onClaimSuccess={handleClaimSuccess}
+          onClaimSubmitted={handleClaimSubmitted}
         />
       )}
 
@@ -1037,6 +1211,7 @@ export default function App() {
         isOpen={isListBusinessOpen}
         onClose={() => setIsListBusinessOpen(false)}
         onBusinessAdded={handleBusinessAdded}
+        onApplicationSubmitted={handleApplicationSubmitted}
       />
 
       {/* Community Review / Feedback Modal */}

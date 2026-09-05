@@ -16,6 +16,7 @@ import {
   UploadCloud,
   Briefcase,
   KeyRound,
+  Clock,
 } from 'lucide-react';
 import { Business, EstateZone, BusinessApplication, OperationType } from '../../types';
 import { saveBusinessApplication, saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
@@ -27,13 +28,15 @@ import { compressImageFile, validateImageFile } from '../../lib/imageCompression
 interface ListYourBusinessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onBusinessAdded: (newBusiness: Business) => void;
+  onBusinessAdded?: (newBusiness: Business) => void;
+  onApplicationSubmitted?: (application: BusinessApplication) => void;
 }
 
 export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   isOpen,
   onClose,
   onBusinessAdded,
+  onApplicationSubmitted,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMode, setSuccessMode] = useState(false);
@@ -177,30 +180,18 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         createdAt: new Date().toISOString(),
       };
 
-      // Register Merchant PIN and grant active session
-      registerMerchantAccount({
-        businessId: newId,
-        businessName: name,
-        pin: merchantPin || '1234',
-        phone: phone,
-        applicantName: applicantName || 'Proprietor',
-        role: effectiveRole,
-        isListingOnBehalf,
-        ownerName: isListingOnBehalf ? ownerFullName : undefined,
-        ownerPhone: isListingOnBehalf ? ownerPhoneNumber : undefined,
-      });
-
       const application: BusinessApplication = {
+        id: newId,
         name,
         category,
         operationType,
         zone,
         landmark,
         phone,
-        whatsapp: whatsapp || phone,
-        email,
-        description,
-        services: newBusinessRecord.services,
+        whatsapp: whatsapp ? whatsapp.replace(/[^0-9]/g, '') : phone.replace(/[^0-9]/g, ''),
+        email: email || undefined,
+        description: description || `Welcome to ${name}, serving residents in ${zone}, Kahawa West.`,
+        services: ['Local Service in Kahawa West', 'Direct Resident Support'],
         mpesaType,
         mpesaNumber,
         heroImage: photos[0],
@@ -208,21 +199,25 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         applicantName,
         applicantPhone: phone,
         applicantRole: effectiveRole,
+        merchantPin: merchantPin || '1234',
+        status: 'pending',
         notes: isListingOnBehalf
           ? `[Listed on Behalf of Owner: ${ownerFullName} (${ownerPhoneNumber})]`
           : undefined,
         created_at: new Date().toISOString(),
       };
 
+      // Persist ONLY to applications queue in Supabase & local storage (Pending Editorial verification)
       await saveBusinessApplication(application);
-      await saveCustomizedBusiness(newBusinessRecord);
 
       setSuccessMode(true);
       setTimeout(() => {
         setIsSubmitting(false);
-        onBusinessAdded(newBusinessRecord);
+        if (onApplicationSubmitted) {
+          onApplicationSubmitted(application);
+        }
         onClose();
-      }, 1800);
+      }, 2000);
     } catch (err) {
       console.error(err);
       setIsSubmitting(false);
@@ -280,15 +275,15 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
 
         {successMode ? (
           <div className="p-6 sm:p-12 text-center my-auto">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 animate-bounce">
-              <CheckCircle2 className="w-10 h-10" />
+            <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4 animate-bounce">
+              <Clock className="w-10 h-10" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Business Listed Successfully!</h3>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Listing Submitted for Verification!</h3>
             <p className="text-slate-600 text-sm max-w-md mx-auto mb-4">
-              <strong>{name}</strong> is now live on the Kahawa West directory and accessible to estate neighbors.
+              <strong>{name}</strong> has been registered and submitted to the KWEST Editorial Review Desk. Our editorial team reviews neighborhood location and contact details before publishing to the live directory.
             </p>
-            <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-200">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Live on KWEST Directory
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
+              <Clock className="w-4 h-4 text-amber-600" /> Pending Editorial Desk Verification
             </div>
           </div>
         ) : (
