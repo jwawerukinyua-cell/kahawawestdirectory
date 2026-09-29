@@ -48,6 +48,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   const [activeTab, setActiveTab] = useState<'claimant' | 'customize'>('claimant');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMode, setSuccessMode] = useState(false);
+  const [isRemoteSynced, setIsRemoteSynced] = useState(true);
 
   // Claimant form state (Matches Supabase 'claims' table: business_id, full_name, phone_number, email, business_role, status, created_at)
   const [fullName, setFullName] = useState('');
@@ -235,8 +236,12 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         created_at: new Date().toISOString(),
       };
 
-      // 2. Persist ONLY to claims queue in Supabase & local storage (Does NOT mutate live business until verified)
-      await saveBusinessClaim(claimRecord);
+      // 2. Persist to claims queue in Supabase & local storage (Does NOT mutate live business until verified)
+      const saveRes = await saveBusinessClaim(claimRecord);
+      if (saveRes.id) {
+        claimRecord.id = saveRes.id;
+      }
+      setIsRemoteSynced(Boolean(saveRes.remoteSynced));
 
       setSuccessMode(true);
       setTimeout(() => {
@@ -247,7 +252,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
           onClaimSuccess(business, claimRecord);
         }
         onClose();
-      }, 2000);
+      }, 2500);
     } catch (err) {
       console.error(err);
       setIsSubmitting(false);
@@ -342,8 +347,19 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
             <p className="text-slate-600 text-xs sm:text-sm max-w-md mx-auto mb-4">
               Your claim for <strong>{customName || business.name}</strong> has been received and queued in the KWEST Editorial Review Desk. Our editorial team validates merchant credentials before changes take effect.
             </p>
-            <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
-              <Clock className="w-4 h-4 text-amber-600" /> Pending Editorial Desk Verification
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
+                <Clock className="w-4 h-4 text-amber-600" /> Pending Editorial Desk Verification
+              </div>
+              {isRemoteSynced ? (
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Synced to Supabase Cloud Desk
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
+                  <Clock className="w-4 h-4 text-amber-600" /> Saved to Local Storage (Cloud Pending)
+                </div>
+              )}
             </div>
           </div>
         ) : (

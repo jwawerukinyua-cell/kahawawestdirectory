@@ -60,7 +60,7 @@ export const ESTATE_ZONES_LIST: EstateZone[] = [
   'Kiamumbi Border',
 ];
 
-export const DEFAULT_PRODUCTION_BASE_URL = 'https://kwestdirectory.co.ke';
+export const DEFAULT_PRODUCTION_BASE_URL = 'https://www.kahawawestdirectory.co.ke';
 
 /**
  * Safely escapes special XML characters (&, <, >, ", ') to maintain valid XML.

@@ -103,6 +103,9 @@ interface EditorialReviewModalProps {
   onToggleVerifyBusiness?: (business: Business) => void;
   onOpenSubmitModal: () => void;
   onOpenSubmitUpdateModal?: () => void;
+  onRefreshCloudData?: () => void;
+  isSyncingCloud?: boolean;
+  lastCloudSyncTime?: Date | null;
 }
 
 // Master default strong passphrases
@@ -138,6 +141,9 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   onToggleVerifyBusiness,
   onOpenSubmitModal,
   onOpenSubmitUpdateModal,
+  onRefreshCloudData,
+  isSyncingCloud = false,
+  lastCloudSyncTime,
 }) => {
   const [activeMainTab, setActiveMainTab] = useState<'stories' | 'updates' | 'claims' | 'ad_campaigns' | 'ad_sales' | 'supabase_guide'>('stories');
   const [storySubTab, setStorySubTab] = useState<'pending' | 'published'>('pending');
@@ -541,6 +547,7 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
         updatesTableAccessible: false,
         businessesTableAccessible: false,
         claimsTableAccessible: false,
+        applicationsTableAccessible: false,
         businessesInsertable: false,
         message: String(err),
       });
@@ -1559,40 +1566,54 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                 <div className="space-y-4">
                   {/* Subtabs for Claims vs Directory Listings */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-800 pb-3">
-                    <div className="inline-flex p-1 rounded-xl bg-stone-900 border border-stone-800">
-                      <button
-                        onClick={() => setClaimsSubTab('pending_claims')}
-                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                          claimsSubTab === 'pending_claims'
-                            ? 'bg-[#630303] text-white'
-                            : 'text-stone-400 hover:text-white'
-                        }`}
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>Claims Queue ({claims.length})</span>
-                      </button>
-                      <button
-                        onClick={() => setClaimsSubTab('pending_applications')}
-                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                          claimsSubTab === 'pending_applications'
-                            ? 'bg-[#630303] text-white'
-                            : 'text-stone-400 hover:text-white'
-                        }`}
-                      >
-                        <PlusCircle className="w-3.5 h-3.5" />
-                        <span>New Listings ({applications.length})</span>
-                      </button>
-                      <button
-                        onClick={() => setClaimsSubTab('all_listings')}
-                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                          claimsSubTab === 'all_listings'
-                            ? 'bg-[#630303] text-white'
-                            : 'text-stone-400 hover:text-white'
-                        }`}
-                      >
-                        <Building className="w-3.5 h-3.5" />
-                        <span>All Directory Listings ({businesses.length})</span>
-                      </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="inline-flex p-1 rounded-xl bg-stone-900 border border-stone-800">
+                        <button
+                          onClick={() => setClaimsSubTab('pending_claims')}
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                            claimsSubTab === 'pending_claims'
+                              ? 'bg-[#630303] text-white'
+                              : 'text-stone-400 hover:text-white'
+                          }`}
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>Claims Queue ({claims.length})</span>
+                        </button>
+                        <button
+                          onClick={() => setClaimsSubTab('pending_applications')}
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                            claimsSubTab === 'pending_applications'
+                              ? 'bg-[#630303] text-white'
+                              : 'text-stone-400 hover:text-white'
+                          }`}
+                        >
+                          <PlusCircle className="w-3.5 h-3.5" />
+                          <span>New Listings ({applications.length})</span>
+                        </button>
+                        <button
+                          onClick={() => setClaimsSubTab('all_listings')}
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                            claimsSubTab === 'all_listings'
+                              ? 'bg-[#630303] text-white'
+                              : 'text-stone-400 hover:text-white'
+                          }`}
+                        >
+                          <Building className="w-3.5 h-3.5" />
+                          <span>All Directory Listings ({businesses.length})</span>
+                        </button>
+                      </div>
+
+                      {onRefreshCloudData && (
+                        <button
+                          onClick={onRefreshCloudData}
+                          disabled={isSyncingCloud}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800/80 text-xs font-bold flex items-center gap-1.5 transition disabled:opacity-50"
+                          title="Pull latest claims and listings directly from Supabase Cloud"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin' : ''}`} />
+                          <span>{isSyncingCloud ? 'Syncing...' : 'Sync Live'}</span>
+                        </button>
+                      )}
                     </div>
 
                     {claimsSubTab === 'all_listings' && (

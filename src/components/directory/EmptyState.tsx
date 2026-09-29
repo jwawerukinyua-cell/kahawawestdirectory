@@ -43,9 +43,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   const hasZoneFilter = selectedZone !== 'all';
   const hasQuickFilter = isHousingFilterActive || isVerifiedFilterActive || isMpesaFilterActive;
 
+  const currentBase = typeof window !== 'undefined' ? window.location.origin : 'https://www.kahawawestdirectory.co.ke';
   const shareText = hasSearch
-    ? `Hello! I was searching for "${searchQuery.trim()}" on Kahawa West Directory (KWEST) and couldn't find your listing. You can add your business for free so neighbors find you easily: https://kwestdirectory.co.ke`
-    : `Hello! If you run a business or service in Kahawa West, add it for free to the official KWEST Neighborhood Directory: https://kwestdirectory.co.ke`;
+    ? `Hello! I was searching for "${searchQuery.trim()}" on Kahawa West Directory (KWEST) and couldn't find your listing. You can add your business for free so neighbors find you easily: ${currentBase}`
+    : `Hello! If you run a business or service in Kahawa West, add it for free to the official KWEST Neighborhood Directory: ${currentBase}`;
 
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 

@@ -40,6 +40,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMode, setSuccessMode] = useState(false);
+  const [isRemoteSynced, setIsRemoteSynced] = useState(true);
 
   // Form State
   const [applicantName, setApplicantName] = useState('');
@@ -207,8 +208,12 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         created_at: new Date().toISOString(),
       };
 
-      // Persist ONLY to applications queue in Supabase & local storage (Pending Editorial verification)
-      await saveBusinessApplication(application);
+      // Persist to applications queue in Supabase & local storage (Pending Editorial verification)
+      const saveRes = await saveBusinessApplication(application);
+      if (saveRes.id) {
+        application.id = saveRes.id;
+      }
+      setIsRemoteSynced(Boolean(saveRes.remoteSynced));
 
       setSuccessMode(true);
       setTimeout(() => {
@@ -217,7 +222,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
           onApplicationSubmitted(application);
         }
         onClose();
-      }, 2000);
+      }, 2500);
     } catch (err) {
       console.error(err);
       setIsSubmitting(false);
@@ -282,8 +287,19 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
             <p className="text-slate-600 text-sm max-w-md mx-auto mb-4">
               <strong>{name}</strong> has been registered and submitted to the KWEST Editorial Review Desk. Our editorial team reviews neighborhood location and contact details before publishing to the live directory.
             </p>
-            <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
-              <Clock className="w-4 h-4 text-amber-600" /> Pending Editorial Desk Verification
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
+                <Clock className="w-4 h-4 text-amber-600" /> Pending Editorial Desk Verification
+              </div>
+              {isRemoteSynced ? (
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Synced to Supabase Cloud Desk
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
+                  <Clock className="w-4 h-4 text-amber-600" /> Saved to Local Storage (Cloud Pending)
+                </div>
+              )}
             </div>
           </div>
         ) : (

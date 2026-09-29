@@ -167,7 +167,7 @@ export const SitemapModal: React.FC<SitemapModalProps> = ({
               onChange={(e) => setCustomDomain(e.target.value)}
               className="bg-white border border-stone-300 rounded-lg px-2.5 py-1 text-xs text-stone-800 font-medium focus:ring-2 focus:ring-[#630303] outline-none"
             >
-              <option value={DEFAULT_PRODUCTION_BASE_URL}>Production (kwestdirectory.co.ke)</option>
+              <option value={DEFAULT_PRODUCTION_BASE_URL}>Production (kahawawestdirectory.co.ke)</option>
               <option value={currentOrigin}>Current App URL ({currentOrigin})</option>
             </select>
           </div>
@@ -405,7 +405,7 @@ export const SitemapModal: React.FC<SitemapModalProps> = ({
                   </h5>
                   <ol className="list-decimal list-inside space-y-1.5 text-stone-600 mt-2">
                     <li>Go to <strong>search.google.com/search-console</strong>.</li>
-                    <li>Add property <code>https://kwestdirectory.co.ke</code>.</li>
+                    <li>Add property <code>https://www.kahawawestdirectory.co.ke</code>.</li>
                     <li>In the left sidebar, click on <strong>Sitemaps</strong>.</li>
                     <li>Enter <code>sitemap.xml</code> in the submission box.</li>
                     <li>Click <strong>Submit</strong> to start instant indexing.</li>
@@ -421,14 +421,14 @@ export const SitemapModal: React.FC<SitemapModalProps> = ({
                     <li>Go to <strong>bing.com/webmasters</strong>.</li>
                     <li>Sign in and import your site from Google Search Console.</li>
                     <li>Go to <strong>Sitemaps &gt; Submit Sitemap</strong>.</li>
-                    <li>Submit <code>https://kwestdirectory.co.ke/sitemap.xml</code>.</li>
-                    <li>Bing will index listings across Bing, Yahoo & DuckDuckGo.</li>
+                    <li>Submit <code>https://www.kahawawestdirectory.co.ke/sitemap.xml</code>.</li>
+                    <li>Bing will index listings across Bing, Yahoo &amp; DuckDuckGo.</li>
                   </ol>
                 </div>
               </div>
 
               <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
-                <strong>💡 Automatic Verification:</strong> The generated <code>/public/robots.txt</code> file already includes the canonical <code>Sitemap: https://kwestdirectory.co.ke/sitemap.xml</code> directive so search crawlers can discover it automatically upon visiting any page.
+                <strong>💡 Automatic Verification:</strong> The generated <code>/public/robots.txt</code> file already includes the canonical <code>Sitemap: https://www.kahawawestdirectory.co.ke/sitemap.xml</code> directive so search crawlers can discover it automatically upon visiting any page.
               </div>
             </div>
           )}

@@ -2,9 +2,10 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Business, BusinessClaim, CommunityFeedback, BusinessApplication, CommunityStory, CommunityUpdate } from '../types';
 import { DEFAULT_OPENING_HOURS } from '../data/defaultOpeningHours';
 
-// The user's Supabase project URL and anon key
-const rawUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://wfsqnhujjqldcxnhnzvf.supabase.co';
-const rawKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+// The user's Supabase project URL and anon key with bulletproof production fallback
+export const DEFAULT_SUPABASE_URL = 'https://wfsqnhujjqldcxnhnzvf.supabase.co';
+export const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmc3FuaHVqanFsZGN4bmhuenZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2Mjc0NTEsImV4cCI6MjEwMjIwMzQ1MX0.BAVXjSjkw5IPbmeZLaN2uOrM4mnIhB_wbZsk1lbgT4A';
 
 function isValidHttpUrl(stringUrl: string): boolean {
   try {
@@ -15,8 +16,18 @@ function isValidHttpUrl(stringUrl: string): boolean {
   }
 }
 
-export const SUPABASE_URL = isValidHttpUrl(rawUrl) ? rawUrl : 'https://wfsqnhujjqldcxnhnzvf.supabase.co';
-export const SUPABASE_ANON_KEY = typeof rawKey === 'string' ? rawKey.trim() : '';
+export function isUuid(str?: string | null): boolean {
+  if (!str) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
+}
+
+const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
+const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
+
+export const SUPABASE_URL = (envUrl && isValidHttpUrl(envUrl)) ? envUrl.trim() : DEFAULT_SUPABASE_URL;
+export const SUPABASE_ANON_KEY = (envKey && typeof envKey === 'string' && envKey.trim().length > 20)
+  ? envKey.trim()
+  : DEFAULT_SUPABASE_ANON_KEY;
 
 export const isSupabaseConfigured = Boolean(
   SUPABASE_ANON_KEY &&
@@ -47,11 +58,16 @@ const BUSINESSES_STORAGE_KEY = 'kwest_directory_custom_businesses';
 const FEEDBACK_STORAGE_KEY = 'kwest_directory_feedback';
 const APPLICATIONS_STORAGE_KEY = 'kwest_directory_applications';
 
-export const saveBusinessClaim = async (claim: BusinessClaim): Promise<{ success: boolean; error?: string }> => {
+export const saveBusinessClaim = async (
+  claim: BusinessClaim
+): Promise<{ success: boolean; error?: string; remoteSynced?: boolean; id?: string }> => {
+  let remoteSynced = false;
+  let remoteError: string | undefined;
+
   try {
     // 1. If Supabase is connected with active key, write to claims table
     if (supabase && isSupabaseConfigured) {
-      const { error } = await supabase.from('claims').insert([
+      const { data, error } = await supabase.from('claims').insert([
         {
           business_id: claim.business_id,
           business_name: claim.business_name || null,
@@ -65,27 +81,37 @@ export const saveBusinessClaim = async (claim: BusinessClaim): Promise<{ success
           claimed_details: claim.claimed_details || {},
           created_at: claim.created_at || new Date().toISOString(),
         }
-      ]);
+      ]).select('id').single();
+
       if (error) {
         console.warn('Supabase insert warning, falling back to local sync:', error.message);
+        remoteError = error.message;
+      } else {
+        remoteSynced = true;
+        if (data?.id) {
+          claim.id = data.id;
+        }
       }
     }
 
     // 2. Persist locally to browser storage for instantaneous UI updates
     const existingClaims: BusinessClaim[] = JSON.parse(localStorage.getItem(CLAIMS_STORAGE_KEY) || '[]');
-    const filtered = existingClaims.filter((c) => c.business_id !== claim.business_id);
+    const filtered = existingClaims.filter((c) => c.business_id !== claim.business_id && c.id !== claim.id);
     filtered.unshift(claim);
     localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(filtered));
 
-    return { success: true };
+    window.dispatchEvent(new CustomEvent('kwest_claims_updated', { detail: filtered }));
+
+    return { success: true, remoteSynced, error: remoteError, id: claim.id };
   } catch (err: any) {
     console.error('Error saving claim:', err);
     // Fallback save locally
     const existingClaims: BusinessClaim[] = JSON.parse(localStorage.getItem(CLAIMS_STORAGE_KEY) || '[]');
-    const filtered = existingClaims.filter((c) => c.business_id !== claim.business_id);
+    const filtered = existingClaims.filter((c) => c.business_id !== claim.business_id && c.id !== claim.id);
     filtered.unshift(claim);
     localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(filtered));
-    return { success: true };
+    window.dispatchEvent(new CustomEvent('kwest_claims_updated', { detail: filtered }));
+    return { success: true, remoteSynced: false, error: err?.message, id: claim.id };
   }
 };
 
@@ -142,10 +168,13 @@ export const updateClaimStatusInSupabase = async (
 ): Promise<boolean> => {
   try {
     if (supabase && isSupabaseConfigured) {
-      const { error } = await supabase
-        .from('claims')
-        .update({ status, ...(notes ? { notes } : {}) })
-        .or(`id.eq.${claimIdOrBizId},business_id.eq.${claimIdOrBizId}`);
+      let query = supabase.from('claims').update({ status, ...(notes ? { notes } : {}) });
+      if (isUuid(claimIdOrBizId)) {
+        query = query.eq('id', claimIdOrBizId);
+      } else {
+        query = query.eq('business_id', claimIdOrBizId);
+      }
+      const { error } = await query;
       if (error) console.warn('Supabase update claim warning:', error.message);
     }
     const existing = getSavedClaims();
@@ -155,6 +184,7 @@ export const updateClaimStatusInSupabase = async (
         : c
     );
     localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('kwest_claims_updated', { detail: updated }));
     return true;
   } catch (err) {
     console.warn('Failed to update claim status:', err);
@@ -165,16 +195,20 @@ export const updateClaimStatusInSupabase = async (
 export const deleteClaimFromSupabase = async (claimIdOrBizId: string): Promise<boolean> => {
   try {
     if (supabase && isSupabaseConfigured) {
-      await supabase
-        .from('claims')
-        .delete()
-        .or(`id.eq.${claimIdOrBizId},business_id.eq.${claimIdOrBizId}`);
+      let query = supabase.from('claims').delete();
+      if (isUuid(claimIdOrBizId)) {
+        query = query.eq('id', claimIdOrBizId);
+      } else {
+        query = query.eq('business_id', claimIdOrBizId);
+      }
+      await query;
     }
     const existing = getSavedClaims();
     const updated = existing.filter(
       (c) => c.id !== claimIdOrBizId && c.business_id !== claimIdOrBizId
     );
     localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('kwest_claims_updated', { detail: updated }));
     return true;
   } catch (err) {
     console.warn('Failed to delete claim:', err);
@@ -199,6 +233,7 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
     };
 
     if (supabase && isSupabaseConfigured) {
+      // Supabase 'businesses' table schema columns
       const { error } = await supabase.from('businesses').upsert([
         {
           id: normalizedBusiness.id,
@@ -209,13 +244,13 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
           sub_category: normalizedBusiness.subCategory || null,
           zone: normalizedBusiness.zone,
           landmark: normalizedBusiness.landmark || 'Kahawa West',
-          address_details: normalizedBusiness.addressDetails || null,
           phone: normalizedBusiness.phone,
           whatsapp: normalizedBusiness.whatsapp || normalizedBusiness.phone,
           email: normalizedBusiness.email || null,
           is_verified: normalizedBusiness.isVerified ?? true,
           is_claimed: normalizedBusiness.isClaimed ?? true,
           claimed_by: normalizedBusiness.claimedBy || null,
+          claimed_at: normalizedBusiness.claimedAt || new Date().toISOString().split('T')[0],
           rating: normalizedBusiness.rating || 5.0,
           review_count: normalizedBusiness.reviewCount || 1,
           price_level: normalizedBusiness.priceLevel || 'Moderate',
@@ -227,7 +262,8 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
           mpesa: normalizedBusiness.mpesa || null,
           social_links: normalizedBusiness.socialLinks || null,
           special_offer: normalizedBusiness.specialOffer || null,
-          coordinates: normalizedBusiness.coordinates || null,
+          status: 'published',
+          created_at: normalizedBusiness.createdAt || new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
       ]);
@@ -480,7 +516,12 @@ export const getStoredFeedback = (businessId?: string): CommunityFeedback[] => {
   }
 };
 
-export const saveBusinessApplication = async (app: BusinessApplication): Promise<boolean> => {
+export const saveBusinessApplication = async (
+  app: BusinessApplication
+): Promise<{ success: boolean; error?: string; remoteSynced?: boolean; id?: string }> => {
+  let remoteSynced = false;
+  let remoteError: string | undefined;
+
   try {
     const appWithId: BusinessApplication = {
       ...app,
@@ -489,7 +530,7 @@ export const saveBusinessApplication = async (app: BusinessApplication): Promise
     };
 
     if (supabase && isSupabaseConfigured) {
-      const { error } = await supabase.from('applications').insert([
+      const { data, error } = await supabase.from('applications').insert([
         {
           name: appWithId.name,
           category: appWithId.category,
@@ -512,15 +553,30 @@ export const saveBusinessApplication = async (app: BusinessApplication): Promise
           status: 'pending',
           created_at: appWithId.created_at || new Date().toISOString(),
         }
-      ]);
-      if (error) console.warn('Supabase application insert warning:', error.message);
+      ]).select('id').single();
+
+      if (error) {
+        console.warn('Supabase application insert warning:', error.message);
+        remoteError = error.message;
+      } else {
+        remoteSynced = true;
+        if (data?.id) {
+          appWithId.id = data.id;
+        }
+      }
     }
+
     const existing: BusinessApplication[] = JSON.parse(localStorage.getItem(APPLICATIONS_STORAGE_KEY) || '[]');
-    existing.unshift(appWithId);
-    localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(existing));
-    return true;
-  } catch {
-    return false;
+    const filtered = existing.filter((a) => a.id !== appWithId.id);
+    filtered.unshift(appWithId);
+    localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(filtered));
+
+    window.dispatchEvent(new CustomEvent('kwest_applications_updated', { detail: filtered }));
+
+    return { success: true, remoteSynced, error: remoteError, id: appWithId.id };
+  } catch (err: any) {
+    console.error('Error saving application:', err);
+    return { success: false, remoteSynced: false, error: err?.message };
   }
 };
 
@@ -584,10 +640,13 @@ export const updateApplicationStatusInSupabase = async (
 ): Promise<boolean> => {
   try {
     if (supabase && isSupabaseConfigured) {
-      const { error } = await supabase
-        .from('applications')
-        .update({ status, ...(notes ? { notes } : {}) })
-        .eq('id', appId);
+      let query = supabase.from('applications').update({ status, ...(notes ? { notes } : {}) });
+      if (isUuid(appId)) {
+        query = query.eq('id', appId);
+      } else {
+        query = query.eq('id', appId);
+      }
+      const { error } = await query;
       if (error) console.warn('Supabase update application warning:', error.message);
     }
     const existing = getStoredApplications();
@@ -595,6 +654,7 @@ export const updateApplicationStatusInSupabase = async (
       a.id === appId ? { ...a, status, ...(notes ? { notes } : {}) } : a
     );
     localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('kwest_applications_updated', { detail: updated }));
     return true;
   } catch (err) {
     console.warn('Failed to update application status:', err);
@@ -605,11 +665,14 @@ export const updateApplicationStatusInSupabase = async (
 export const deleteApplicationFromSupabase = async (appId: string): Promise<boolean> => {
   try {
     if (supabase && isSupabaseConfigured) {
-      await supabase.from('applications').delete().eq('id', appId);
+      if (isUuid(appId)) {
+        await supabase.from('applications').delete().eq('id', appId);
+      }
     }
     const existing = getStoredApplications();
     const updated = existing.filter((a) => a.id !== appId);
     localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('kwest_applications_updated', { detail: updated }));
     return true;
   } catch (err) {
     console.warn('Failed to delete application:', err);
@@ -835,6 +898,7 @@ export interface SupabaseSyncReport {
   updatesTableAccessible: boolean;
   businessesTableAccessible: boolean;
   claimsTableAccessible: boolean;
+  applicationsTableAccessible: boolean;
   businessesInsertable: boolean;
   message: string;
   sqlToRun?: string;
@@ -848,6 +912,7 @@ export const testSupabaseSyncStatus = async (): Promise<SupabaseSyncReport> => {
       updatesTableAccessible: false,
       businessesTableAccessible: false,
       claimsTableAccessible: false,
+      applicationsTableAccessible: false,
       businessesInsertable: false,
       message: 'Supabase credentials are not configured.',
     };
@@ -857,6 +922,7 @@ export const testSupabaseSyncStatus = async (): Promise<SupabaseSyncReport> => {
   let updatesTableAccessible = false;
   let businessesTableAccessible = false;
   let claimsTableAccessible = false;
+  let applicationsTableAccessible = false;
   let businessesInsertable = false;
   let errorMessages: string[] = [];
 
@@ -892,12 +958,21 @@ export const testSupabaseSyncStatus = async (): Promise<SupabaseSyncReport> => {
     errorMessages.push(`Claims: ${claimsCheck.error.message}`);
   }
 
+  // 5. Test applications SELECT
+  const appsCheck = await supabase.from('applications').select('id').limit(1);
+  if (!appsCheck.error) {
+    applicationsTableAccessible = true;
+  } else {
+    errorMessages.push(`Applications: ${appsCheck.error.message}`);
+  }
+
   return {
     connected: true,
     storiesTableAccessible,
     updatesTableAccessible,
     businessesTableAccessible,
     claimsTableAccessible,
+    applicationsTableAccessible,
     businessesInsertable,
     message: errorMessages.length > 0 ? errorMessages.join(' | ') : 'All tables accessible and syncing.',
   };

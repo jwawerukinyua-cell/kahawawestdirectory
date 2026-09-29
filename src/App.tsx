@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Search,
   MapPin,
@@ -52,6 +52,8 @@ import {
   deleteApplicationFromSupabase,
   fetchBusinessesFromSupabase,
   generateBusinessSlug,
+  supabase,
+  isSupabaseConfigured,
 } from './lib/supabase';
 
 // Layout & Components
@@ -167,9 +169,47 @@ export default function App() {
     return () => window.removeEventListener('beforeinstallprompt', handlePrompt);
   }, []);
 
-  // Fetch latest community stories, updates, claims, applications & businesses from Supabase on mount
-  useEffect(() => {
-    fetchStoriesFromSupabase().then((remoteStories) => {
+  // Cloud sync status state
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+  const [lastCloudSyncTime, setLastCloudSyncTime] = useState<Date | null>(null);
+
+  // Centralized cloud data refresher (Supabase)
+  const refreshCloudData = useCallback(async () => {
+    setIsSyncingCloud(true);
+    try {
+      const [remoteClaims, remoteApps, remoteBiz, remoteStories, remoteUpdates] = await Promise.all([
+        fetchClaimsFromSupabase(),
+        fetchApplicationsFromSupabase(),
+        fetchBusinessesFromSupabase(),
+        fetchStoriesFromSupabase(),
+        fetchUpdatesFromSupabase(),
+      ]);
+
+      if (remoteClaims !== null) {
+        setClaims(remoteClaims);
+      }
+      if (remoteApps !== null) {
+        setApplications(remoteApps);
+      }
+      if (remoteBiz && remoteBiz.length > 0) {
+        setBusinesses((prev) => {
+          const remoteMap = new Map(remoteBiz.map((b) => [b.id, b]));
+          const updatedPrev = prev.map((p) => {
+            if (remoteMap.has(p.id)) {
+              return {
+                ...p,
+                ...remoteMap.get(p.id)!,
+              };
+            }
+            return p;
+          });
+          const prevMap = new Map(updatedPrev.map((p) => [p.id, p]));
+          const newVerifiedRemote = remoteBiz.filter(
+            (b) => !prevMap.has(b.id) && b.isVerified === true
+          );
+          return [...updatedPrev, ...newVerifiedRemote];
+        });
+      }
       if (remoteStories && remoteStories.length > 0) {
         const deletedIds = getDeletedStoryIds();
         const activeRemote = remoteStories.filter(
@@ -199,9 +239,6 @@ export default function App() {
           );
         });
       }
-    });
-
-    fetchUpdatesFromSupabase().then((remoteUpdates) => {
       if (remoteUpdates && remoteUpdates.length > 0) {
         const deletedIds = getDeletedUpdateIds();
         const activeRemote = remoteUpdates.filter(
@@ -223,44 +260,92 @@ export default function App() {
           );
         });
       }
-    });
+      setLastCloudSyncTime(new Date());
+    } catch (err) {
+      console.warn('Error syncing cloud data:', err);
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  }, []);
 
-    // Fetch latest claims from Supabase
-    fetchClaimsFromSupabase().then((remoteClaims) => {
-      if (remoteClaims && remoteClaims.length > 0) {
-        setClaims(remoteClaims);
-      }
-    });
+  // Fetch initial data on mount
+  useEffect(() => {
+    refreshCloudData();
+  }, [refreshCloudData]);
 
-    // Fetch latest listing applications from Supabase
-    fetchApplicationsFromSupabase().then((remoteApps) => {
-      if (remoteApps && remoteApps.length > 0) {
-        setApplications(remoteApps);
+  // Keep claims and applications reactive to window events
+  useEffect(() => {
+    const handleAppsUpdate = (e: any) => {
+      if (e.detail && Array.isArray(e.detail)) {
+        setApplications(e.detail);
       }
-    });
+    };
+    const handleClaimsUpdate = (e: any) => {
+      if (e.detail && Array.isArray(e.detail)) {
+        setClaims(e.detail);
+      }
+    };
+    window.addEventListener('kwest_applications_updated', handleAppsUpdate);
+    window.addEventListener('kwest_claims_updated', handleClaimsUpdate);
 
-    // Fetch latest verified businesses from Supabase to sync across devices (laptop, mobile)
-    fetchBusinessesFromSupabase().then((remoteBusinesses) => {
-      if (remoteBusinesses && remoteBusinesses.length > 0) {
-        setBusinesses((prev) => {
-          const remoteMap = new Map(remoteBusinesses.map((b) => [b.id, b]));
-          const updatedPrev = prev.map((p) => {
-            if (remoteMap.has(p.id)) {
-              return {
-                ...p,
-                ...remoteMap.get(p.id)!,
-              };
-            }
-            return p;
-          });
-          const prevMap = new Map(updatedPrev.map((p) => [p.id, p]));
-          const newVerifiedRemote = remoteBusinesses.filter(
-            (b) => !prevMap.has(b.id) && b.isVerified === true
-          );
-          return [...updatedPrev, ...newVerifiedRemote];
-        });
-      }
-    });
+    return () => {
+      window.removeEventListener('kwest_applications_updated', handleAppsUpdate);
+      window.removeEventListener('kwest_claims_updated', handleClaimsUpdate);
+    };
+  }, []);
+
+  // Auto-refresh when opening Editorial Review desk or when window gains focus
+  useEffect(() => {
+    if (isEditorialReviewOpen) {
+      refreshCloudData();
+    }
+  }, [isEditorialReviewOpen, refreshCloudData]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      refreshCloudData();
+    };
+    window.addEventListener('focus', handleFocus);
+    const interval = setInterval(refreshCloudData, 45000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, [refreshCloudData]);
+
+  // Realtime multi-device subscription to Supabase changes
+  useEffect(() => {
+    if (!supabase || !isSupabaseConfigured) return;
+    try {
+      const channel = supabase
+        .channel('public:realtime-kwest-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'applications' },
+          () => {
+            fetchApplicationsFromSupabase().then((remoteApps) => {
+              if (remoteApps !== null) setApplications(remoteApps);
+            });
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'claims' },
+          () => {
+            fetchClaimsFromSupabase().then((remoteClaims) => {
+              if (remoteClaims !== null) setClaims(remoteClaims);
+            });
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (err) {
+      console.warn('Realtime channel error:', err);
+    }
   }, []);
 
   // 3b. Businesses with active special resident offers
@@ -1142,6 +1227,9 @@ export default function App() {
         onToggleVerifyBusiness={handleToggleVerifyBusiness}
         onOpenSubmitModal={() => setIsSubmitStoryOpen(true)}
         onOpenSubmitUpdateModal={() => setIsSubmitUpdateOpen(true)}
+        onRefreshCloudData={refreshCloudData}
+        isSyncingCloud={isSyncingCloud}
+        lastCloudSyncTime={lastCloudSyncTime}
       />
 
       {/* Community Spotlight Story Reader Modal */}
