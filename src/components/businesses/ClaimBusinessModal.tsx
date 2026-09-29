@@ -23,12 +23,14 @@ import {
   Tag,
   KeyRound,
   UserCheck,
+  MessageCircle,
 } from 'lucide-react';
 import { Business, BusinessClaim, EstateZone, OperationType } from '../../types';
 import { saveBusinessClaim, saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
 import { registerMerchantAccount } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
 import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
+import { getWhatsAppChatUrl } from '../../lib/phoneUtils';
 
 interface ClaimBusinessModalProps {
   business: Business;
@@ -339,7 +341,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
 
         {/* Form Body */}
         {successMode ? (
-          <div className="p-6 sm:p-12 text-center my-auto min-w-0">
+          <div className="p-6 sm:p-10 text-center my-auto min-w-0">
             <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4 animate-bounce">
               <Clock className="w-10 h-10" />
             </div>
@@ -347,7 +349,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
             <p className="text-slate-600 text-xs sm:text-sm max-w-md mx-auto mb-4">
               Your claim for <strong>{customName || business.name}</strong> has been received and queued in the KWEST Editorial Review Desk. Our editorial team validates merchant credentials before changes take effect.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
               <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
                 <Clock className="w-4 h-4 text-amber-600" /> Pending Editorial Desk Verification
               </div>
@@ -361,6 +363,40 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Seamless WhatsApp text to Editorial Desk (Option 3) */}
+            <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 sm:p-5 max-w-md mx-auto mb-6 text-left shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-emerald-950">Fast-Track via WhatsApp</h4>
+                  <p className="text-xs text-emerald-800 mt-0.5 leading-relaxed">
+                    Leave a direct note with the Editorial Desk to quickly verify your ownership claim for <strong>{customName || business.name}</strong>.
+                  </p>
+                  <a
+                    href={getWhatsAppChatUrl(
+                      '254764405842',
+                      `Hello Kahawa West Directory, I have just submitted an ownership claim for "${customName || business.name}" (ID: ${business.id}) via kahawawestdirectory.co.ke.\n\nClaimant: ${fullName} (${businessRole})\nContact: ${phoneNumber}\n\nPlease verify our ownership badge. Thank you!`
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition active:scale-98"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Send WhatsApp Note to Editorial Desk</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition"
+            >
+              Done &amp; Return to Directory
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmitClaim} className="overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-5 flex-1 min-w-0 max-w-full">

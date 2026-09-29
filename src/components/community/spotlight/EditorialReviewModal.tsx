@@ -25,6 +25,7 @@ import {
   Filter,
   Layers,
   MessageSquare,
+  MessageCircle,
   Lock,
   Unlock,
   Key,
@@ -1702,7 +1703,23 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                               </div>
 
                               {/* Moderation Actions */}
-                              <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-center">
+                              <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-center flex-wrap justify-end">
+                                {(claim.whatsapp_number || claim.phone_number) && (
+                                  <a
+                                    href={getWhatsAppChatUrl(
+                                      claim.whatsapp_number || claim.phone_number,
+                                      `Hello ${claim.full_name || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your ownership claim for "${claim.business_name || claim.business_id}". We are verifying your details to activate your verified merchant badge. Could you kindly confirm your business location or permit? Thank you!`
+                                    )}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-2 rounded-xl bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80 font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                                    title="Open WhatsApp chat with claimant"
+                                  >
+                                    <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span>WhatsApp Claimant</span>
+                                  </a>
+                                )}
+
                                 {claim.status !== 'verified' && onApproveClaim && (
                                   <button
                                     onClick={() => onApproveClaim(claim.business_id)}
@@ -1837,7 +1854,23 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                               </div>
 
                               {/* Actions */}
-                              <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-center">
+                              <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-center flex-wrap justify-end">
+                                {(app.whatsapp || app.applicantPhone || app.phone) && (
+                                  <a
+                                    href={getWhatsAppChatUrl(
+                                      app.whatsapp || app.applicantPhone || app.phone,
+                                      `Hello ${app.applicantName || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your listing application for "${app.name}" (${app.zone || 'Kahawa West'}). We received your submission and are reviewing the details to publish your listing!`
+                                    )}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-2 rounded-xl bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80 font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                                    title="Open WhatsApp chat with applicant"
+                                  >
+                                    <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span>WhatsApp Applicant</span>
+                                  </a>
+                                )}
+
                                 {app.status !== 'approved' && onApproveApplication && (
                                   <button
                                     onClick={() => onApproveApplication(app)}
