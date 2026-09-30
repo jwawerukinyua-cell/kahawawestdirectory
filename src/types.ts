@@ -242,6 +242,11 @@ export interface BusinessApplication {
   phone: string;
   whatsapp: string;
   email?: string;
+  website?: string;
+  facebook?: string;
+  instagram?: string;
+  tiktok?: string;
+  socialLinks?: SocialLinks;
   description: string;
   services: string[];
   mpesaType?: string;

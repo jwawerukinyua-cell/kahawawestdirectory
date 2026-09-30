@@ -55,6 +55,7 @@ import {
   supabase,
   isSupabaseConfigured,
 } from './lib/supabase';
+import { getWhatsAppChatUrl } from './lib/phoneUtils';
 
 // Layout & Components
 import { Header } from './components/layout/Header';
@@ -687,6 +688,25 @@ export default function App() {
         return b;
       });
     });
+
+    // Offer to immediately send verified badge notice & live link on WhatsApp
+    if (claimRecord) {
+      const contact = claimRecord.whatsapp_number || claimRecord.phone_number;
+      if (contact) {
+        const liveLink = `https://www.kahawawestdirectory.co.ke/?biz=${businessId}`;
+        const claimApprovalMsg = `Hello ${claimRecord.full_name || 'Merchant'}, congratulations! Your ownership claim for "${claimRecord.business_name || businessId}" has been verified and APPROVED on the Kahawa West Community Directory! 🎉\n\nYour verified merchant badge is now active. View your live listing here:\n${liveLink}\n\nWelcome to the KWEST business network!`;
+        const waUrl = getWhatsAppChatUrl(contact, claimApprovalMsg);
+
+        setTimeout(() => {
+          const notify = confirm(
+            `🎉 Claim for "${claimRecord.business_name || businessId}" verified!\n\nWould you like to open WhatsApp now to send ${claimRecord.full_name} their verified badge notice and live link?`
+          );
+          if (notify) {
+            window.open(waUrl, '_blank');
+          }
+        }, 300);
+      }
+    }
   };
 
   const handleRejectClaim = async (businessId: string, reason?: string) => {
@@ -738,6 +758,13 @@ export default function App() {
       description: app.description,
       services: app.services || [],
       features: ['Lipa na M-Pesa Available', 'Local Kahawa West Resident Owned', 'Verified Contact'],
+      socialLinks: app.socialLinks || (app.website || app.facebook || app.instagram || app.tiktok ? {
+        website: app.website,
+        facebook: app.facebook,
+        instagram: app.instagram,
+        tiktok: app.tiktok,
+        whatsapp: app.whatsapp || app.phone,
+      } : undefined),
       mpesa: app.mpesaNumber
         ? {
             type: (app.mpesaType as 'Till' | 'Pochi la Biashara' | 'Paybill' | 'Send Money') || 'Till',
@@ -752,6 +779,23 @@ export default function App() {
 
     await saveCustomizedBusiness(approvedBusiness);
     setBusinesses((prev) => [approvedBusiness, ...prev]);
+
+    // Offer to immediately send approval notification & live link to applicant via WhatsApp
+    const applicantPhone = app.whatsapp || app.applicantPhone || app.phone;
+    if (applicantPhone) {
+      const liveLink = `https://www.kahawawestdirectory.co.ke/?biz=${newSlug}`;
+      const approvalMsg = `Hello ${app.applicantName || 'Merchant'}, congratulations! Your business "${app.name}" in ${app.zone} has been APPROVED and published to the live Kahawa West Community Directory! 🎉\n\nView your official live listing here:\n${liveLink}\n\nWelcome to the KWEST local merchant network!`;
+      const waUrl = getWhatsAppChatUrl(applicantPhone, approvalMsg);
+
+      setTimeout(() => {
+        const notify = confirm(
+          `🎉 "${app.name}" is now live on the directory!\n\nWould you like to open WhatsApp now to send ${app.applicantName || 'the owner'} (${applicantPhone}) their congratulations message and live directory link?`
+        );
+        if (notify) {
+          window.open(waUrl, '_blank');
+        }
+      }, 300);
+    }
   };
 
   const handleRejectApplication = async (appId: string, reason?: string) => {

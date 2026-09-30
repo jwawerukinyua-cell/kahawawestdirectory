@@ -76,7 +76,7 @@ import {
 import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
 import { copyToClipboard } from '../../../lib/clipboard';
-import { testSupabaseSyncStatus, SupabaseSyncReport } from '../../../lib/supabase';
+import { testSupabaseSyncStatus, SupabaseSyncReport, generateBusinessSlug } from '../../../lib/supabase';
 
 interface EditorialReviewModalProps {
   isOpen: boolean;
@@ -1708,15 +1708,21 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                                   <a
                                     href={getWhatsAppChatUrl(
                                       claim.whatsapp_number || claim.phone_number,
-                                      `Hello ${claim.full_name || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your ownership claim for "${claim.business_name || claim.business_id}". We are verifying your details to activate your verified merchant badge. Could you kindly confirm your business location or permit? Thank you!`
+                                      claim.status === 'verified'
+                                        ? `Hello ${claim.full_name || 'Merchant'}, congratulations! Your ownership claim for "${claim.business_name || claim.business_id}" has been verified and APPROVED on the Kahawa West Community Directory! 🎉\n\nYour verified merchant badge is now active. View your listing here: https://www.kahawawestdirectory.co.ke/?biz=${claim.business_id}\n\nWelcome to the KWEST business network!`
+                                        : `Hello ${claim.full_name || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your ownership claim for "${claim.business_name || claim.business_id}". We are verifying your details to activate your verified merchant badge. Could you kindly confirm your business location or permit? Thank you!`
                                     )}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-3 py-2 rounded-xl bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80 font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
-                                    title="Open WhatsApp chat with claimant"
+                                    className={`px-3 py-2 rounded-xl font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm ${
+                                      claim.status === 'verified'
+                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                        : 'bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80'
+                                    }`}
+                                    title={claim.status === 'verified' ? 'Send verified live link on WhatsApp' : 'Open WhatsApp chat with claimant'}
                                   >
-                                    <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                                    <span>WhatsApp Claimant</span>
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                    <span>{claim.status === 'verified' ? 'WhatsApp: Send Verified Link' : 'WhatsApp Claimant'}</span>
                                   </a>
                                 )}
 
@@ -1823,6 +1829,10 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                                   <span>📞 Biz Phone: <strong className="text-stone-200">{app.phone}</strong></span>
                                   {app.whatsapp && <span>💬 WhatsApp: <strong className="text-stone-200">{app.whatsapp}</strong></span>}
                                   {app.email && <span>✉️ Email: <strong className="text-stone-200">{app.email}</strong></span>}
+                                  {(app.website || app.socialLinks?.website) && <span>🌐 Website: <strong className="text-stone-200">{app.website || app.socialLinks?.website}</strong></span>}
+                                  {(app.instagram || app.socialLinks?.instagram) && <span>📸 IG: <strong className="text-stone-200">{app.instagram || app.socialLinks?.instagram}</strong></span>}
+                                  {(app.facebook || app.socialLinks?.facebook) && <span>📘 FB: <strong className="text-stone-200">{app.facebook || app.socialLinks?.facebook}</strong></span>}
+                                  {(app.tiktok || app.socialLinks?.tiktok) && <span>🎵 TikTok: <strong className="text-stone-200">{app.tiktok || app.socialLinks?.tiktok}</strong></span>}
                                   {app.mpesaNumber && <span>💳 M-Pesa: {app.mpesaType || 'Till'} {app.mpesaNumber}</span>}
                                   {app.created_at && (
                                     <span>📅 Submitted: {new Date(app.created_at).toLocaleDateString()}</span>
@@ -1859,15 +1869,21 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                                   <a
                                     href={getWhatsAppChatUrl(
                                       app.whatsapp || app.applicantPhone || app.phone,
-                                      `Hello ${app.applicantName || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your listing application for "${app.name}" (${app.zone || 'Kahawa West'}). We received your submission and are reviewing the details to publish your listing!`
+                                      app.status === 'approved'
+                                        ? `Hello ${app.applicantName || 'Merchant'}, congratulations! Your business "${app.name}" in ${app.zone} has been APPROVED and published to the live Kahawa West Community Directory! 🎉\n\nView your official live listing here:\nhttps://www.kahawawestdirectory.co.ke/?biz=${generateBusinessSlug(app.name)}\n\nWelcome to the KWEST business network!`
+                                        : `Hello ${app.applicantName || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your listing application for "${app.name}" (${app.zone || 'Kahawa West'}). We received your submission and are reviewing the details to publish your listing!`
                                     )}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-3 py-2 rounded-xl bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80 font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
-                                    title="Open WhatsApp chat with applicant"
+                                    className={`px-3 py-2 rounded-xl font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm ${
+                                      app.status === 'approved'
+                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/40'
+                                        : 'bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80'
+                                    }`}
+                                    title={app.status === 'approved' ? 'Send live directory link on WhatsApp' : 'Open WhatsApp chat with applicant'}
                                   >
-                                    <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                                    <span>WhatsApp Applicant</span>
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                    <span>{app.status === 'approved' ? 'WhatsApp: Send Live Link' : 'WhatsApp Applicant'}</span>
                                   </a>
                                 )}
 

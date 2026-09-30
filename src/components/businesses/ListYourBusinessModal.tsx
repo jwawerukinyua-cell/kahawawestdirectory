@@ -63,6 +63,9 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
+  const [facebook, setFacebook] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [tiktok, setTiktok] = useState('');
   const [description, setDescription] = useState('');
   const [mpesaType, setMpesaType] = useState<'Till' | 'Paybill' | 'Pochi la Biashara' | 'Send Money'>('Till');
   const [mpesaNumber, setMpesaNumber] = useState('');
@@ -167,8 +170,24 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         priceLevel: 'Moderate',
         heroImage: photos[0],
         galleryImages: photos,
-        socialLinks: website ? {
-          website: website.startsWith('http') ? website : `https://${website}`,
+        socialLinks: (website.trim() || facebook.trim() || instagram.trim() || tiktok.trim()) ? {
+          website: website.trim() ? (website.startsWith('http') ? website.trim() : `https://${website.trim()}`) : undefined,
+          facebook: facebook.trim() ? (facebook.startsWith('http') ? facebook.trim() : `https://${facebook.trim()}`) : undefined,
+          instagram: instagram.trim()
+            ? instagram.startsWith('http')
+              ? instagram.trim()
+              : instagram.startsWith('@')
+              ? `https://instagram.com/${instagram.trim().slice(1)}`
+              : `https://instagram.com/${instagram.trim()}`
+            : undefined,
+          tiktok: tiktok.trim()
+            ? tiktok.startsWith('http')
+              ? tiktok.trim()
+              : tiktok.startsWith('@')
+              ? `https://tiktok.com/@${tiktok.trim().slice(1)}`
+              : `https://tiktok.com/@${tiktok.trim()}`
+            : undefined,
+          whatsapp: whatsapp ? whatsapp.replace(/[^0-9]/g, '') : undefined,
         } : undefined,
         description: description || `Welcome to ${name}, serving residents in ${zone}, Kahawa West.`,
         services: ['Local Service in Kahawa West', 'Direct Resident Support'],
@@ -193,6 +212,41 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         phone,
         whatsapp: whatsapp ? whatsapp.replace(/[^0-9]/g, '') : phone.replace(/[^0-9]/g, ''),
         email: email || undefined,
+        website: website.trim() ? (website.startsWith('http') ? website.trim() : `https://${website.trim()}`) : undefined,
+        facebook: facebook.trim() ? (facebook.startsWith('http') ? facebook.trim() : `https://${facebook.trim()}`) : undefined,
+        instagram: instagram.trim()
+          ? instagram.startsWith('http')
+            ? instagram.trim()
+            : instagram.startsWith('@')
+            ? `https://instagram.com/${instagram.trim().slice(1)}`
+            : `https://instagram.com/${instagram.trim()}`
+          : undefined,
+        tiktok: tiktok.trim()
+          ? tiktok.startsWith('http')
+            ? tiktok.trim()
+            : tiktok.startsWith('@')
+            ? `https://tiktok.com/@${tiktok.trim().slice(1)}`
+            : `https://tiktok.com/@${tiktok.trim()}`
+          : undefined,
+        socialLinks: (website.trim() || facebook.trim() || instagram.trim() || tiktok.trim()) ? {
+          website: website.trim() ? (website.startsWith('http') ? website.trim() : `https://${website.trim()}`) : undefined,
+          facebook: facebook.trim() ? (facebook.startsWith('http') ? facebook.trim() : `https://${facebook.trim()}`) : undefined,
+          instagram: instagram.trim()
+            ? instagram.startsWith('http')
+              ? instagram.trim()
+              : instagram.startsWith('@')
+              ? `https://instagram.com/${instagram.trim().slice(1)}`
+              : `https://instagram.com/${instagram.trim()}`
+            : undefined,
+          tiktok: tiktok.trim()
+            ? tiktok.startsWith('http')
+              ? tiktok.trim()
+              : tiktok.startsWith('@')
+              ? `https://tiktok.com/@${tiktok.trim().slice(1)}`
+              : `https://tiktok.com/@${tiktok.trim()}`
+            : undefined,
+          whatsapp: whatsapp ? whatsapp.replace(/[^0-9]/g, '') : undefined,
+        } : undefined,
         description: description || `Welcome to ${name}, serving residents in ${zone}, Kahawa West.`,
         services: ['Local Service in Kahawa West', 'Direct Resident Support'],
         mpesaType,
@@ -216,15 +270,11 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         application.id = saveRes.id;
       }
       setIsRemoteSynced(Boolean(saveRes.remoteSynced));
-
+      if (onApplicationSubmitted) {
+        onApplicationSubmitted(application);
+      }
+      setIsSubmitting(false);
       setSuccessMode(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        if (onApplicationSubmitted) {
-          onApplicationSubmitted(application);
-        }
-        onClose();
-      }, 2500);
     } catch (err) {
       console.error(err);
       setIsSubmitting(false);
@@ -674,6 +724,54 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="contact@business.co.ke"
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Social Media & Business Pages (Optional) */}
+            <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-800 text-xs uppercase tracking-wider">
+                  Social Pages &amp; Online Profiles (Optional)
+                </span>
+                <span className="text-[11px] text-slate-500">Facebook, Instagram, TikTok</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    📸 Instagram (@handle or link)
+                  </label>
+                  <input
+                    type="text"
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    placeholder="@username or link"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    📘 Facebook Page URL
+                  </label>
+                  <input
+                    type="text"
+                    value={facebook}
+                    onChange={(e) => setFacebook(e.target.value)}
+                    placeholder="facebook.com/yourpage"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    🎵 TikTok (@handle or link)
+                  </label>
+                  <input
+                    type="text"
+                    value={tiktok}
+                    onChange={(e) => setTiktok(e.target.value)}
+                    placeholder="@username or link"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white font-medium"
                   />
                 </div>
               </div>

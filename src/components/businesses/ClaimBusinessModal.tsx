@@ -244,17 +244,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         claimRecord.id = saveRes.id;
       }
       setIsRemoteSynced(Boolean(saveRes.remoteSynced));
-
+      if (onClaimSubmitted) {
+        onClaimSubmitted(claimRecord);
+      } else if (onClaimSuccess) {
+        onClaimSuccess(business, claimRecord);
+      }
+      setIsSubmitting(false);
       setSuccessMode(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        if (onClaimSubmitted) {
-          onClaimSubmitted(claimRecord);
-        } else if (onClaimSuccess) {
-          onClaimSuccess(business, claimRecord);
-        }
-        onClose();
-      }, 2500);
     } catch (err) {
       console.error(err);
       setIsSubmitting(false);
