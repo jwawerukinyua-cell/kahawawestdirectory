@@ -115,6 +115,16 @@ export function trackBusinessInteraction(
         detail: { businessId, type, stats: current },
       })
     );
+
+    // Forward event to Google Analytics (GA4)
+    if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+      (window as any).gtag('event', type === 'whatsapp' ? 'whatsapp_click' : type === 'phone' ? 'phone_call' : type, {
+        event_category: 'business_lead',
+        business_id: businessId,
+        interaction_type: type,
+        value: type === 'whatsapp' || type === 'phone' ? 1 : 0,
+      });
+    }
   } catch (e) {
     console.error('Error recording interaction:', e);
   }
@@ -146,6 +156,15 @@ export function trackSearchQuery(query: string, zone?: string, category?: string
 
     const updated = [newItem, ...filtered].slice(0, 10);
     localStorage.setItem(SEARCH_HISTORY_STORAGE_KEY, JSON.stringify(updated));
+
+    // Forward search event to Google Analytics (GA4)
+    if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+      (window as any).gtag('event', 'search', {
+        search_term: newItem.query,
+        search_zone: newItem.zone || 'all',
+        search_category: newItem.category || 'all',
+      });
+    }
   } catch (e) {
     console.error('Error saving search history:', e);
   }
