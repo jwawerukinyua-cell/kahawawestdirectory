@@ -83,6 +83,7 @@ import { AboutModal } from './components/about/AboutModal';
 import { LegalModal } from './components/legal/LegalModal';
 import { MonetizationPlaceholders } from './components/home/MonetizationPlaceholders';
 import { AdEnquiryModal } from './components/home/AdEnquiryModal';
+import { JsonLdManager } from './components/seo/JsonLdManager';
 import { FloatingShareButton } from './components/ui/FloatingShareButton';
 import { NotificationCenter } from './components/notifications/NotificationCenter';
 import { NotificationToast } from './components/notifications/NotificationToast';
@@ -972,6 +973,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col font-sans antialiased text-stone-900 selection:bg-emerald-700 selection:text-white pb-16 md:pb-0">
+      {/* Dynamic Technical SEO, Open Graph & Schema.org JSON-LD Manager */}
+      <JsonLdManager
+        activeBusiness={selectedBusinessForDetails}
+        activeCategory={selectedCategory !== 'all' ? selectedCategory : null}
+        activeZone={selectedZone !== 'all' ? selectedZone : null}
+      />
+
       {/* 1. Header Navigation Bar */}
       <Header
         onListBusinessClick={() => setIsListBusinessOpen(true)}
