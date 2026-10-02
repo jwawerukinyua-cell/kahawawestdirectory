@@ -1,6 +1,5 @@
-// KWEST PWA Notification Management & Service Worker Integration
-import { CommunityUpdate } from '../types';
-import { getRecentSearches } from './tracking';
+// KWEST PWA Notification Management & Dynamic Live Content Alerts
+import { CommunityUpdate, CommunityStory } from '../types';
 
 export interface AppNotification {
   id: string;
@@ -14,112 +13,118 @@ export interface AppNotification {
   relatedZone?: string;
 }
 
-const NOTIFICATIONS_STORAGE_KEY = 'kwest_in_app_notifications_v1';
+const READ_NOTIFICATIONS_STORAGE_KEY = 'kwest_read_notifications_ids_v2';
 const PUSH_PREFERENCE_KEY = 'kwest_push_enabled_v1';
 
-// Seed initial in-app community alerts
-const SEED_NOTIFICATIONS: AppNotification[] = [
-  {
-    id: 'notif-01',
-    title: '⚡ Power Notice for Bima & Soweto',
-    body: 'Scheduled KPLC transformer maintenance on Thursday 9:00 AM - 5:00 PM.',
-    type: 'update',
-    time: '2 hours ago',
-    badge: 'Utility Alert',
-    isRead: false,
-    relatedZone: 'Bima Road',
-  },
-  {
-    id: 'notif-02',
-    title: '🥐 Crown Bakehouse Grand Opening',
-    body: 'Fresh bakery opening this Friday opposite TotalEnergies on Kamiti Road with 15% discount!',
-    type: 'deal',
-    time: '5 hours ago',
-    badge: 'New Opening',
-    isRead: false,
-    relatedZone: 'Kamiti Road',
-  },
-  {
-    id: 'notif-03',
-    title: '⚽ Youth Football Tournament Saturday',
-    body: 'Annual inter-estate championship kicking off 10:00 AM at Kahawa West Grounds. Free entry!',
-    type: 'update',
-    time: '1 day ago',
-    badge: 'Community Event',
-    isRead: true,
-    relatedZone: 'Station / Railway',
-  },
-];
+// Read IDs tracking from localStorage
+export function getReadNotificationIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(READ_NOTIFICATIONS_STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
 
+export function saveReadNotificationIds(ids: Set<string>): void {
+  try {
+    localStorage.setItem(READ_NOTIFICATIONS_STORAGE_KEY, JSON.stringify(Array.from(ids)));
+    window.dispatchEvent(new CustomEvent('kwest_notifications_updated'));
+  } catch (e) {
+    console.error('Error saving read notification ids:', e);
+  }
+}
+
+// Build notifications ONLY from real, live, published content on the site
+export function buildLiveNotifications(
+  updates: CommunityUpdate[] = [],
+  stories: CommunityStory[] = [],
+  customReadIds?: Set<string>
+): AppNotification[] {
+  const readIds = customReadIds || getReadNotificationIds();
+  const list: AppNotification[] = [];
+
+  // 1. Real published updates (e.g. IEBC, emergency advisories, utility alerts)
+  updates.forEach((u) => {
+    const isLive =
+      !u.status ||
+      u.status === 'published' ||
+      u.status === 'approved' ||
+      (u.status as string) === 'approve';
+    if (!isLive) return;
+
+    const notifId = `up-${u.id}`;
+    list.push({
+      id: notifId,
+      title: u.title,
+      body: u.content.length > 130 ? u.content.slice(0, 130) + '...' : u.content,
+      type: 'update',
+      time: u.timeInfo || u.date || 'Recent',
+      badge: u.badge || (u.type === 'business' ? 'Business Notice' : 'Community Alert'),
+      url: `/?view=updates&update=${encodeURIComponent(u.id)}`,
+      isRead: readIds.has(notifId),
+      relatedZone: u.zone,
+    });
+  });
+
+  // 2. Real published stories (e.g. El Niño readiness, grassroots features)
+  stories.forEach((s) => {
+    const isLive =
+      !s.status ||
+      s.status === 'published' ||
+      s.status === 'approved' ||
+      (s.status as string) === 'approve';
+    if (!isLive) return;
+
+    const notifId = `story-${s.id}`;
+    list.push({
+      id: notifId,
+      title: s.title,
+      body: s.excerpt || (s.content.length > 130 ? s.content.slice(0, 130) + '...' : s.content),
+      type: 'update',
+      time: s.date || 'Recent',
+      badge: s.category || 'Spotlight Story',
+      url: `/?view=stories&story=${encodeURIComponent(s.slug || s.id)}`,
+      isRead: readIds.has(notifId),
+      relatedZone: s.zone,
+    });
+  });
+
+  return list;
+}
+
+// Get notifications based on stored data or fallback
 export function getStoredNotifications(): AppNotification[] {
-  try {
-    const raw = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
-    if (raw) {
-      return JSON.parse(raw);
-    }
-  } catch (e) {
-    console.error('Error reading notifications:', e);
-  }
-
-  try {
-    localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(SEED_NOTIFICATIONS));
-  } catch (e) {
-    console.error(e);
-  }
-  return SEED_NOTIFICATIONS;
+  return buildLiveNotifications();
 }
 
-export function saveNotification(notif: AppNotification): AppNotification[] {
-  const current = getStoredNotifications();
-  const exists = current.some((n) => n.id === notif.id);
-  const updated = exists ? current.map((n) => (n.id === notif.id ? notif : n)) : [notif, ...current];
-
-  try {
-    localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent('kwest_notifications_updated', { detail: updated }));
-  } catch (e) {
-    console.error(e);
-  }
-  return updated;
+export function saveNotification(_notif: AppNotification): AppNotification[] {
+  return getStoredNotifications();
 }
 
-export function markAllNotificationsAsRead(): AppNotification[] {
-  const current = getStoredNotifications();
-  const updated = current.map((n) => ({ ...n, isRead: true }));
-  try {
-    localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent('kwest_notifications_updated', { detail: updated }));
-  } catch (e) {
-    console.error(e);
-  }
-  return updated;
+export function markAllNotificationsAsRead(notifications?: AppNotification[]): AppNotification[] {
+  const readIds = getReadNotificationIds();
+  const current = notifications || getStoredNotifications();
+  current.forEach((n) => readIds.add(n.id));
+  saveReadNotificationIds(readIds);
+  return current.map((n) => ({ ...n, isRead: true }));
 }
 
 export function markNotificationAsRead(id: string): AppNotification[] {
-  const current = getStoredNotifications();
-  const updated = current.map((n) => (n.id === id ? { ...n, isRead: true } : n));
-  try {
-    localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent('kwest_notifications_updated', { detail: updated }));
-  } catch (e) {
-    console.error(e);
-  }
-  return updated;
+  const readIds = getReadNotificationIds();
+  readIds.add(id);
+  saveReadNotificationIds(readIds);
+  return getStoredNotifications();
 }
 
-export function clearNotifications(): AppNotification[] {
-  try {
-    localStorage.removeItem(NOTIFICATIONS_STORAGE_KEY);
-    window.dispatchEvent(new CustomEvent('kwest_notifications_updated', { detail: [] }));
-  } catch (e) {
-    console.error(e);
-  }
-  return [];
+export function clearNotifications(notifications?: AppNotification[]): AppNotification[] {
+  return markAllNotificationsAsRead(notifications);
 }
 
-// Smart contextual alerts - search term alerts disabled per user specification
+// Disabled dummy search echoing alerts
 export function generateSearchMatchAlerts(_communityUpdates: CommunityUpdate[]): AppNotification | null {
-  // Disabled: Do not echo search words (e.g. Bima) into the notification center
   return null;
 }
 

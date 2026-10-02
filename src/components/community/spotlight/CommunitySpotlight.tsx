@@ -38,7 +38,9 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
   const [copiedStoryId, setCopiedStoryId] = useState<string | null>(null);
 
   // Find the featured story (or the first available story)
-  const featuredStory = stories.find((s) => s.featured && s.status === 'published') || stories[0];
+  const isPublished = (s: CommunityStory) =>
+    !s.status || s.status === 'published' || s.status === 'approved' || (s.status as string) === 'approve';
+  const featuredStory = stories.find((s) => s.featured && isPublished(s)) || stories.find(isPublished) || stories[0];
 
   const handleQuickShare = (e: React.MouseEvent, story: CommunityStory) => {
     e.stopPropagation();

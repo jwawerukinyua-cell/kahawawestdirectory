@@ -93,10 +93,9 @@ import { SitemapModal } from './components/seo/SitemapModal';
 import { trackSearchQuery } from './lib/tracking';
 import {
   AppNotification,
-  getStoredNotifications,
-  saveNotification,
+  buildLiveNotifications,
+  getReadNotificationIds,
   sendNativeNotification,
-  generateSearchMatchAlerts,
 } from './lib/notifications';
 
 export default function App() {
@@ -137,21 +136,26 @@ export default function App() {
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
   const [isInstallAppOpen, setIsInstallAppOpen] = useState(false);
   const [isSitemapOpen, setIsSitemapOpen] = useState(false);
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications());
-  const [activeToastNotification, setActiveToastNotification] = useState<AppNotification | null>(null);
-  const [legalTab, setLegalTab] = useState<'guidelines' | 'community' | 'privacy' | 'terms' | null>(null);
+  
+  // Dynamic live notifications derived exclusively from real published updates & stories
+  const [readNotifIds, setReadNotifIds] = useState<Set<string>>(() => getReadNotificationIds());
 
-  // Unread notification count
+  const notifications = useMemo(() => {
+    return buildLiveNotifications(updates, stories, readNotifIds);
+  }, [updates, stories, readNotifIds]);
+
+  // Unread notification count - only glows when real live items are unread
   const unreadNotificationsCount = useMemo(() => {
     return notifications.filter((n) => !n.isRead).length;
   }, [notifications]);
 
+  const [activeToastNotification, setActiveToastNotification] = useState<AppNotification | null>(null);
+  const [legalTab, setLegalTab] = useState<'guidelines' | 'community' | 'privacy' | 'terms' | null>(null);
+
   // Keep notifications reactive
   useEffect(() => {
-    const handleNotifUpdate = (e: any) => {
-      if (e.detail) {
-        setNotifications(e.detail);
-      }
+    const handleNotifUpdate = () => {
+      setReadNotifIds(getReadNotificationIds());
     };
     window.addEventListener('kwest_notifications_updated', handleNotifUpdate);
 
@@ -274,6 +278,13 @@ export default function App() {
   useEffect(() => {
     refreshCloudData();
   }, [refreshCloudData]);
+
+  // Auto-refresh from cloud whenever the Editorial Review Desk opens
+  useEffect(() => {
+    if (isEditorialReviewOpen) {
+      refreshCloudData();
+    }
+  }, [isEditorialReviewOpen, refreshCloudData]);
 
   // Keep claims and applications reactive to window events
   useEffect(() => {
@@ -862,21 +873,40 @@ export default function App() {
   };
 
   const handleApproveStory = (storyId: string, featured?: boolean) => {
-    const updated = updateStoryModeration(storyId, 'published', featured);
-    setStories(updated);
-    const story = updated.find((s) => s.id === storyId);
-    if (story) {
-      syncStoryToSupabase(story);
-    }
+    setStories((prev) => {
+      const updated = prev.map((s) => {
+        if (s.id === storyId) {
+          return { ...s, status: 'published' as const, featured: featured !== undefined ? featured : s.featured };
+        }
+        if (featured) {
+          return { ...s, featured: false };
+        }
+        return s;
+      });
+      const target = updated.find((s) => s.id === storyId);
+      if (target) {
+        syncStoryToSupabase(target);
+      }
+      return updated;
+    });
+    updateStoryModeration(storyId, 'published', featured);
   };
 
   const handleRejectStory = (storyId: string, reason: string) => {
-    const updated = updateStoryModeration(storyId, 'rejected', false, reason);
-    setStories(updated);
-    const story = updated.find((s) => s.id === storyId);
-    if (story) {
-      syncStoryToSupabase(story);
-    }
+    setStories((prev) => {
+      const updated = prev.map((s) => {
+        if (s.id === storyId) {
+          return { ...s, status: 'rejected' as const, rejectionReason: reason, featured: false };
+        }
+        return s;
+      });
+      const target = updated.find((s) => s.id === storyId);
+      if (target) {
+        syncStoryToSupabase(target);
+      }
+      return updated;
+    });
+    updateStoryModeration(storyId, 'rejected', false, reason);
   };
 
   const handleDeleteStory = (storyId: string) => {
@@ -1207,7 +1237,7 @@ export default function App() {
         <section id="community-hub-section" className="space-y-12 mb-12">
           {/* A. Community Spotlight */}
           <CommunitySpotlight
-            stories={stories.filter((s) => s.status === 'published' || !s.status)}
+            stories={stories.filter((s) => !s.status || s.status === 'published' || s.status === 'approved' || (s.status as string) === 'approve')}
             onReadStory={handleReadStory}
             onSubmitStoryClick={() => setIsSubmitStoryOpen(true)}
             onOpenEditorialDesk={() => setIsEditorialReviewOpen(true)}
@@ -1216,7 +1246,7 @@ export default function App() {
 
           {/* B. Community Updates (Directly below Community Spotlight) */}
           <CommunityUpdates
-            updates={updates.filter((u) => u.status === 'published' || !u.status)}
+            updates={updates.filter((u) => !u.status || u.status === 'published' || u.status === 'approved' || (u.status as string) === 'approve')}
             onPostUpdateClick={() => setIsSubmitUpdateOpen(true)}
           />
         </section>
@@ -1397,6 +1427,7 @@ export default function App() {
         isOpen={isNotificationCenterOpen}
         onClose={() => setIsNotificationCenterOpen(false)}
         updates={updates}
+        stories={stories}
       />
 
       {/* Real-time Notification Toast Notification */}

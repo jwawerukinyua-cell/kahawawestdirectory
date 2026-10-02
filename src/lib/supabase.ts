@@ -720,6 +720,21 @@ export const syncStoryToSupabase = async (story: CommunityStory): Promise<boolea
   }
 };
 
+export function normalizeContentStatus(status?: string): 'published' | 'pending_review' | 'rejected' | 'archived' {
+  if (!status) return 'published';
+  const s = status.toLowerCase().trim();
+  if (s === 'published' || s === 'approved' || s === 'approve' || s === 'live' || s === 'active') {
+    return 'published';
+  }
+  if (s === 'rejected' || s === 'reject') {
+    return 'rejected';
+  }
+  if (s === 'pending' || s === 'pending_review' || s === 'in_review') {
+    return 'pending_review';
+  }
+  return 'published';
+}
+
 export const fetchStoriesFromSupabase = async (): Promise<CommunityStory[] | null> => {
   try {
     if (!supabase || !isSupabaseConfigured) return null;
@@ -762,7 +777,7 @@ export const fetchStoriesFromSupabase = async (): Promise<CommunityStory[] | nul
       date: row.date,
       readTimeMinutes: row.read_time_minutes || 3,
       featured: Boolean(row.featured),
-      status: row.status || 'published',
+      status: normalizeContentStatus(row.status),
       rejectionReason: row.rejection_reason,
       likes: row.likes || 0,
     }));
@@ -883,7 +898,7 @@ export const fetchUpdatesFromSupabase = async (): Promise<CommunityUpdate[] | nu
       isAccountabilityConfirmed: row.is_accountability_confirmed ?? true,
       urgencyLevel: row.urgency_level || 'standard',
       date: row.date,
-      status: row.status || 'published',
+      status: normalizeContentStatus(row.status),
       rejectionReason: row.rejection_reason,
     }));
   } catch (err) {

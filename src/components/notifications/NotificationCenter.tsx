@@ -12,9 +12,10 @@ import {
   ShieldCheck,
   Check,
 } from 'lucide-react';
-import { CommunityUpdate } from '../../types';
+import { CommunityUpdate, CommunityStory } from '../../types';
 import {
   AppNotification,
+  buildLiveNotifications,
   getStoredNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
@@ -29,46 +30,48 @@ interface NotificationCenterProps {
   isOpen: boolean;
   onClose: () => void;
   updates: CommunityUpdate[];
+  stories?: CommunityStory[];
   onSelectUpdate?: (update: CommunityUpdate) => void;
+  onReadStory?: (story: CommunityStory) => void;
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   isOpen,
   onClose,
   updates,
+  stories = [],
   onSelectUpdate,
+  onReadStory,
 }) => {
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications());
+  const [notifications, setNotifications] = useState<AppNotification[]>(() =>
+    buildLiveNotifications(updates, stories)
+  );
   const [filterType, setFilterType] = useState<'all' | 'updates' | 'suggested'>('all');
   const [pushStatus, setPushStatus] = useState<string>('default');
   const [testSent, setTestSent] = useState(false);
 
   useEffect(() => {
-    // Generate any smart search match alert from recent searches
-    generateSearchMatchAlerts(updates);
-    setNotifications(getStoredNotifications());
+    setNotifications(buildLiveNotifications(updates, stories));
     setPushStatus(getNotificationPermission());
 
-    const handleUpdate = (e: any) => {
-      if (e.detail) {
-        setNotifications(e.detail);
-      }
+    const handleUpdate = () => {
+      setNotifications(buildLiveNotifications(updates, stories));
     };
     window.addEventListener('kwest_notifications_updated', handleUpdate);
     return () => window.removeEventListener('kwest_notifications_updated', handleUpdate);
-  }, [updates, isOpen]);
+  }, [updates, stories, isOpen]);
 
   if (!isOpen) return null;
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const handleMarkAllRead = () => {
-    const updated = markAllNotificationsAsRead();
+    const updated = markAllNotificationsAsRead(notifications);
     setNotifications(updated);
   };
 
   const handleClearAll = () => {
-    const updated = clearNotifications();
+    const updated = clearNotifications(notifications);
     setNotifications(updated);
   };
 

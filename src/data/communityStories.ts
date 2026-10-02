@@ -66,6 +66,60 @@ Follow the journey. Support the teams. Show up for Kahawa. 🦁⚽
     likes: 1,
     dislikes: 0,
   },
+  {
+    id: 'story-1790854817571',
+    slug: 'is-kahawa-west-ready-for-el-nino',
+    title: 'Is Kahawa West Ready for El Niño?',
+    subtitle: '🌧️ Heavy rains, drainage readiness and community preparedness ahead of the rainy season',
+    category: 'Environment & Clean Up',
+    zone: 'Kiamumbi Border',
+    excerpt: 'Forecasts point to a wetter-than-usual season ahead, and for a neighbourhood like Kahawa West, that is not just a weather update. It is a call to prepare, and to do so before the first serious downpour lands.',
+    content: `The rains are coming. The bigger question is whether we are ready for them.
+
+Forecasts point to a wetter-than-usual season ahead, and for a neighbourhood like Kahawa West, that is not just a weather update. It is a call to prepare, and to do so before the first serious downpour lands.
+
+### Why This Matters More Than We Think
+
+Heavy rainfall in Kahawa West is rarely just an inconvenience. When the drainage cannot keep up, roads turn into rivers within minutes. Potholes fill with water and become genuine hazards for motorists and boda boda riders alike. Low-lying sections of the neighbourhood flood, sometimes reaching into homes and business premises. Landlords deal with leaking roofs and water damage. Traders watch stock spoil or get swept away. Pedestrians and schoolchildren are left navigating flooded paths just to get to and from where they need to be.
+
+None of this is new to residents who have lived through past rainy seasons here. The pattern repeats because the preparation often does not happen until the water is already rising.
+
+### The Questions Kahawa West Needs to Answer Now
+
+Before the rains intensify, it is worth taking honest stock of where things stand.
+
+- **Drainage:** Are the drainage channels in our estates and along our main roads actually clear, or have they been left blocked since the last rains?
+- **Roads:** Can our access routes handle sustained heavy rainfall, or will key roads become impassable the moment the rain picks up?
+- **Landlords:** Have roofs, gutters, and compound drainage been inspected and repaired ahead of the season?
+- **Businesses:** Is stock stored off the ground and away from likely water paths? Is electrical equipment protected?
+- **Schools:** Is there a plan for how pupils get home safely if heavy rain hits during school hours?
+- **Households:** Do families have basic emergency supplies on hand, such as torches, a charged power bank, drinking water, first aid essentials, and a dry, safe place to keep important documents?
+
+### Preparation Does Not Have to Be Expensive
+
+Much of what protects a home, a business, or a street during heavy rain costs little more than time and attention. Clearing a blocked drain, raising stock off a shop floor, or checking a roof for weak spots can be the difference between a manageable rainy season and a costly one.
+
+### This Is a Community Responsibility
+
+Preparedness in Kahawa West is not the job of one group alone. Residents, landlords, business owners, schools, and local authorities each have a role to play, and the work is more effective when it happens before the rain arrives rather than in response to it.
+
+We want to hear from you. What is your biggest concern when heavy rains hit Kahawa West — flooding, poor roads, blocked drainage, leaking houses, power outages, getting around safely, protecting business stock, or children getting to school? And just as importantly, what should residents, landlords, businesses, and local authorities be doing right now to get ahead of it?
+
+Share your thoughts in the comments. Kahawa West is our home, and getting ready for what is coming starts with the conversations we have today.`,
+    imageUrl: '/hero.jpg',
+    imageCaption: 'Kahawa West roundabout - Community Spotlight',
+    isRealPhotoConfirmed: true,
+    authorName: 'Mfalme Ukweli',
+    authorEmail: 'support@kahawawestdirectory.co.ke',
+    authorPhone: '+254764405842',
+    authorRole: 'Admin-Kahawa West Directory',
+    date: '2026-10-01',
+    readTimeMinutes: 4,
+    featured: false,
+    status: 'published',
+    likes: 1,
+    dislikes: 0,
+  },
 ];
 
 const LOCAL_STORAGE_STORIES_KEY = 'kwest_community_stories_v1';

@@ -75,8 +75,12 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               id="header-notification-btn"
               onClick={onOpenNotifications}
-              className="p-2.5 rounded-xl bg-[#4D0202] hover:bg-[#3D0101] text-stone-200 hover:text-white transition relative active:scale-95 border border-[#630303]"
-              title="View community notices & power alerts"
+              className={`p-2.5 rounded-xl transition relative active:scale-95 border cursor-pointer ${
+                unreadNotificationsCount > 0
+                  ? 'bg-[#4D0202] hover:bg-[#3D0101] text-white border-amber-500/60 shadow-sm'
+                  : 'bg-[#4D0202]/60 hover:bg-[#3D0101] text-stone-300 hover:text-white border-[#630303]/60'
+              }`}
+              title="View community notices & live updates"
             >
               <Bell className="w-4.5 h-4.5" />
               {unreadNotificationsCount > 0 && (
