@@ -179,16 +179,17 @@ export default function App() {
   const [isSyncingCloud, setIsSyncingCloud] = useState(false);
   const [lastCloudSyncTime, setLastCloudSyncTime] = useState<Date | null>(null);
 
-  // Centralized cloud data refresher (Supabase)
-  const refreshCloudData = useCallback(async () => {
+  // Centralized cloud data refresher (Supabase) - optimized for low egress
+  const refreshCloudData = useCallback(async (includeAdminData = false) => {
     setIsSyncingCloud(true);
     try {
-      const [remoteClaims, remoteApps, remoteBiz, remoteStories, remoteUpdates] = await Promise.all([
-        fetchClaimsFromSupabase(),
-        fetchApplicationsFromSupabase(),
+      const shouldFetchAdmin = includeAdminData || isEditorialReviewOpen;
+      const [remoteBiz, remoteStories, remoteUpdates, remoteClaims, remoteApps] = await Promise.all([
         fetchBusinessesFromSupabase(),
         fetchStoriesFromSupabase(),
         fetchUpdatesFromSupabase(),
+        shouldFetchAdmin ? fetchClaimsFromSupabase() : Promise.resolve(null),
+        shouldFetchAdmin ? fetchApplicationsFromSupabase() : Promise.resolve(null),
       ]);
 
       if (remoteClaims !== null) {
@@ -196,6 +197,66 @@ export default function App() {
       }
       if (remoteApps !== null) {
         setApplications(remoteApps);
+
+        // Auto-promote any application marked approved in Supabase to live directory businesses
+        remoteApps.forEach((app) => {
+          const isAppApproved = app.status === 'approved' || (app.status as string) === 'approve';
+          if (isAppApproved && app.name) {
+            const alreadyInBiz = (remoteBiz || []).some(
+              (b) =>
+                b.name.toLowerCase().trim() === app.name.toLowerCase().trim() ||
+                (b.slug && app.name && generateBusinessSlug(app.name) === b.slug)
+            );
+            if (!alreadyInBiz) {
+              const newBizId = `kw-biz-${app.id || Date.now()}`;
+              const newSlug = generateBusinessSlug(app.name);
+              const approvedBusiness: Business = {
+                id: newBizId,
+                slug: newSlug,
+                name: app.name,
+                tagline: `${app.category} in ${app.zone}, Kahawa West`,
+                category: app.category,
+                subCategory: app.subCategory,
+                zone: app.zone,
+                landmark: app.landmark,
+                addressDetails: `${app.landmark}, ${app.zone}, Kahawa West`,
+                phone: app.phone,
+                whatsapp: app.whatsapp || app.phone,
+                email: app.email,
+                isVerified: true,
+                isClaimed: true,
+                claimedBy: `${app.applicantName} (${app.applicantRole || 'Owner'})`,
+                rating: 5.0,
+                reviewCount: 1,
+                priceLevel: 'Moderate',
+                heroImage: app.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+                galleryImages: app.galleryImages && app.galleryImages.length > 0 ? app.galleryImages : [app.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
+                description: app.description,
+                services: app.services && app.services.length > 0 ? app.services : ['Local Service in Kahawa West', 'Direct Resident Support'],
+                features: ['Lipa na M-Pesa Available', 'Local Kahawa West Resident Owned', 'Verified Contact'],
+                socialLinks: app.socialLinks || (app.website || app.facebook || app.instagram || app.tiktok ? {
+                  website: app.website,
+                  facebook: app.facebook,
+                  instagram: app.instagram,
+                  tiktok: app.tiktok,
+                  whatsapp: app.whatsapp || app.phone,
+                } : undefined),
+                mpesa: app.mpesaNumber
+                  ? {
+                      type: (app.mpesaType as 'Till' | 'Pochi la Biashara' | 'Paybill' | 'Send Money') || 'Till',
+                      number: app.mpesaNumber,
+                      accountName: app.name.toUpperCase(),
+                    }
+                  : undefined,
+                openingHours: DEFAULT_OPENING_HOURS,
+                coordinates: { lat: -1.1850, lng: 36.8850 },
+                createdAt: new Date().toISOString(),
+              };
+              saveCustomizedBusiness(approvedBusiness).catch(console.warn);
+              setBusinesses((prev) => [approvedBusiness, ...prev]);
+            }
+          }
+        });
       }
       if (remoteBiz && remoteBiz.length > 0) {
         setBusinesses((prev) => {
@@ -307,25 +368,12 @@ export default function App() {
     };
   }, []);
 
-  // Auto-refresh when opening Editorial Review desk or when window gains focus
+  // Auto-refresh admin queues when opening Editorial Review desk
   useEffect(() => {
     if (isEditorialReviewOpen) {
-      refreshCloudData();
+      refreshCloudData(true);
     }
   }, [isEditorialReviewOpen, refreshCloudData]);
-
-  useEffect(() => {
-    const handleFocus = () => {
-      refreshCloudData();
-    };
-    window.addEventListener('focus', handleFocus);
-    const interval = setInterval(refreshCloudData, 45000);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      clearInterval(interval);
-    };
-  }, [refreshCloudData]);
 
   // Realtime multi-device subscription to Supabase changes
   useEffect(() => {
