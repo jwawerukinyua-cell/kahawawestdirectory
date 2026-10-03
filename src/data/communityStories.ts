@@ -212,6 +212,131 @@ Have questions or need help listing?
     likes: 1,
     dislikes: 0,
   },
+  {
+    id: 'story-cost-of-education-kahawa-west',
+    slug: 'the-cost-of-education-are-kahawa-west-schools-pricier-than-our-neighbors',
+    title: 'The Cost of Education: Are Kahawa West Schools Pricier Than Our Neighbors?',
+    subtitle: '🎒 KBA, Marion, Little Angels, Mahiga, Kahawa Primary & Mary Immaculate: Breaking down the real cost of schooling for local families',
+    category: 'Schools & Education',
+    zone: 'Kamiti Road',
+    excerpt: 'For a parent living in Kahawa West, choosing a school is not just about names on a signpost—it is about real costs, proximity, class sizes, and value. Here is an honest look at the local education landscape.',
+    content: `**KBA. Marion. Little Angels. Green Cottage. Niceways. Mahiga. Kahawa Primary. Kamiti Primary. And just across the neighbourhood boundary, Mary Immaculate Kiamumbi.**
+
+For a parent living in Kahawa West, these aren’t simply names on a school signpost. They are part of the daily education landscape—the uniforms we see every morning at stage, the school vans navigating our estate roads, and the fee structures we evaluate every school holiday.
+
+And they raise an important, practical question:
+
+### Are parents in Kahawa West paying more for education simply because they live in Kahawa West?
+
+Or are we genuinely getting a balanced range of options for different household budgets?
+
+---
+
+### 🏫 The Private-School Reality
+
+Kahawa West has no shortage of private academies. Parents can choose from established institutions such as **KBA, Marion, Little Angels, Green Cottage, and Niceways**, alongside a number of smaller academies and kindergartens serving different estates.
+
+These schools compete not only on termly tuition fees but on the everyday factors parents care deeply about:
+- **Academic performance & CBC implementation**
+- **Discipline & values**
+- **Teacher-to-pupil ratios & individual attention**
+- **Facilities, playfields & computer labs**
+- **Nutritious meals & reliable transport**
+- **Proximity to home**
+
+And in Kahawa West, **proximity matters immensely.**
+
+For a working parent commuting to the CBD, Westlands, or Thika Road, having a child at a reputable school just five minutes away can easily justify paying slightly higher fees than sending them to a cheaper school that requires a 5:30 AM wake-up call and a long, exhausting daily bus route.
+
+Yet private schooling comes with another undeniable reality:
+
+> **The advertised school fee is rarely the complete cost.**
+
+Between tuition, meals, transport, branded uniforms, CBC project materials, educational trips, activity levies, and exam fees, the actual invoice sent home at the end of the term can significantly change the final bill.
+
+---
+
+### 🎒 The Overlooked Alternative: Our Public Schools
+
+This is an important part of the conversation that is sometimes overlooked.
+
+Not every Kahawa West parent is choosing between private schools. The neighbourhood and its immediate surroundings are anchored by established public institutions that serve thousands of children:
+
+1. **Mahiga Primary School:**  
+   Positioned right opposite the Kamiti Prison boundary, at the entry to Kahawa West Shopping Centre. It is a public, mixed day school and an integral, visible fixture of everyday Kahawa West community life.
+2. **Kahawa Primary School:**  
+   Located adjacent to the Farmers Choice factory, serving generations of families living around Station, Kamae, and the industrial corridor. Both Kahawa Primary and Mahiga Primary fall under Nairobi County’s official public-school network.
+3. **Kamiti Primary School:**  
+   Located inside Kamiti Prison. Despite the name and location, it is a dedicated public school serving the wider Kahawa and Kamiti area.
+
+These public schools offer an advantage no private academy can rival: **access to foundational primary education without burdensome termly tuition bills.**
+
+At the same time, they come with their own set of real-world considerations—enrolment numbers, classroom facilities, teacher-pupil ratios, walking distance, and the individual learning needs of each child.
+
+So the question isn’t simply:  
+*"Private or public?"*  
+It is:  
+**"What works best for my child and my household's financial reality?"**
+
+---
+
+### 🗺️ The Kiamumbi Factor: Mary Immaculate
+
+This is where our neighbourhood becomes particularly interesting.
+
+Just across the county boundary sits **Mary Immaculate Kiamumbi Primary School**.
+
+Administratively, Kiamumbi is in Kiambu County. But anyone who actually lives here knows that **county boundaries do not determine where children go to school.**
+
+A child can live in Kahawa West, have friends in Kiamumbi, shop in Kiamumbi, attend church along Kamiti Road—and go to school at Mary Immaculate. School listings place Mary Immaculate barely 1.2 kilometres from Kamiti Primary. It is a very real, everyday part of the education choices available to families around the Kahawa West–Kamiti–Kiamumbi corridor.
+
+And that is precisely why a Kahawa West school fee comparison should not stop at an artificial Nairobi County boundary when local families cross it every single day.
+
+---
+
+### 📊 How We Should Compare: The "Real Cost of Schooling"
+
+Rather than simply publishing a list of base school fees, the Kahawa West Community Directory proposes a much more useful formula:
+
+### **The Real Cost of Schooling**
+**Tuition + Meals + Transport + Uniforms + Books + CBC Materials + Compulsory Levies = Actual Termly Cost.**
+
+Evaluated alongside:
+
+### **The Perceived Value**
+**Distance + Class Size + Facilities + Curriculum + Extracurricular Activities + Parent Experience = True Value.**
+
+That gives parents something much more useful than a simple *"School A costs KSh X while School B costs KSh Y."* Because the cheapest school isn't necessarily the best value, and the most expensive school isn't automatically the best choice.
+
+---
+
+### 🗣️ We Want to Hear from Kahawa West Parents
+
+If your child attends **KBA, Marion, Little Angels, Green Cottage, Niceways, Mahiga Primary, Kahawa Primary, Kamiti Primary, Mary Immaculate Kiamumbi**, or another school in our wider neighbourhood, tell us about your experience:
+
+- **What is your complete termly bill including transport, lunch, and extras?**
+- **How large are the classes, and how do you rate teacher dedication?**
+- **How responsive is school administration when you have an issue?**
+- **How safe and reliable is the school transport?**
+- **Most importantly: knowing what you know today, would you choose the same school again?**
+
+Because that is the conversation Kahawa West needs: not a competition between schools, and not a judgment of parents who choose public or private education, but **honest information from parents, for parents.**
+
+*School fees and policies change. Any formal comparison published by Kahawa West Directory will be based on verified information supplemented by experiences from local parents.*`,
+    imageUrl: '/schools-in-kahawa-west.png',
+    imageCaption: 'Schools in Kahawa West — Examining education costs, value, and parent experiences',
+    isRealPhotoConfirmed: true,
+    authorName: 'Mfalme Ukweli',
+    authorEmail: 'support@kahawawestdirectory.co.ke',
+    authorPhone: '+254764405842',
+    authorRole: 'Admin - Kahawa West Directory',
+    date: '2026-10-03',
+    readTimeMinutes: 4,
+    featured: true,
+    status: 'published',
+    likes: 1,
+    dislikes: 0,
+  },
 ];
 
 const LOCAL_STORAGE_STORIES_KEY = 'kwest_community_stories_v1';
