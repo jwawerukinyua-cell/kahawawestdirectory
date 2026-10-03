@@ -120,6 +120,98 @@ Share your thoughts in the comments. Kahawa West is our home, and getting ready 
     likes: 1,
     dislikes: 0,
   },
+  {
+    id: 'story-kwest-how-to-list-and-claim',
+    slug: 'why-kahawa-west-directory-matters-how-to-list-and-claim',
+    title: 'Why Kahawa West Directory Matters: How to List or Claim Your Business',
+    subtitle: '🏪 Building a connected neighbourhood economy for residents, fundis, and local shop owners',
+    category: 'Local Business & Artisan',
+    zone: 'Kamiti Road',
+    excerpt: 'Every day, someone in Kahawa West is searching for a trusted plumber, electrician, laundry service, fresh grocer, or guest house. Here is why KWEST exists, how to list your business for free, and how to claim your existing profile.',
+    content: `Every single day, someone in Kahawa West is looking for help:
+- *"Nani anajua fundi mzuri wa stima karibu na Bima?"*
+- *"Where can I get affordable laundry pickup around Station?"*
+- *"Looking for a swimming instructor or daycare in Jacaranda."*
+- *"Which chemist is open late tonight near Maternity or Kamiti Road?"*
+
+Until now, we have relied on word of mouth or asking on crowded WhatsApp estate groups where recommendations get buried in minutes.
+
+**Kahawa West Directory (KWEST)** was created to solve this once and for all. It is a dedicated, community-owned platform where every resident can find trusted local services, and every hardworking entrepreneur gets discovered.
+
+---
+
+### 🏡 Why This Directory Matters to Every Resident
+
+When you support a business in Kahawa West, your money stays within our neighbourhood. It pays our local fundis, feeds local families, and builds our estate infrastructure.
+
+With **kahawawestdirectory.co.ke**, you have:
+1. **Direct Phone & WhatsApp Access:** No middlemen or agency fees. Tap to call or chat directly with the owner.
+2. **Verified Lipa na M-Pesa Badges:** Know official Till numbers and Paybills before sending money to prevent fraud.
+3. **Estate Landmark Navigation:** Find businesses mapped by familiar zones—Roundabout, Kamiti Road, Station / Railway, Bima Road, Soweto, Kware, and Jacaranda.
+4. **Emergency Numbers at Your Fingertips:** Instant access to local police, ambulance, hospitals, and Kenya Power hotlines even when offline.
+
+---
+
+### 💼 Why Every Business Owner & Artisan Should Be Listed
+
+Whether you run a large hardware store, a cozy guest house, a laundry service, or you are a freelance electrician, salonist, or mama mboga:
+
+- **100% Free Listing:** No monthly fees. This is a public service for the growth of Kahawa West.
+- **Google Search Visibility:** Your business gets indexed on Google so when someone searches *"laundry in Kahawa West"* or *"guest house near Kamiti Road"*, your listing shows up.
+- **Direct WhatsApp Orders:** Customers send enquiries directly to your WhatsApp inbox.
+- **Neighborhood Trust:** Verified listings earn badges that build instant credibility with new tenants and residents.
+
+---
+
+### 📝 How to List a New Business (Takes Under 2 Minutes)
+
+If your business is not yet in the directory, adding it is quick and simple:
+
+1. Visit **[kahawawestdirectory.co.ke](https://www.kahawawestdirectory.co.ke/)**.
+2. Tap the **"+ List Your Business"** button in the top menu or banner.
+3. Fill in your business name, category, estate zone (e.g. *Station, Kamiti Road, Jacaranda*), and nearest landmark.
+4. Add your official phone number, WhatsApp number, and Lipa na M-Pesa Till/Paybill so customers can pay you seamlessly.
+5. Upload a clear photo of your premises, work, or storefront.
+6. Click **Submit Listing**.
+
+Our Editorial Desk reviews and verifies every submission to keep the directory clean, safe, and spam-free. Once approved, your business receives a permanent live link to share with your customers!
+
+---
+
+### 🛡️ How to Claim an Existing Business Listing
+
+Already see your shop or service in the directory? You can claim it to take full control:
+
+1. Search for your business card in the directory.
+2. Click on the card to open its profile.
+3. Tap the **"Claim This Listing"** button.
+4. Enter your name, phone number, and proof of ownership.
+5. Once confirmed by our editorial team, you receive the **Verified Badge** (green shield) and can update your contacts, photos, and resident special offers anytime!
+
+---
+
+### 🤝 Let Us Build Kahawa West Together
+
+A directory is only as strong as its community. Share the link with your estate WhatsApp groups, encourage your local fundi or shopkeeper to list, and always check KWEST first before looking outside Kahawa West for services.
+
+Have questions or need help listing?
+- **WhatsApp Support:** [+254 764 405 842](https://wa.me/254764405842)
+- **Email:** support@kahawawestdirectory.co.ke
+- **Website:** [www.kahawawestdirectory.co.ke](https://www.kahawawestdirectory.co.ke/)`,
+    imageUrl: '/kwest-logo.png',
+    imageCaption: 'KWEST Official Logo — Kahawa West Community Business Directory',
+    isRealPhotoConfirmed: true,
+    authorName: 'Mfalme Ukweli',
+    authorEmail: 'support@kahawawestdirectory.co.ke',
+    authorPhone: '+254764405842',
+    authorRole: 'Admin - Kahawa West Directory',
+    date: '2026-10-03',
+    readTimeMinutes: 3,
+    featured: true,
+    status: 'published',
+    likes: 1,
+    dislikes: 0,
+  },
 ];
 
 const LOCAL_STORAGE_STORIES_KEY = 'kwest_community_stories_v1';

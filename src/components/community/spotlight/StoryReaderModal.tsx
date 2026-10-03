@@ -239,13 +239,13 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           {/* Featured Image */}
           {story.imageUrl && story.imageUrl.trim() !== '' && (
             <div className="space-y-1.5">
-              <div className="relative rounded-2xl overflow-hidden shadow-md bg-stone-900 max-h-[420px]">
+              <div className={`relative rounded-2xl overflow-hidden shadow-md max-h-[420px] flex items-center justify-center ${story.imageUrl.includes('logo') ? 'bg-stone-950 p-6' : 'bg-stone-900'}`}>
                 <ListingImage
                   src={story.imageUrl}
                   story={story}
                   customCaption={story.imageCaption}
                   imageType="cover"
-                  className="w-full h-full object-cover max-h-[420px]"
+                  className={story.imageUrl.includes('logo') ? 'max-h-[360px] max-w-full object-contain mx-auto' : 'w-full h-full object-cover max-h-[420px]'}
                 />
               </div>
               {story.imageCaption && (

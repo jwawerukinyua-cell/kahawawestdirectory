@@ -10,13 +10,13 @@ export const FloatingShareButton: React.FC = () => {
 
   const shareTitle = 'KWEST | Kahawa West Business Directory';
   const shareText =
-    'Discover verified local businesses, fundis, emergency contacts & shops in Kahawa West on KWEST (kahawawestdirectory.co.ke) 🚀';
+    'Discover verified local businesses, fundis, emergency contacts & shops in Kahawa West on KWEST (kahawawestdirectory.co.ke)';
 
   const getShareUrl = () => {
     if (typeof window !== 'undefined') {
       return window.location.origin;
     }
-    return 'https://kahawawestdirectory.co.ke';
+    return 'https://www.kahawawestdirectory.co.ke';
   };
 
   // Close when clicking outside
@@ -40,12 +40,13 @@ export const FloatingShareButton: React.FC = () => {
     }
 
     const url = getShareUrl();
+    const fullUrl = url.endsWith('/') ? url : `${url}/`;
     if (navigator.share) {
       try {
         await navigator.share({
           title: shareTitle,
           text: shareText,
-          url: url,
+          url: fullUrl,
         });
         return;
       } catch (err) {
@@ -61,28 +62,32 @@ export const FloatingShareButton: React.FC = () => {
 
   const handleCopyLink = async () => {
     const url = getShareUrl();
-    await copyToClipboard(url);
+    const fullUrl = url.endsWith('/') ? url : `${url}/`;
+    await copyToClipboard(`${shareText}\n${fullUrl}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
 
   const handleWhatsAppShare = () => {
     const url = getShareUrl();
-    const message = encodeURIComponent(`${shareText}\n\nExplore or list your business: ${url}`);
+    const fullUrl = url.endsWith('/') ? url : `${url}/`;
+    const message = encodeURIComponent(`${shareText}\n${fullUrl}`);
     window.open(`https://wa.me/?text=${message}`, '_blank', 'noopener,noreferrer');
     setIsOpen(false);
   };
 
   const handleTwitterShare = () => {
     const url = getShareUrl();
+    const fullUrl = url.endsWith('/') ? url : `${url}/`;
     const text = encodeURIComponent(shareText);
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(fullUrl)}`, '_blank', 'noopener,noreferrer');
     setIsOpen(false);
   };
 
   const handleFacebookShare = () => {
     const url = getShareUrl();
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+    const fullUrl = url.endsWith('/') ? url : `${url}/`;
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullUrl)}`, '_blank', 'noopener,noreferrer');
     setIsOpen(false);
   };
 

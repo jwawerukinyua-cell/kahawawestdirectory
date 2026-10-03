@@ -305,13 +305,13 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
             >
               <div>
                 {/* Story Photo */}
-                <div className="relative h-48 bg-stone-100 overflow-hidden">
+                <div className={`relative h-48 overflow-hidden flex items-center justify-center ${story.imageUrl?.includes('logo') ? 'bg-stone-950 p-4' : 'bg-stone-100'}`}>
                   {story.imageUrl && story.imageUrl.trim() !== '' ? (
                     <ListingImage
                       src={story.imageUrl}
                       story={story}
                       imageType="preview"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className={story.imageUrl?.includes('logo') ? 'max-h-full max-w-full object-contain mx-auto group-hover:scale-105 transition-transform duration-300' : 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'}
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 text-xs">
