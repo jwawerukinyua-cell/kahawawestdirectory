@@ -123,6 +123,39 @@ export const getSavedClaims = (): BusinessClaim[] => {
   }
 };
 
+export const PURGED_CLAIM_IDS = new Set([
+  'biz-test-check',
+  'biz-test-inspect',
+  'kw-biz-muriithi-hardware',
+  'kw-biz-01',
+  '4063e854-ed42-4b74-936f-d6a7ad82f59f',
+  '22f73c33-550d-4cef-9368-af5ebf020f94',
+  '9ed03cdf-5c96-4f8e-bbc0-58bc75cd3414',
+  '39b8116c-cceb-4766-9872-144a96cf9b09',
+]);
+
+export const PURGED_TEST_BUSINESS_IDS = new Set([
+  'test-inspect-biz',
+  'kw-biz-kimondo-tech',
+  'kw-biz-bonata-cleaners',
+  'kw-biz-bewai-transporters',
+  'kw-test-approved-123',
+  'kw-biz-muriithi-hardware',
+  'kw-biz-kj-fresh-foods',
+]);
+
+export const PURGED_TEST_BUSINESS_NAMES = new Set([
+  'ukweli furniture crafts',
+  'muriithi general hardware',
+  'test approved biz',
+  'test business',
+  'kimondo tech & laptop repair doctor',
+  'kimondo tech & laptop',
+  'bonata cleaners',
+  'bewai transporters',
+  'kj',
+]);
+
 export const fetchClaimsFromSupabase = async (): Promise<BusinessClaim[] | null> => {
   try {
     if (!supabase || !isSupabaseConfigured) return null;
@@ -136,7 +169,15 @@ export const fetchClaimsFromSupabase = async (): Promise<BusinessClaim[] | null>
       return null;
     }
 
-    const mapped: BusinessClaim[] = data.map((row: any): BusinessClaim => ({
+    const filtered = data.filter(
+      (row: any) =>
+        !PURGED_CLAIM_IDS.has(row.id) &&
+        !PURGED_CLAIM_IDS.has(row.business_id) &&
+        row.status !== 'rejected' &&
+        row.status !== 'archived'
+    );
+
+    const mapped: BusinessClaim[] = filtered.map((row: any): BusinessClaim => ({
       id: row.id,
       business_id: row.business_id,
       business_name: row.business_name,
@@ -303,7 +344,15 @@ export const fetchBusinessesFromSupabase = async (): Promise<Business[] | null> 
       return null;
     }
 
-    return data.map((row: any): Business => ({
+    return data
+      .filter((row: any) => {
+        if (row.status === 'archived' || row.status === 'rejected') return false;
+        if (PURGED_TEST_BUSINESS_IDS.has(row.id)) return false;
+        const norm = (row.name || '').toLowerCase().trim();
+        if (PURGED_TEST_BUSINESS_NAMES.has(norm)) return false;
+        return true;
+      })
+      .map((row: any): Business => ({
       id: row.id,
       slug: row.slug || generateBusinessSlug(row.name),
       name: row.name,
@@ -389,7 +438,14 @@ export const getStoredBusinesses = (seedBusinesses: Business[]): Business[] => {
       }
     });
 
-    return [...newCustomListings, ...mergedSeeds];
+    const isPurged = (b: Business) => {
+      if (PURGED_TEST_BUSINESS_IDS.has(b.id)) return true;
+      const norm = (b.name || '').toLowerCase().trim();
+      if (PURGED_TEST_BUSINESS_NAMES.has(norm)) return true;
+      return false;
+    };
+
+    return [...newCustomListings, ...mergedSeeds].filter((b) => !isPurged(b));
   } catch {
     return seedBusinesses;
   }

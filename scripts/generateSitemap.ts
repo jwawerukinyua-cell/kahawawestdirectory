@@ -38,7 +38,33 @@ async function run() {
         const bizMap = new Map<string, Business>();
         INITIAL_BUSINESSES.forEach((b) => bizMap.set(b.id, b));
 
+        const PURGED_TEST_BUSINESS_IDS = new Set([
+          'test-inspect-biz',
+          'kw-biz-kimondo-tech',
+          'kw-biz-bonata-cleaners',
+          'kw-biz-bewai-transporters',
+          'kw-test-approved-123',
+          'kw-biz-muriithi-hardware',
+          'kw-biz-kj-fresh-foods',
+        ]);
+        const PURGED_TEST_BUSINESS_NAMES = new Set([
+          'ukweli furniture crafts',
+          'muriithi general hardware',
+          'test approved biz',
+          'test business',
+          'kimondo tech & laptop repair doctor',
+          'kimondo tech & laptop',
+          'bonata cleaners',
+          'bewai transporters',
+          'kj',
+        ]);
+
         dbRows.forEach((row: any) => {
+          if (row.status === 'archived' || row.status === 'rejected') return;
+          if (PURGED_TEST_BUSINESS_IDS.has(row.id)) return;
+          const norm = (row.name || '').toLowerCase().trim();
+          if (PURGED_TEST_BUSINESS_NAMES.has(norm)) return;
+
           const biz: Business = {
             id: row.id,
             name: row.name,

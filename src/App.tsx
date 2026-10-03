@@ -54,6 +54,9 @@ import {
   generateBusinessSlug,
   supabase,
   isSupabaseConfigured,
+  PURGED_TEST_BUSINESS_IDS,
+  PURGED_TEST_BUSINESS_NAMES,
+  PURGED_CLAIM_IDS,
 } from './lib/supabase';
 import { getWhatsAppChatUrl } from './lib/phoneUtils';
 
@@ -193,15 +196,24 @@ export default function App() {
       ]);
 
       if (remoteClaims !== null) {
-        setClaims(remoteClaims);
+        setClaims(
+          remoteClaims.filter(
+            (c) =>
+              !PURGED_CLAIM_IDS.has(c.id) &&
+              !PURGED_CLAIM_IDS.has(c.business_id) &&
+              c.status !== 'rejected' &&
+              c.status !== 'archived'
+          )
+        );
       }
       if (remoteApps !== null) {
         setApplications(remoteApps);
 
-        // Auto-promote any application marked approved in Supabase to live directory businesses
+        // Auto-promote any application marked approved in Supabase to live directory businesses (excluding purged)
         remoteApps.forEach((app) => {
           const isAppApproved = app.status === 'approved' || (app.status as string) === 'approve';
-          if (isAppApproved && app.name) {
+          const normName = (app.name || '').toLowerCase().trim();
+          if (isAppApproved && app.name && !PURGED_TEST_BUSINESS_NAMES.has(normName) && !PURGED_TEST_BUSINESS_IDS.has(app.id || '')) {
             const alreadyInBiz = (remoteBiz || []).some(
               (b) =>
                 b.name.toLowerCase().trim() === app.name.toLowerCase().trim() ||
@@ -259,9 +271,18 @@ export default function App() {
         });
       }
       if (remoteBiz && remoteBiz.length > 0) {
+        const isPurged = (b: Business) => {
+          if (PURGED_TEST_BUSINESS_IDS.has(b.id)) return true;
+          const norm = (b.name || '').toLowerCase().trim();
+          if (PURGED_TEST_BUSINESS_NAMES.has(norm)) return true;
+          return false;
+        };
+
+        const cleanRemote = remoteBiz.filter((b) => !isPurged(b));
+
         setBusinesses((prev) => {
-          const remoteMap = new Map(remoteBiz.map((b) => [b.id, b]));
-          const updatedPrev = prev.map((p) => {
+          const remoteMap = new Map(cleanRemote.map((b) => [b.id, b]));
+          const updatedPrev = prev.filter((p) => !isPurged(p)).map((p) => {
             if (remoteMap.has(p.id)) {
               return {
                 ...p,
@@ -271,7 +292,7 @@ export default function App() {
             return p;
           });
           const prevMap = new Map(updatedPrev.map((p) => [p.id, p]));
-          const newVerifiedRemote = remoteBiz.filter(
+          const newVerifiedRemote = cleanRemote.filter(
             (b) => !prevMap.has(b.id) && b.isVerified === true
           );
           return [...updatedPrev, ...newVerifiedRemote];
@@ -498,9 +519,9 @@ export default function App() {
 
       // 2. Hash-based routing check (#story=... or #biz-slug or #story-02 or #kahawa-pride-fc)
       const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
-      if (rawHash) {
-        const decodedHash = decodeURIComponent(rawHash).toLowerCase();
+      const decodedHash = rawHash ? decodeURIComponent(rawHash).toLowerCase() : '';
 
+      if (decodedHash) {
         // Check if hash matches any story (either explicit prefix or matching slug/id)
         const foundStoryFromHash = allStories.find((s) => {
           const cleanHash = decodedHash.replace(/^story=/, '');
@@ -525,53 +546,62 @@ export default function App() {
           setSelectedStoryForReading(foundStoryFromHash);
           return;
         }
+      }
 
-        // 3. Otherwise check business matching
-        const targetBiz = (bizParam || decodedHash).toLowerCase().trim();
-        if (targetBiz) {
-          // 1. Direct slug or ID match
-          let found = businesses.find(
-            (b) => b.slug?.toLowerCase() === targetBiz || b.id?.toLowerCase() === targetBiz
+      // 3. Business matching from either query parameter (?biz=...) OR hash (#slug)
+      const targetBiz = (bizParam || decodedHash).toLowerCase().trim();
+      if (targetBiz && !targetBiz.startsWith('story=')) {
+        // 1. Direct slug or ID match
+        let found = businesses.find(
+          (b) => b.slug?.toLowerCase() === targetBiz || b.id?.toLowerCase() === targetBiz
+        );
+
+        // 2. Name-derived slug match
+        if (!found) {
+          found = businesses.find((b) => b.name && generateBusinessSlug(b.name) === targetBiz);
+        }
+
+        // 3. Partial/fuzzy match for long names or variants (e.g. swim, guest-house, kj, etc.)
+        if (!found) {
+          found = businesses.find(
+            (b) =>
+              (b.slug && (b.slug.includes(targetBiz) || targetBiz.includes(b.slug))) ||
+              (b.name && (b.name.toLowerCase().includes(targetBiz) || targetBiz.includes(b.name.toLowerCase())))
           );
+        }
 
-          // 2. Name-derived slug match
-          if (!found) {
-            found = businesses.find((b) => b.name && generateBusinessSlug(b.name) === targetBiz);
-          }
+        // 4. Fallback for Kimondo Tech, Bonata Cleaners, Bewai Transporters
+        if (!found && (targetBiz.includes('kimondo') || targetBiz.includes('laptop-repair'))) {
+          found = businesses.find(
+            (b) => b.id === 'kw-biz-kimondo-tech' || b.slug?.includes('kimondo') || b.name.toLowerCase().includes('kimondo')
+          );
+        }
+        if (!found && targetBiz.includes('bonata')) {
+          found = businesses.find(
+            (b) => b.id === 'kw-biz-bonata-cleaners' || b.slug?.includes('bonata') || b.name.toLowerCase().includes('bonata')
+          );
+        }
+        if (!found && targetBiz.includes('bewai')) {
+          found = businesses.find(
+            (b) => b.id === 'kw-biz-bewai-transporters' || b.slug?.includes('bewai') || b.name.toLowerCase().includes('bewai')
+          );
+        }
 
-          // 3. Fallback for Kimondo Tech, Bonata Cleaners, Bewai Transporters
-          if (!found && (targetBiz.includes('kimondo') || targetBiz.includes('laptop-repair'))) {
-            found = businesses.find(
-              (b) => b.id === 'kw-biz-kimondo-tech' || b.slug?.includes('kimondo') || b.name.toLowerCase().includes('kimondo')
-            );
-          }
-          if (!found && targetBiz.includes('bonata')) {
-            found = businesses.find(
-              (b) => b.id === 'kw-biz-bonata-cleaners' || b.slug?.includes('bonata') || b.name.toLowerCase().includes('bonata')
-            );
-          }
-          if (!found && targetBiz.includes('bewai')) {
-            found = businesses.find(
-              (b) => b.id === 'kw-biz-bewai-transporters' || b.slug?.includes('bewai') || b.name.toLowerCase().includes('bewai')
-            );
-          }
+        // 5. Fallback for seed business variants
+        if (!found && (targetBiz.includes('furniture-crafts') || targetBiz.includes('furniture'))) {
+          found = businesses.find(
+            (b) =>
+              b.category === 'hardware-construction' &&
+              (b.subCategory?.toLowerCase().includes('furniture') ||
+                b.name.toLowerCase().includes('furniture') ||
+                b.name.toLowerCase().includes('ukweli'))
+          );
+        }
 
-          // 4. Fallback for seed business variants
-          if (!found && (targetBiz.includes('furniture-crafts') || targetBiz.includes('furniture'))) {
-            found = businesses.find(
-              (b) =>
-                b.category === 'hardware-construction' &&
-                (b.subCategory?.toLowerCase().includes('furniture') ||
-                  b.name.toLowerCase().includes('furniture') ||
-                  b.name.toLowerCase().includes('ukweli'))
-            );
-          }
-
-          if (found) {
-            setSelectedBusinessForDetails(found);
-            if (found.slug && window.location.hash.replace('#', '') !== found.slug && !bizParam) {
-              window.history.replaceState(null, '', `#${found.slug}`);
-            }
+        if (found) {
+          setSelectedBusinessForDetails(found);
+          if (found.slug && window.location.hash.replace('#', '') !== found.slug && !bizParam) {
+            window.history.replaceState(null, '', `#${found.slug}`);
           }
         }
       }
