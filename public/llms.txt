@@ -1,67 +1,35 @@
-# Kahawa West Community & Business Directory (KWEST)
-> Official digital business directory, domestic services index, and emergency hub for Kahawa West, Roysambu Constituency, Nairobi County, Kenya.
-> Canonical URL: https://www.kahawawestdirectory.co.ke
+# Kahawa West Directory (KWEST)
+> Official hyper-local digital business directory, domestic services index, and emergency helpline hub for Kahawa West, Roysambu Constituency, Nairobi County, Kenya.
 
-## Platform Overview
-Kahawa West Directory (KWEST) is a hyper-local community platform connecting residents and visitors to verified neighborhood businesses, artisans (fundis), healthcare providers, grocers, domestic specialists, and official estate services in Kahawa West, Nairobi, Kenya.
+## Core Resources
+- [Directory Homepage](https://www.kahawawestdirectory.co.ke/): Main portal to search 55+ verified local businesses, fundis, and clinics
+- [Community Spotlight Stories](https://www.kahawawestdirectory.co.ke/#community-hub-section): Investigative local journalism, school fee guides, and estate safety reports
+- [List a Business](https://www.kahawawestdirectory.co.ke/?view=list-business): Free registration portal for Kahawa West shop owners and service providers
+- [XML Sitemap](https://www.kahawawestdirectory.co.ke/sitemap.xml): Machine-readable index of all business profiles and community updates
+- [Robots Directives](https://www.kahawawestdirectory.co.ke/robots.txt): Crawler access rules and sitemap reference
 
-- **Location**: Kahawa West Ward, Roysambu Constituency, Nairobi County, Kenya (Postal Code: 00609)
-- **Primary Domain**: https://www.kahawawestdirectory.co.ke
-- **Supported Currencies**: KES (Kenyan Shilling)
-- **Primary Payment Modes**: Lipa Na M-Pesa (Buy Goods Till, Paybill), Cash
-- **Community Helpline & Editorial Desk**: +254 764 405 842
+## Estate Zones
+- [Congo Commercial Hub](https://www.kahawawestdirectory.co.ke/?zone=Congo): Central retail corridor, market stalls, and cyber services
+- [Roundabout Center](https://www.kahawawestdirectory.co.ke/?zone=Roundabout): Commuter interchange, chemist hub, and matatu stages
+- [Jacaranda Estate](https://www.kahawawestdirectory.co.ke/?zone=Jacaranda%20Estate): Quiet residential zone, academies, and daycare centers
+- [Northern Bypass](https://www.kahawawestdirectory.co.ke/?zone=Northern%20Bypass): Highway transit strip, auto garages, and logistics
+- [Kware and Quarry](https://www.kahawawestdirectory.co.ke/?zone=Kware%20%2F%20Quarry): Domestic artisans, fundis, welders, and hardware stores
+- [Bima Road](https://www.kahawawestdirectory.co.ke/?zone=Bima%20Road): Healthcare clinics, pharmacies, and salons
+- [Kamae](https://www.kahawawestdirectory.co.ke/?zone=Kamae): Mechanics, car wash centers, and domestic workshops
 
----
+## Directory Categories
+- [Food and Dining](https://www.kahawawestdirectory.co.ke/?category=food-fresh): Local eateries, nyama choma grills, bakeries, and milk bars
+- [Healthcare and Chemists](https://www.kahawawestdirectory.co.ke/?category=health-wellness): 24/7 pharmacies, medical centers, and clinics
+- [Fundis and Domestic Specialists](https://www.kahawawestdirectory.co.ke/?category=mama-fua-domestic): Plumbers, electricians, carpenters, and mama fua
+- [Housing and Rentals](https://www.kahawawestdirectory.co.ke/?category=home-rentals): Bedsitters, 1-bedroom apartments, and rent collection agents
+- [Automotive and Mechanics](https://www.kahawawestdirectory.co.ke/?category=automotive-mechanics): Garages, tyre clinics, and spare parts
 
-## Estate Zones & Sub-Localities
-Businesses and public facilities in Kahawa West are categorized across 13 distinct geographical estate zones:
-1. **Congo**: Main commercial hub along Congo Road, bustling market stalls, electronic shops, and retail centers.
-2. **Roundabout**: Central commuter interchange, matatu stages, chemist hubs, and banking agents.
-3. **Jacaranda Estate**: Established residential zone featuring schools, daycare centers, and quiet neighborhood amenities.
-4. **Jubilee Estate**: Residential community bordering northern bypass connections.
-5. **Northern Bypass**: Highway corridor with fuel stations, auto repair hubs, logistics, and major dining spots.
-6. **Kware / Quarry**: Vibrant artisans quarter, hardware supplies, and domestic welding workshops.
-7. **Bima Road**: Community artery with clinics, pharmacies, hardware, and salons.
-8. **Soweto**: Dense residential pocket with localized fresh produce, salons, and convenience kiosks.
-9. **Kamae**: Expansive mixed residential area with garages, car washes, and specialized workshops.
-10. **Station / Railway**: Commuter train terminal zone and transit retail stalls.
-11. **Mahiga**: Quiet residential avenue with churches, schools, and corner bakeries.
-12. **Kamiti Road**: Transit corridor connecting Kahawa West to Zimmerman, Roysambu, and Ruiru.
-13. **Kiamumbi Border**: Transition zone between Nairobi County and Kiambu County.
+## Emergency Hotlines
+- [National Emergency](tel:999): Police, Fire, and Ambulance (999 or 112)
+- [Nairobi Fire and Rescue](tel:+254202222181): +254 20 222 2181
+- [Kenya Power Dispatch](tel:97771): 97771 or +254 703 070 707
+- [Kahawa West Community Helpline](tel:+254764405842): +254 764 405 842
 
----
-
-## Directory Categories & Service Taxonomy
-- **Food & Dining**: Nyama choma grills, bakeries, cafes, local eateries, fast food, milk bars.
-- **Healthcare & Chemists**: 24/7 pharmacies, medical centers, dental clinics, optical centers.
-- **Domestic Specialists & Fundis**: Plumbers, certified electricians, carpenters, masonry, painters.
-- **Groceries & Fresh Produce**: Market grocers, fruit vendors, cereal stores, butchery.
-- **Hardware & Construction**: Building supplies, electrical equipment, plumbing fittings, paint dealers.
-- **Automotive & Mechanics**: Garages, auto spares, car washes, tyre clinics, breakdown services.
-- **Salons, Barbers & Beauty**: Kinyozi, hair stylists, nail bars, cosmetics.
-- **Gas & Energy**: 6kg/13kg LPG gas refills, solar fittings, electrical contractors.
-- **Professional & Cyber Services**: Cyber cafes, KRA tax agents, printing, legal and accounting.
-- **Education & Childcare**: Daycare centers, nursery schools, primary academies.
-
----
-
-## Emergency Hotlines & Public Services
-- **National Emergency / Police**: 999 / 112 / 911
-- **Kahawa West Police Post**: +254 722 000 000 / Kasarani Division
-- **Nairobi Fire & Rescue**: +254 20 222 2181 / +254 718 199 999
-- **Kenya Red Cross Emergency**: 1199 / +254 703 037 000
-- **St. Francis Community Hospital (Kasarani)**: +254 718 969 000
-- **Nairobi Water & Sewerage (Githurai/Kahawa Depot)**: +254 717 356 578
-- **Kenya Power Emergency Dispatch**: 97771 / +254 703 070 707
-
----
-
-## Deep Link URL Structure
-- **Homepage**: `https://www.kahawawestdirectory.co.ke/`
-- **Business Detail**: `https://www.kahawawestdirectory.co.ke/?biz={business-slug}`
-- **Category Filter**: `https://www.kahawawestdirectory.co.ke/?category={category-id}`
-- **Estate Zone Filter**: `https://www.kahawawestdirectory.co.ke/?zone={zone-name}`
-- **Emergency Hub**: `https://www.kahawawestdirectory.co.ke/?view=emergency`
-- **List a Business**: `https://www.kahawawestdirectory.co.ke/?view=list-business`
-- **XML Sitemap**: `https://www.kahawawestdirectory.co.ke/sitemap.xml`
-- **Robots Directives**: `https://www.kahawawestdirectory.co.ke/robots.txt`
+## Optional
+- [About KWEST](https://www.kahawawestdirectory.co.ke/?view=about): Mission statement, community guidelines, and verified data standards
+- [Ad Space and Sponsorship](https://www.kahawawestdirectory.co.ke/?view=advertising): Banner placement and sponsored listings for local merchants

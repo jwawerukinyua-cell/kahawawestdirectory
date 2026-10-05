@@ -119,10 +119,12 @@ const CategoryFilterComponent: React.FC<CategoryFilterProps> = ({
     >
       <button
         onClick={() => onSelectCategory('all')}
-        className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ease-out flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
+        aria-pressed={selectedCategory === 'all'}
+        aria-label="Filter by all categories"
+        className={`px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ease-out flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
           selectedCategory === 'all'
             ? 'bg-gradient-to-b from-[#3B0202] to-[#200101] text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.35),0_1px_2px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.25)] -translate-y-0.5'
-            : 'bg-white text-stone-700 hover:text-stone-900 hover:bg-stone-50 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:translate-y-0'
+            : 'bg-white text-stone-800 hover:text-stone-950 hover:bg-stone-50 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:translate-y-0'
         }`}
       >
         <LayoutGrid className="w-3.5 h-3.5" />
@@ -137,10 +139,12 @@ const CategoryFilterComponent: React.FC<CategoryFilterProps> = ({
           <button
             key={cat.id}
             onClick={() => onSelectCategory(cat.id)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ease-out flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
+            aria-pressed={isSelected}
+            aria-label={`Filter by ${cat.name} (${count ?? 0} businesses)`}
+            className={`px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ease-out flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
               isSelected
                 ? 'bg-gradient-to-b from-emerald-600 to-emerald-800 text-white font-bold shadow-[0_4px_12px_rgba(5,150,105,0.4),0_1px_2px_rgba(0,0,0,0.3),inset_0_1px_1.5px_rgba(255,255,255,0.35)] -translate-y-0.5'
-                : 'bg-white text-stone-700 hover:text-stone-900 hover:bg-stone-50 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:translate-y-0'
+                : 'bg-white text-stone-800 hover:text-stone-950 hover:bg-stone-50 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:translate-y-0'
             }`}
           >
             {getCategoryIcon(cat.icon)}
@@ -148,7 +152,7 @@ const CategoryFilterComponent: React.FC<CategoryFilterProps> = ({
             {count !== undefined && (
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  isSelected ? 'bg-white/20 text-white font-bold' : 'bg-stone-100 text-stone-600'
+                  isSelected ? 'bg-white/20 text-white font-bold' : 'bg-stone-100 text-stone-800 font-bold'
                 }`}
               >
                 {count}

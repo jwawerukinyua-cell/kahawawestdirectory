@@ -50,17 +50,19 @@ const ZoneFilterComponent: React.FC<ZoneFilterProps> = ({
           <button
             key={z.id}
             onClick={() => onSelectZone(z.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
+            aria-pressed={isSelected}
+            aria-label={`Filter by ${z.name} zone ${count !== undefined ? `(${count} businesses)` : ''}`}
+            className={`px-3.5 py-2.5 min-h-[44px] rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
               isSelected
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'bg-white text-slate-800 hover:bg-slate-100 border border-slate-300'
             }`}
           >
             <span>{z.name}</span>
             {count !== undefined && (
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  isSelected ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-600'
+                  isSelected ? 'bg-emerald-800 text-white font-bold' : 'bg-slate-100 text-slate-800 font-bold'
                 }`}
               >
                 {count}

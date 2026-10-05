@@ -16,7 +16,6 @@
     <!-- Preload Critical Above-The-Fold Assets for LCP Performance -->
     <link rel="preload" as="image" href="/hero.webp" type="image/webp" fetchpriority="high" />
     <link rel="preload" as="image" href="/kwest-logo.webp" type="image/webp" />
-    <link rel="preload" as="image" href="/schools-in-kahawa-west.webp" type="image/webp" />
 
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -42,20 +41,125 @@
     <meta name="twitter:description" content="Find trusted Kahawa West businesses, domestic specialists, verified local contacts, emergency hotlines, and estate updates in one community directory." />
     <meta name="twitter:image" content="https://www.kahawawestdirectory.co.ke/kwest-logo.png" />
 
-    <!-- Structured Data (Schema.org JSON-LD) -->
+    <!-- Structured Data (Schema.org JSON-LD - Full Rich Results Eligible Graph) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Kahawa West Directory",
-      "alternateName": "KWEST Directory",
-      "url": "https://www.kahawawestdirectory.co.ke",
-      "description": "Find trusted Kahawa West businesses, domestic specialists, verified local contacts, emergency hotlines, and estate updates in one community directory.",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://www.kahawawestdirectory.co.ke/?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://www.kahawawestdirectory.co.ke/#website",
+          "url": "https://www.kahawawestdirectory.co.ke/",
+          "name": "Kahawa West Directory",
+          "alternateName": "KWEST Community Directory",
+          "description": "Find trusted Kahawa West businesses, domestic specialists, verified local contacts, emergency hotlines, and estate updates in one community directory.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.kahawawestdirectory.co.ke/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "LocalBusiness",
+          "@id": "https://www.kahawawestdirectory.co.ke/#localbusiness",
+          "name": "Kahawa West Directory & Community Desk",
+          "alternateName": "KWEST Directory",
+          "url": "https://www.kahawawestdirectory.co.ke/",
+          "logo": "https://www.kahawawestdirectory.co.ke/kwest-logo.png",
+          "image": "https://www.kahawawestdirectory.co.ke/hero.webp",
+          "description": "Hyper-local community business directory and verified public services platform for Kahawa West, Roysambu, Nairobi.",
+          "telephone": "+254764405842",
+          "email": "support@kahawawestdirectory.co.ke",
+          "priceRange": "KSh",
+          "currenciesAccepted": "KES",
+          "paymentAccepted": "Cash, Lipa Na M-Pesa",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Bypass Roundabout, Kamiti Road",
+            "addressLocality": "Kahawa West",
+            "addressRegion": "Nairobi County",
+            "postalCode": "00609",
+            "addressCountry": "KE"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": -1.1870,
+            "longitude": 36.8830
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+              "opens": "00:00",
+              "closes": "23:59"
+            }
+          ],
+          "areaServed": [
+            { "@type": "AdministrativeArea", "name": "Kahawa West" },
+            { "@type": "AdministrativeArea", "name": "Jacaranda Estate" },
+            { "@type": "AdministrativeArea", "name": "Congo" },
+            { "@type": "AdministrativeArea", "name": "Kamae" },
+            { "@type": "AdministrativeArea", "name": "Bima Road" },
+            { "@type": "AdministrativeArea", "name": "Northern Bypass" }
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://www.kahawawestdirectory.co.ke/#breadcrumbs",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://www.kahawawestdirectory.co.ke/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Kahawa West Directory",
+              "item": "https://www.kahawawestdirectory.co.ke/#directory-section"
+            }
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://www.kahawawestdirectory.co.ke/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is the Kahawa West Directory (KWEST)?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Kahawa West Directory is a verified community directory connecting residents and visitors to local businesses, domestic specialists (fundis, electricians, plumbers, mama fua), healthcare clinics, fresh food grocers, and emergency contacts in Kahawa West, Nairobi."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How can a business owner list or claim their business in Kahawa West?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Business owners in Kahawa West can list their shop for free by tapping 'List Your Business' or claim their existing profile by tapping 'Claim' to update their Lipa Na M-Pesa till, WhatsApp contacts, photos, and services."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What are the emergency contact numbers for Kahawa West?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "National Emergency is 999 / 112 / 911. Nairobi Fire & Rescue can be reached at +254 20 222 2181, Kenya Power at 97771, and Kahawa West Community Helpline at +254 764 405 842."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Which estate zones are covered in Kahawa West?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The directory covers Congo, Roundabout, Jacaranda Estate, Jubilee Estate, Northern Bypass, Kware / Quarry, Bima Road, Soweto, Kamae, Station / Railway, Mahiga, Kamiti Road, and Kiamumbi Border."
+              }
+            }
+          ]
+        }
+      ]
     }
     </script>
     
@@ -127,15 +231,15 @@
         <div style="font-size: 12px; color: #10B981; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
           Connecting Our Community
         </div>
-        <!-- Subtle Animated Loading Bar -->
+        <!-- Subtle Hardware-Accelerated Animated Loading Bar (Composited) -->
         <div style="width: 140px; height: 3px; background: #262930; border-radius: 9999px; margin-top: 24px; overflow: hidden; position: relative;">
-          <div style="position: absolute; top: 0; left: 0; height: 100%; width: 45%; background: linear-gradient(90deg, #630303, #10B981); border-radius: 9999px; animation: kwestPulse 1.2s ease-in-out infinite alternate;"></div>
+          <div style="position: absolute; top: 0; left: 0; height: 100%; width: 45%; background: linear-gradient(90deg, #630303, #10B981); border-radius: 9999px; will-change: transform; animation: kwestPulse 1.2s ease-in-out infinite alternate;"></div>
         </div>
       </div>
       <style>
         @keyframes kwestPulse {
-          0% { left: 0%; width: 30%; }
-          100% { left: 70%; width: 30%; }
+          0% { transform: translateX(-10%); }
+          100% { transform: translateX(130%); }
         }
       </style>
     </div>

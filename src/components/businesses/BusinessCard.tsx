@@ -79,7 +79,7 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
   const heroImageUrl =
     business.heroImage && business.heroImage.trim() !== ''
       ? business.heroImage
-      : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+      : '/hero.webp';
 
   return (
     <div
@@ -217,19 +217,21 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleWhatsApp}
-                  className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-semibold transition active:scale-95 border border-emerald-200"
+                  aria-label={`Chat with ${business.name} on WhatsApp`}
+                  className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-xs font-bold transition active:scale-95 border border-emerald-300 min-h-[44px]"
                 >
-                  <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                  WhatsApp
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>WhatsApp</span>
                 </a>
 
                 <a
                   href={`tel:${phoneTelUri}`}
                   onClick={handlePhone}
-                  className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-900 text-xs font-semibold transition active:scale-95 border border-sky-200"
+                  aria-label={`Call ${business.name}`}
+                  className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-950 text-xs font-bold transition active:scale-95 border border-sky-300 min-h-[44px]"
                 >
-                  <Phone className="w-3.5 h-3.5 text-sky-700" />
-                  Call
+                  <Phone className="w-3.5 h-3.5 text-sky-800" />
+                  <span>Call</span>
                 </a>
               </>
             )}
@@ -240,7 +242,8 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
             <button
               id={`view-details-${business.id}`}
               onClick={handleDetails}
-              className="flex-1 py-2 px-3 rounded-xl bg-[#00000f] hover:bg-[#7D0404] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+              aria-label={`View full details for ${business.name}`}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-[#00000f] hover:bg-[#7D0404] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer min-h-[44px]"
             >
               <span>VIEW FULL DETAILS</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -250,8 +253,9 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
               <button
                 id={`claim-btn-${business.id}`}
                 onClick={() => onClaim(business)}
-                title="Claim this business"
-                className="py-2 px-3 rounded-xl bg-[#630303]/10 hover:bg-[#630303]/20 text-[#630303] border border-[#630303]/30 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                aria-label={`Claim listing for ${business.name}`}
+                title={`Claim ${business.name}`}
+                className="py-2.5 px-3.5 rounded-xl bg-[#630303]/10 hover:bg-[#630303]/20 text-[#630303] border border-[#630303]/30 text-xs font-bold transition flex items-center gap-1 cursor-pointer min-h-[44px]"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-[#630303]" />
                 <span>Claim</span>

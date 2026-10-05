@@ -174,6 +174,11 @@ export default function App() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [mpesaOnly, setMpesaOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'name' | 'verified'>('rating');
+  const [visibleBizCount, setVisibleBizCount] = useState(16);
+
+  useEffect(() => {
+    setVisibleBizCount(16);
+  }, [searchQuery, selectedCategory, selectedZone, housingAgentsOnly, verifiedOnly, mpesaOnly, sortBy]);
 
   const handleSelectCategory = useCallback((categoryId: string) => {
     startCategoryTransition(() => {
@@ -1294,6 +1299,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col font-sans antialiased text-stone-900 selection:bg-emerald-700 selection:text-white pb-16 md:pb-0">
+      {/* Skip to Main Content for Accessibility Screen Readers & Agentic Navigation */}
+      <a
+        href="#directory-section"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-emerald-700 focus:text-white focus:rounded-xl focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-white text-xs font-bold transition"
+      >
+        Skip to business directory
+      </a>
+
       {/* Dynamic Technical SEO, Open Graph & Schema.org JSON-LD Manager */}
       <JsonLdManager
         activeBusiness={selectedBusinessForDetails}
@@ -1312,7 +1325,7 @@ export default function App() {
       />
 
       {/* 2. Main Page Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main id="main-content" role="main" className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Top Scenic Hero Showcase featuring the Bypass Roundabout & Integrated Category Grid */}
         <Hero
           searchQuery={searchQuery}
@@ -1468,15 +1481,38 @@ export default function App() {
             onSelectSuggestion={(sug) => setSearchQuery(sug)}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-16">
-            {filteredBusinesses.map((b) => (
-              <BusinessCard
-                key={b.id}
-                business={b}
-                onViewDetails={handleViewDetails}
-                onClaim={handleClaim}
-              />
-            ))}
+          <div className="mb-16">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {filteredBusinesses.slice(0, visibleBizCount).map((b) => (
+                <BusinessCard
+                  key={b.id}
+                  business={b}
+                  onViewDetails={handleViewDetails}
+                  onClaim={handleClaim}
+                />
+              ))}
+            </div>
+
+            {/* Accessible Show More Businesses Pagination for DOM and Mobile LCP */}
+            {filteredBusinesses.length > visibleBizCount && (
+              <div className="flex flex-col items-center justify-center mt-8 text-center">
+                <button
+                  id="load-more-businesses-btn"
+                  type="button"
+                  onClick={() => setVisibleBizCount((prev) => prev + 16)}
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#630303] to-[#400202] hover:from-[#7D0404] hover:to-[#550303] active:scale-95 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer min-h-[44px]"
+                  aria-label={`Load more businesses. Currently showing ${visibleBizCount} of ${filteredBusinesses.length}`}
+                >
+                  <span>Show More Businesses</span>
+                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-semibold">
+                    +{Math.min(16, filteredBusinesses.length - visibleBizCount)} more
+                  </span>
+                </button>
+                <p className="text-xs text-stone-600 font-medium mt-2">
+                  Showing {visibleBizCount} of {filteredBusinesses.length} verified listings
+                </p>
+              </div>
+            )}
           </div>
         )}
 
