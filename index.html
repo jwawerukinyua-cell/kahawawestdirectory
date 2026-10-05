@@ -115,7 +115,31 @@
   </head>
   <body class="bg-slate-950/5 text-slate-900 antialiased font-sans">
     <div id="root">
-      <!-- Semantic Crawlable Fallback for Search Engines and AI Crawlers (Replaced by React on mount) -->
+      <!-- Branded Native Splash Screen while React hydration takes place (prevents raw text flash) -->
+      <div style="min-height: 100vh; background-color: #121417; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; color: white; padding: 20px; text-align: center;">
+        <div style="position: relative; width: 88px; height: 88px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">
+          <img src="/kwest-logo.png" alt="KWEST" style="width: 80px; height: 80px; object-fit: contain; border-radius: 18px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);" />
+        </div>
+        <div style="font-weight: 800; font-size: 18px; letter-spacing: -0.02em; color: #FFFFFF; margin-bottom: 6px;">
+          Kahawa West Directory
+        </div>
+        <div style="font-size: 12px; color: #10B981; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+          Connecting Our Community
+        </div>
+        <!-- Subtle Animated Loading Bar -->
+        <div style="width: 140px; height: 3px; background: #262930; border-radius: 9999px; margin-top: 24px; overflow: hidden; position: relative;">
+          <div style="position: absolute; top: 0; left: 0; height: 100%; width: 45%; background: linear-gradient(90deg, #630303, #10B981); border-radius: 9999px; animation: kwestPulse 1.2s ease-in-out infinite alternate;"></div>
+        </div>
+      </div>
+      <style>
+        @keyframes kwestPulse {
+          0% { left: 0%; width: 30%; }
+          100% { left: 70%; width: 30%; }
+        }
+      </style>
+    </div>
+    <noscript>
+      <!-- Semantic Crawlable Fallback for Non-JS Crawlers & Search Engines -->
       <header style="padding: 24px; background: #630303; color: white;">
         <h1 style="font-size: 24px; margin: 0 0 8px 0;">Kahawa West Local Business Directory &amp; Community Hub</h1>
         <p style="margin: 0; font-size: 14px; opacity: 0.9;">
@@ -149,9 +173,7 @@
           </p>
         </section>
       </main>
-    </div>
-    <noscript>
-      <div style="padding: 24px; text-align: center; background: #fef3c7; color: #92400e; font-family: system-ui, sans-serif;">
+      <div style="padding: 16px; text-align: center; background: #fef3c7; color: #92400e; font-family: system-ui, sans-serif; font-size: 13px;">
         <strong>JavaScript Required:</strong> To use interactive search, Lipa Na M-Pesa verification, maps, and instant WhatsApp chat with Kahawa West businesses, please enable JavaScript in your browser settings.
       </div>
     </noscript>

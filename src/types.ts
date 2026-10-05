@@ -70,6 +70,7 @@ export interface Business {
   phone: string;
   whatsapp: string;
   email?: string;
+  website?: string;
   isVerified: boolean;
   isClaimed: boolean;
   claimedBy?: string;
@@ -180,7 +181,7 @@ export interface CommunityUpdate {
   imageCaption?: string;
   isAccountabilityConfirmed?: boolean;
   urgencyLevel?: 'standard' | 'high' | 'critical';
-  status?: 'published' | 'pending_review' | 'rejected';
+  status?: 'published' | 'approved' | 'approve' | 'pending_review' | 'rejected' | 'archived';
   rejectionReason?: string;
   submittedAt?: string;
 }
@@ -192,6 +193,7 @@ export type StoryCategory =
   | 'Schools & Education'
   | 'Socio-Economic Development'
   | 'Environment & Clean-up'
+  | 'Environment & Clean Up'
   | 'Neighborhood Events';
 
 export interface CommunityStory {
@@ -213,7 +215,7 @@ export interface CommunityStory {
   date: string;
   readTimeMinutes?: number;
   featured?: boolean;
-  status: 'published' | 'pending_review' | 'archived' | 'rejected';
+  status: 'published' | 'approved' | 'approve' | 'pending_review' | 'archived' | 'rejected';
   likes?: number;
   dislikes?: number;
   commentsCount?: number;

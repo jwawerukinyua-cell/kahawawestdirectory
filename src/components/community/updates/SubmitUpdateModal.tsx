@@ -437,7 +437,7 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
                     ? 'e.g. URGENT: Missing Child / Lost 6-Yr-Old Boy near Jacaranda or Scheduled Water Interruption'
                     : 'e.g. Kahawa West Youth Football Tournament or Estate Clean-up Day'
                 }
-                className="w-full bg-[#181B20] border border-stone-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500 transition"
+                className="w-full bg-[#181B20] border border-stone-700/80 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500 transition"
               />
             </div>
 
@@ -522,7 +522,7 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
                     ? 'Provide full physical description, clothing worn (for lost child/person), circumstances, last seen location, who to contact or immediate instructions...'
                     : 'Provide key information residents should know, schedule, requirements, or how to participate...'
                 }
-                className="w-full bg-[#181B20] border border-stone-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500 transition"
+                className="w-full bg-[#181B20] border border-stone-700/80 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500 transition leading-relaxed min-h-[110px]"
               />
             </div>
 

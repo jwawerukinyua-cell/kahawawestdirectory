@@ -412,21 +412,24 @@ export function getStoredCommunityStories(): CommunityStory[] {
       if (initialMap.has(p.id)) {
         const seed = initialMap.get(p.id)!;
         result.push({
-          ...p,
           ...seed,
-          title: seed.title,
-          subtitle: seed.subtitle,
-          slug: seed.slug || p.slug,
-          category: seed.category,
-          content: seed.content,
-          featured: seed.featured,
-          authorName: seed.authorName,
-          authorEmail: seed.authorEmail,
-          authorRole: seed.authorRole,
-          imageUrl: seed.imageUrl || p.imageUrl,
-          imageCaption: seed.imageCaption || p.imageCaption,
-          isRealPhotoConfirmed: seed.isRealPhotoConfirmed,
-          status: 'published',
+          ...p,
+          title: p.title || seed.title,
+          subtitle: p.subtitle !== undefined ? p.subtitle : seed.subtitle,
+          slug: p.slug || seed.slug,
+          category: p.category || seed.category,
+          zone: p.zone || seed.zone,
+          content: p.content || seed.content,
+          excerpt: p.excerpt || seed.excerpt,
+          featured: p.featured !== undefined ? p.featured : seed.featured,
+          authorName: p.authorName || seed.authorName,
+          authorEmail: p.authorEmail || seed.authorEmail,
+          authorRole: p.authorRole || seed.authorRole,
+          authorPhone: p.authorPhone || seed.authorPhone,
+          imageUrl: p.imageUrl !== undefined ? p.imageUrl : seed.imageUrl,
+          imageCaption: p.imageCaption !== undefined ? p.imageCaption : seed.imageCaption,
+          isRealPhotoConfirmed: p.isRealPhotoConfirmed ?? seed.isRealPhotoConfirmed,
+          status: p.status || seed.status,
           likes: Math.max(seed.likes || 0, p.likes || 0),
           dislikes: Math.max(seed.dislikes || 0, p.dislikes || 0),
         });
@@ -463,6 +466,7 @@ export function saveCommunityStory(story: CommunityStory): void {
     const filtered = current.filter((s) => s.id !== story.id);
     const updated = [story, ...filtered];
     localStorage.setItem(LOCAL_STORAGE_STORIES_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('kwest_stories_updated', { detail: updated }));
   } catch (err) {
     console.warn('Error saving community story:', err);
   }

@@ -99,6 +99,7 @@ import {
   buildLiveNotifications,
   getReadNotificationIds,
   sendNativeNotification,
+  saveNotification,
 } from './lib/notifications';
 
 export default function App() {
@@ -121,13 +122,101 @@ export default function App() {
   const [mpesaOnly, setMpesaOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'name' | 'verified'>('rating');
 
-  // 3. Modal & Drawer States
-  const [selectedBusinessForDetails, setSelectedBusinessForDetails] = useState<Business | null>(null);
+  // 3. Modal & Drawer States - Synchronously initialized from URL on mount so shared links open instantly with 0ms delay
+  const [selectedBusinessForDetails, setSelectedBusinessForDetails] = useState<Business | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const bizParam = searchParams.get('biz');
+      const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
+      const targetBiz = (bizParam || rawHash).toLowerCase().trim();
+      if (!targetBiz || targetBiz.startsWith('story=') || targetBiz.startsWith('view=')) return null;
+
+      const initialList = getStoredBusinesses(SEED_50_BUSINESSES);
+      return (
+        initialList.find(
+          (b) =>
+            b.slug?.toLowerCase() === targetBiz ||
+            b.id?.toLowerCase() === targetBiz ||
+            (b.name && generateBusinessSlug(b.name) === targetBiz) ||
+            (b.slug && (b.slug.includes(targetBiz) || targetBiz.includes(b.slug))) ||
+            (b.name && (b.name.toLowerCase().includes(targetBiz) || targetBiz.includes(b.name.toLowerCase())))
+        ) || null
+      );
+    } catch {
+      return null;
+    }
+  });
+
+  const [selectedStoryForReading, setSelectedStoryForReading] = useState<CommunityStory | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const storyParam =
+        searchParams.get('story') ||
+        searchParams.get('storyId') ||
+        searchParams.get('article') ||
+        searchParams.get('s');
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const storyFromPath =
+        pathSegments.length > 1 && (pathSegments[0] === 'story' || pathSegments[0] === 'stories')
+          ? pathSegments[1]
+          : null;
+      const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
+      const hashStory = rawHash.startsWith('story=')
+        ? rawHash.replace(/^story=/, '')
+        : rawHash.includes('pride') ||
+          rawHash.includes('el-nino') ||
+          rawHash.includes('education') ||
+          rawHash.includes('schools') ||
+          rawHash.includes('list-and-claim')
+        ? rawHash
+        : null;
+      const targetKey = (storyParam || storyFromPath || hashStory || '').toLowerCase().trim();
+      if (!targetKey) return null;
+
+      const initialStories = getStoredCommunityStories();
+      return (
+        initialStories.find((s) => {
+          const idMatch = s.id?.toLowerCase() === targetKey;
+          const slugMatch = s.slug?.toLowerCase() === targetKey;
+          const normTitle = s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          return idMatch || slugMatch || normTitle === targetKey || normTitle.includes(targetKey);
+        }) || null
+      );
+    } catch {
+      return null;
+    }
+  });
+
+  const [isResolvingDeepLink, setIsResolvingDeepLink] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const bizParam = searchParams.get('biz');
+      const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
+      const targetBiz = (bizParam || rawHash).toLowerCase().trim();
+      if (!targetBiz || targetBiz.startsWith('story=') || targetBiz.startsWith('view=')) return false;
+
+      const initialList = getStoredBusinesses(SEED_50_BUSINESSES);
+      const found = initialList.some(
+        (b) =>
+          b.slug?.toLowerCase() === targetBiz ||
+          b.id?.toLowerCase() === targetBiz ||
+          (b.name && generateBusinessSlug(b.name) === targetBiz) ||
+          (b.slug && (b.slug.includes(targetBiz) || targetBiz.includes(b.slug))) ||
+          (b.name && (b.name.toLowerCase().includes(targetBiz) || targetBiz.includes(b.name.toLowerCase())))
+      );
+      return !found;
+    } catch {
+      return false;
+    }
+  });
+
   const [selectedBusinessForEdit, setSelectedBusinessForEdit] = useState<Business | null>(null);
   const [isEditBusinessOpen, setIsEditBusinessOpen] = useState(false);
   const [businessToClaim, setBusinessToClaim] = useState<Business | null>(null);
   const [businessForFeedback, setBusinessForFeedback] = useState<Business | null>(null);
-  const [selectedStoryForReading, setSelectedStoryForReading] = useState<CommunityStory | null>(null);
   const [isSubmitStoryOpen, setIsSubmitStoryOpen] = useState(false);
   const [isSubmitUpdateOpen, setIsSubmitUpdateOpen] = useState(false);
   const [isEditorialReviewOpen, setIsEditorialReviewOpen] = useState(false);
@@ -600,6 +689,7 @@ export default function App() {
 
         if (found) {
           setSelectedBusinessForDetails(found);
+          setIsResolvingDeepLink(false);
           if (found.slug && window.location.hash.replace('#', '') !== found.slug && !bizParam) {
             window.history.replaceState(null, '', `#${found.slug}`);
           }
@@ -615,6 +705,16 @@ export default function App() {
       window.removeEventListener('popstate', handleUrlRoute);
     };
   }, [businesses, stories]);
+
+  // Deep-link safety fallback timeout to prevent infinite loader
+  useEffect(() => {
+    if (isResolvingDeepLink) {
+      const timer = setTimeout(() => {
+        setIsResolvingDeepLink(false);
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [isResolvingDeepLink]);
 
   // 5. Category Counts
   const categoryCounts = useMemo(() => {
@@ -1399,7 +1499,22 @@ export default function App() {
         onClose={handleCloseStoryReader}
         onLike={handleLikeStory}
         onDislike={handleDislikeStory}
+        onUpdateStory={handleUpdateStoryContent}
       />
+
+      {/* Deep Link Instant Loader (Prevents directory flash when resolving a specific shared link) */}
+      {isResolvingDeepLink && (
+        <div className="fixed inset-0 z-50 bg-[#121417] flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-150">
+          <div className="w-16 h-16 rounded-2xl bg-[#1D0C06] border border-amber-600/30 flex items-center justify-center mb-4 shadow-xl">
+            <img src="/kwest-logo.png" alt="KWEST" className="w-12 h-12 object-contain rounded-xl" />
+          </div>
+          <h3 className="text-white font-bold text-base sm:text-lg mb-1">Opening Business Listing...</h3>
+          <p className="text-stone-400 text-xs max-w-xs">Connecting to Kahawa West verified directory records</p>
+          <div className="w-32 h-1.5 bg-stone-800 rounded-full mt-4 overflow-hidden">
+            <div className="w-1/2 h-full bg-emerald-500 rounded-full animate-pulse" />
+          </div>
+        </div>
+      )}
 
       {/* Submit Community Story Modal */}
       <SubmitStoryModal

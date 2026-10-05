@@ -49,8 +49,9 @@ import {
   FastForward,
   RotateCcw,
   History,
+  Save,
 } from 'lucide-react';
-import { CommunityStory, CommunityUpdate, BusinessClaim, Business, UpdateType, BusinessAdCampaign, AdCampaignStatus, BusinessApplication } from '../../../types';
+import { CommunityStory, CommunityUpdate, BusinessClaim, Business, UpdateType, BusinessAdCampaign, AdCampaignStatus, BusinessApplication, StoryCategory, EstateZone } from '../../../types';
 import {
   calculateAdExpiresAt,
   getAdTimeRemaining,
@@ -3287,6 +3288,174 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                   className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold cursor-pointer"
                 >
                   Save Ad Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Story Editor Dialog (Works for both Pending & Live Published stories) */}
+      {editingStory && (
+        <div className="fixed inset-0 z-60 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="bg-[#181B20] text-white rounded-3xl max-w-3xl w-full border border-stone-700 shadow-2xl flex flex-col max-h-[92vh] overflow-hidden my-auto">
+            <div className="bg-[#4D0202] px-5 sm:px-7 py-4 border-b border-[#630303] flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-emerald-400" />
+                <h4 className="font-display font-bold text-white text-base">
+                  Edit Story: {editingStory.title}
+                </h4>
+              </div>
+              <button
+                onClick={() => setEditingStory(null)}
+                className="p-1.5 rounded-lg bg-[#630303] text-stone-300 hover:text-white transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (onUpdateStoryContent && editingStory) {
+                  onUpdateStoryContent(editingStory);
+                }
+                setEditingStory(null);
+              }}
+              className="p-5 sm:p-7 overflow-y-auto space-y-4 flex-1 text-xs"
+            >
+              <div>
+                <label className="font-bold text-stone-300 block mb-1">Story Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingStory.title}
+                  onChange={(e) => setEditingStory({ ...editingStory, title: e.target.value })}
+                  className="w-full bg-[#121417] border border-stone-700 rounded-xl p-3 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-stone-300 block mb-1">One-Line Subtitle / Summary</label>
+                <input
+                  type="text"
+                  value={editingStory.subtitle || ''}
+                  onChange={(e) => setEditingStory({ ...editingStory, subtitle: e.target.value })}
+                  className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-stone-300 block mb-1">Category *</label>
+                  <select
+                    value={editingStory.category}
+                    onChange={(e) => setEditingStory({ ...editingStory, category: e.target.value as StoryCategory })}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="Community Initiative">Community Initiative</option>
+                    <option value="Local Business & Artisan">Local Business & Artisan</option>
+                    <option value="Youth & Sports">Youth & Sports</option>
+                    <option value="Schools & Education">Schools & Education</option>
+                    <option value="Socio-Economic Development">Socio-Economic Development</option>
+                    <option value="Environment & Clean-up">Environment & Clean-up</option>
+                    <option value="Neighborhood Events">Neighborhood Events</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-stone-300 block mb-1">Estate Zone *</label>
+                  <select
+                    value={editingStory.zone}
+                    onChange={(e) => setEditingStory({ ...editingStory, zone: e.target.value as EstateZone })}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="Roundabout">Roundabout</option>
+                    <option value="Kamiti Road">Kamiti Road</option>
+                    <option value="Station / Railway">Station / Railway</option>
+                    <option value="Congo">Congo</option>
+                    <option value="Jacaranda Estate">Jacaranda Estate</option>
+                    <option value="Bima Road">Bima Road</option>
+                    <option value="Soweto">Soweto</option>
+                    <option value="Kamae">Kamae</option>
+                    <option value="Mahiga">Mahiga</option>
+                    <option value="Kware / Quarry">Kware / Quarry</option>
+                    <option value="Kiamumbi Border">Kiamumbi Border</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-stone-300 block mb-1">Story Content (Markdown supported) *</label>
+                <textarea
+                  required
+                  rows={10}
+                  value={editingStory.content}
+                  onChange={(e) => setEditingStory({ ...editingStory, content: e.target.value })}
+                  className="w-full bg-[#121417] border border-stone-700 rounded-xl p-3 text-white text-xs font-mono leading-relaxed focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-stone-300 block mb-1">Featured Photo URL</label>
+                  <input
+                    type="text"
+                    value={editingStory.imageUrl || ''}
+                    onChange={(e) => setEditingStory({ ...editingStory, imageUrl: e.target.value })}
+                    placeholder="/schools-in-kahawa-west.png"
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-stone-300 block mb-1">Photo Caption</label>
+                  <input
+                    type="text"
+                    value={editingStory.imageCaption || ''}
+                    onChange={(e) => setEditingStory({ ...editingStory, imageCaption: e.target.value })}
+                    placeholder="e.g. Mahiga Primary School"
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-stone-300 block mb-1">Author Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingStory.authorName}
+                    onChange={(e) => setEditingStory({ ...editingStory, authorName: e.target.value })}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-stone-300 block mb-1">Author Role *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingStory.authorRole}
+                    onChange={(e) => setEditingStory({ ...editingStory, authorRole: e.target.value })}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-stone-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingStory(null)}
+                  className="px-4 py-2 rounded-xl text-stone-400 hover:text-white transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1.5 shadow-md cursor-pointer transition active:scale-95"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save Changes &amp; Update Live</span>
                 </button>
               </div>
             </form>

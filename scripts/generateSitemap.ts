@@ -82,6 +82,18 @@ async function run() {
             galleryImages: row.gallery_images || [],
             isVerified: row.is_verified || false,
             slug: row.slug || row.id,
+            isClaimed: Boolean(row.is_claimed),
+            priceLevel: row.price_level || 'Moderate',
+            services: Array.isArray(row.services) ? row.services : [],
+            openingHours: row.opening_hours || {
+              monday: { open: '08:00', close: '20:00', closed: false },
+              tuesday: { open: '08:00', close: '20:00', closed: false },
+              wednesday: { open: '08:00', close: '20:00', closed: false },
+              thursday: { open: '08:00', close: '20:00', closed: false },
+              friday: { open: '08:00', close: '20:00', closed: false },
+              saturday: { open: '08:00', close: '20:00', closed: false },
+              sunday: { open: '09:00', close: '18:00', closed: false },
+            },
           };
           bizMap.set(biz.id, biz);
         });

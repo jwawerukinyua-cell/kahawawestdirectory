@@ -15,8 +15,12 @@ import {
   User,
   MessageSquare,
   Trash2,
+  Edit3,
+  Save,
+  RotateCcw,
+  Sparkles,
 } from 'lucide-react';
-import { CommunityStory, StoryComment } from '../../../types';
+import { CommunityStory, StoryComment, EstateZone, StoryCategory } from '../../../types';
 import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
 import { ListingImage } from '../../ui/ListingImage';
@@ -36,7 +40,34 @@ interface StoryReaderModalProps {
   onClose: () => void;
   onLike?: (storyId: string) => void;
   onDislike?: (storyId: string) => void;
+  onUpdateStory?: (updatedStory: CommunityStory) => void;
 }
+
+const SPOTLIGHT_ZONES: EstateZone[] = [
+  'Congo',
+  'Roundabout',
+  'Jacaranda Estate',
+  'Jubilee Estate',
+  'Northern Bypass',
+  'Kware / Quarry',
+  'Bima Road',
+  'Soweto',
+  'Kamae',
+  'Station / Railway',
+  'Mahiga',
+  'Kamiti Road',
+  'Kiamumbi Border',
+];
+
+const STORY_CATEGORIES: StoryCategory[] = [
+  'Community Initiative',
+  'Local Business & Artisan',
+  'Youth & Sports',
+  'Schools & Education',
+  'Socio-Economic Development',
+  'Environment & Clean-up',
+  'Neighborhood Events',
+];
 
 export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   story,
@@ -44,6 +75,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   onClose,
   onLike,
   onDislike,
+  onUpdateStory,
 }) => {
   const [copied, setCopied] = useState(false);
   const [reactionState, setReactionState] = useState<StoryReactionState>({
@@ -59,6 +91,21 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   const [isPostingComment, setIsPostingComment] = useState(false);
   const [commentFeedback, setCommentFeedback] = useState<string | null>(null);
 
+  // Edit Story state (works on pending, approved, and live stories)
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editSubtitle, setEditSubtitle] = useState('');
+  const [editCategory, setEditCategory] = useState<StoryCategory>('Community Initiative');
+  const [editZone, setEditZone] = useState<EstateZone>('Jacaranda Estate');
+  const [editContent, setEditContent] = useState('');
+  const [editImageUrl, setEditImageUrl] = useState('');
+  const [editImageCaption, setEditImageCaption] = useState('');
+  const [editAuthorName, setEditAuthorName] = useState('');
+  const [editAuthorRole, setEditAuthorRole] = useState('');
+  const [editAuthorPhone, setEditAuthorPhone] = useState('');
+  const [editAuthorEmail, setEditAuthorEmail] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   // Sync state whenever story changes or opens
   useEffect(() => {
     if (story) {
@@ -68,6 +115,20 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
       setComments(loadedComments);
       setCommentTextInput('');
       setCommentFeedback(null);
+
+      // Populate edit fields
+      setEditTitle(story.title || '');
+      setEditSubtitle(story.subtitle || '');
+      setEditCategory(story.category || 'Community Initiative');
+      setEditZone(story.zone || 'Jacaranda Estate');
+      setEditContent(story.content || '');
+      setEditImageUrl(story.imageUrl || '');
+      setEditImageCaption(story.imageCaption || '');
+      setEditAuthorName(story.authorName || '');
+      setEditAuthorRole(story.authorRole || '');
+      setEditAuthorPhone(story.authorPhone || '');
+      setEditAuthorEmail(story.authorEmail || '');
+      setIsEditing(false);
     }
   }, [story?.id, isOpen]);
 
@@ -160,6 +221,34 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
     setComments(updated);
   };
 
+  const handleSaveStoryChanges = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTitle.trim() || !editContent.trim()) return;
+
+    const updatedStory: CommunityStory = {
+      ...story,
+      title: editTitle.trim(),
+      subtitle: editSubtitle.trim() || undefined,
+      category: editCategory,
+      zone: editZone,
+      content: editContent.trim(),
+      excerpt: editContent.trim().slice(0, 160).replace(/[#*`_]/g, '') + '...',
+      imageUrl: editImageUrl.trim() || undefined,
+      imageCaption: editImageCaption.trim() || undefined,
+      authorName: editAuthorName.trim() || story.authorName,
+      authorRole: editAuthorRole.trim() || story.authorRole,
+      authorPhone: editAuthorPhone.trim() || story.authorPhone,
+      authorEmail: editAuthorEmail.trim() || story.authorEmail,
+    };
+
+    if (onUpdateStory) {
+      onUpdateStory(updatedStory);
+    }
+    setIsEditing(false);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 4000);
+  };
+
   return (
     <div
       id="story-reader-modal"
@@ -173,26 +262,220 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
         <div className="bg-[#4D0202] text-white px-4 sm:px-7 py-3.5 sm:py-4 flex items-center justify-between border-b border-[#630303] flex-shrink-0 min-w-0">
           <div className="flex items-center gap-2 min-w-0 overflow-hidden">
             <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50 truncate">
-              {story.category}
+              {isEditing ? 'Editing Story' : story.category}
             </span>
-            {story.status === 'pending_review' && (
+            {story.status === 'pending_review' ? (
               <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-600/50 truncate">
                 Pending Review
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50 truncate">
+                Live &amp; Published
               </span>
             )}
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-1.5 sm:p-2 rounded-xl bg-[#630303] text-stone-200 hover:text-white transition active:scale-95 flex-shrink-0 ml-2"
-            aria-label="Close Story"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {onUpdateStory && !isEditing && (
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-900/80 hover:bg-stone-800 text-stone-200 hover:text-white border border-stone-600 text-xs font-semibold transition active:scale-95 shadow-xs"
+                title="Edit this story"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Edit Story</span>
+              </button>
+            )}
+
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white text-xs font-semibold transition active:scale-95"
+              >
+                Cancel
+              </button>
+            )}
+
+            <button
+              onClick={onClose}
+              className="p-1.5 sm:p-2 rounded-xl bg-[#630303] text-stone-200 hover:text-white transition active:scale-95 flex-shrink-0"
+              aria-label="Close Story"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Scrollable Story Body */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 space-y-6 min-w-0">
+        {/* Live Notification on Save */}
+        {saveSuccess && (
+          <div className="bg-emerald-700 text-white px-4 py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-inner">
+            <Check className="w-4 h-4" />
+            <span>Story updated successfully! Live changes saved.</span>
+          </div>
+        )}
+
+        {isEditing ? (
+          /* Live Story Editor Form */
+          <form onSubmit={handleSaveStoryChanges} className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-7 space-y-4 text-xs">
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span>Editing live published story. Changes will immediately reflect across the Kahawa West website.</span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Story Title *
+              </label>
+              <input
+                type="text"
+                required
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white font-medium"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                One-Line Subtitle / Summary (Optional)
+              </label>
+              <input
+                type="text"
+                value={editSubtitle}
+                onChange={(e) => setEditSubtitle(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Category *
+                </label>
+                <select
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value as StoryCategory)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white"
+                >
+                  {STORY_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Estate Zone in Kahawa West *
+                </label>
+                <select
+                  value={editZone}
+                  onChange={(e) => setEditZone(e.target.value as EstateZone)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white"
+                >
+                  {SPOTLIGHT_ZONES.map((z) => (
+                    <option key={z} value={z}>
+                      {z}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Photo URL
+                </label>
+                <input
+                  type="text"
+                  value={editImageUrl}
+                  onChange={(e) => setEditImageUrl(e.target.value)}
+                  placeholder="/kwest-logo.png"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Photo Caption
+                </label>
+                <input
+                  type="text"
+                  value={editImageCaption}
+                  onChange={(e) => setEditImageCaption(e.target.value)}
+                  placeholder="e.g. Kahawa West Grounds"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Author Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editAuthorName}
+                  onChange={(e) => setEditAuthorName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Author Role *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editAuthorRole}
+                  onChange={(e) => setEditAuthorRole(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Full Article Content (Markdown Supported) *
+              </label>
+              <textarea
+                required
+                rows={12}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white leading-relaxed font-sans min-h-[240px] resize-y"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-200">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditing(false)}
+                className="px-4 py-2"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                className="bg-emerald-700 hover:bg-emerald-600 text-white px-6 py-2 flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Story Changes</span>
+              </Button>
+            </div>
+          </form>
+        ) : (
+          /* Scrollable Story Body */
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 space-y-6 min-w-0">
           {/* Title & Subtitle */}
           <div className="min-w-0">
             <h1 className="font-display text-xl sm:text-3xl md:text-4xl font-extrabold text-[#630303] tracking-tight leading-tight mb-2 break-words">
@@ -480,6 +763,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
             </div>
           </div>
         </div>
+        )}
 
         {/* Footer */}
         <div className="p-3.5 sm:p-4 bg-stone-100 border-t border-stone-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 text-xs text-stone-600 flex-shrink-0 min-w-0">
