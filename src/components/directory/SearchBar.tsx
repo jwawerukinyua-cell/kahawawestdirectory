@@ -8,7 +8,7 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({
+const SearchBarComponent: React.FC<SearchBarProps> = ({
   value,
   onChange,
   onKeyDown,
@@ -36,3 +36,5 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     </div>
   );
 };
+
+export const SearchBar = React.memo(SearchBarComponent);

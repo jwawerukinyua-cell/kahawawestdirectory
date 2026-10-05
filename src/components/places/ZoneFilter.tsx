@@ -26,7 +26,7 @@ export const ZONES: { id: string; name: string }[] = [
   { id: 'Kiamumbi Border', name: 'Kiamumbi Border' },
 ];
 
-export const ZoneFilter: React.FC<ZoneFilterProps> = ({
+const ZoneFilterComponent: React.FC<ZoneFilterProps> = ({
   selectedZone,
   onSelectZone,
   zoneCounts = {},
@@ -72,3 +72,5 @@ export const ZoneFilter: React.FC<ZoneFilterProps> = ({
     </HorizontalScrollContainer>
   );
 };
+
+export const ZoneFilter = React.memo(ZoneFilterComponent);

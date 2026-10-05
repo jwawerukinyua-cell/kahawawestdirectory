@@ -14,7 +14,7 @@ interface BusinessCardProps {
   onUnlockContact?: (business: Business) => void;
 }
 
-export const BusinessCard: React.FC<BusinessCardProps> = ({
+const BusinessCardComponent: React.FC<BusinessCardProps> = ({
   business,
   onViewDetails,
   onClaim,
@@ -263,3 +263,5 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
     </div>
   );
 };
+
+export const BusinessCard = React.memo(BusinessCardComponent);

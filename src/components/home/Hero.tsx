@@ -57,7 +57,7 @@ interface HeroProps {
   categoryCounts: Record<string, number>;
 }
 
-export const Hero: React.FC<HeroProps> = ({
+const HeroComponent: React.FC<HeroProps> = ({
   searchQuery,
   onSearchChange,
   onListBusinessClick,
@@ -68,12 +68,12 @@ export const Hero: React.FC<HeroProps> = ({
   onSelectCategory,
   categoryCounts = {},
 }) => {
-  const [currentHeroSrc, setCurrentHeroSrc] = useState('/hero.jpg');
+  const [currentHeroSrc, setCurrentHeroSrc] = useState('/hero.webp');
 
   const handleHeroImgError = () => {
-    if (currentHeroSrc === '/hero.jpg') {
-      setCurrentHeroSrc('/hero.webp');
-    } else if (currentHeroSrc === '/hero.webp') {
+    if (currentHeroSrc === '/hero.webp') {
+      setCurrentHeroSrc('/hero.jpg');
+    } else if (currentHeroSrc === '/hero.jpg') {
       setCurrentHeroSrc('/hero-opt.jpg');
     }
   };
@@ -611,3 +611,5 @@ export const Hero: React.FC<HeroProps> = ({
     </div>
   );
 };
+
+export const Hero = React.memo(HeroComponent);

@@ -1,4 +1,13 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useDeferredValue,
+  useTransition,
+  lazy,
+  Suspense,
+} from 'react';
 import {
   Search,
   MapPin,
@@ -71,28 +80,69 @@ import { ZoneFilter } from './components/places/ZoneFilter';
 import { SortDropdown } from './components/directory/SortDropdown';
 import { EmptyState } from './components/directory/EmptyState';
 import { BusinessCard } from './components/businesses/BusinessCard';
-import { BusinessDetailModal } from './components/businesses/BusinessDetailModal';
-import { EditBusinessModal } from './components/businesses/EditBusinessModal';
-import { ClaimBusinessModal } from './components/businesses/ClaimBusinessModal';
-import { ListYourBusinessModal } from './components/businesses/ListYourBusinessModal';
-import { CommunityFeedbackModal } from './components/community/feedback/CommunityFeedbackModal';
 import { CommunitySpotlight } from './components/community/spotlight/CommunitySpotlight';
 import { CommunityUpdates } from './components/community/updates/CommunityUpdates';
-import { SubmitUpdateModal } from './components/community/updates/SubmitUpdateModal';
-import { StoryReaderModal } from './components/community/spotlight/StoryReaderModal';
-import { SubmitStoryModal } from './components/community/spotlight/SubmitStoryModal';
-import { EditorialReviewModal } from './components/community/spotlight/EditorialReviewModal';
-import { EmergencyModal } from './components/EmergencyModal';
-import { AboutModal } from './components/about/AboutModal';
-import { LegalModal } from './components/legal/LegalModal';
 import { MonetizationPlaceholders } from './components/home/MonetizationPlaceholders';
-import { AdEnquiryModal } from './components/home/AdEnquiryModal';
 import { JsonLdManager } from './components/seo/JsonLdManager';
 import { FloatingShareButton } from './components/ui/FloatingShareButton';
 import { NotificationCenter } from './components/notifications/NotificationCenter';
 import { NotificationToast } from './components/notifications/NotificationToast';
-import { InstallAppModal } from './components/pwa/InstallAppModal';
-import { SitemapModal } from './components/seo/SitemapModal';
+
+// Code-split heavy modals (LCP & TBT Optimization: saves >1MB from critical path)
+const BusinessDetailModal = lazy(() =>
+  import('./components/businesses/BusinessDetailModal').then((m) => ({ default: m.BusinessDetailModal }))
+);
+const EditBusinessModal = lazy(() =>
+  import('./components/businesses/EditBusinessModal').then((m) => ({ default: m.EditBusinessModal }))
+);
+const ClaimBusinessModal = lazy(() =>
+  import('./components/businesses/ClaimBusinessModal').then((m) => ({ default: m.ClaimBusinessModal }))
+);
+const ListYourBusinessModal = lazy(() =>
+  import('./components/businesses/ListYourBusinessModal').then((m) => ({ default: m.ListYourBusinessModal }))
+);
+const CommunityFeedbackModal = lazy(() =>
+  import('./components/community/feedback/CommunityFeedbackModal').then((m) => ({ default: m.CommunityFeedbackModal }))
+);
+const SubmitUpdateModal = lazy(() =>
+  import('./components/community/updates/SubmitUpdateModal').then((m) => ({ default: m.SubmitUpdateModal }))
+);
+const StoryReaderModal = lazy(() =>
+  import('./components/community/spotlight/StoryReaderModal').then((m) => ({ default: m.StoryReaderModal }))
+);
+const SubmitStoryModal = lazy(() =>
+  import('./components/community/spotlight/SubmitStoryModal').then((m) => ({ default: m.SubmitStoryModal }))
+);
+const EditorialReviewModal = lazy(() =>
+  import('./components/community/spotlight/EditorialReviewModal').then((m) => ({ default: m.EditorialReviewModal }))
+);
+const EmergencyModal = lazy(() =>
+  import('./components/EmergencyModal').then((m) => ({ default: m.EmergencyModal }))
+);
+const AboutModal = lazy(() =>
+  import('./components/about/AboutModal').then((m) => ({ default: m.AboutModal }))
+);
+const LegalModal = lazy(() =>
+  import('./components/legal/LegalModal').then((m) => ({ default: m.LegalModal }))
+);
+const AdEnquiryModal = lazy(() =>
+  import('./components/home/AdEnquiryModal').then((m) => ({ default: m.AdEnquiryModal }))
+);
+const InstallAppModal = lazy(() =>
+  import('./components/pwa/InstallAppModal').then((m) => ({ default: m.InstallAppModal }))
+);
+const SitemapModal = lazy(() =>
+  import('./components/seo/SitemapModal').then((m) => ({ default: m.SitemapModal }))
+);
+
+// Warm cache for deep-linked visitors so modals open instantly
+if (typeof window !== 'undefined') {
+  if (window.location.search.includes('biz=') || (window.location.hash && !window.location.hash.includes('story'))) {
+    import('./components/businesses/BusinessDetailModal');
+  } else if (window.location.search.includes('story=') || window.location.hash.includes('story')) {
+    import('./components/community/spotlight/StoryReaderModal');
+  }
+}
 import { trackSearchQuery } from './lib/tracking';
 import {
   AppNotification,
@@ -115,12 +165,27 @@ export default function App() {
 
   // 2. Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [, startCategoryTransition] = useTransition();
   const [selectedZone, setSelectedZone] = useState('all');
+  const [, startZoneTransition] = useTransition();
   const [housingAgentsOnly, setHousingAgentsOnly] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [mpesaOnly, setMpesaOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'name' | 'verified'>('rating');
+
+  const handleSelectCategory = useCallback((categoryId: string) => {
+    startCategoryTransition(() => {
+      setSelectedCategory(categoryId);
+    });
+  }, []);
+
+  const handleSelectZone = useCallback((zoneId: string) => {
+    startZoneTransition(() => {
+      setSelectedZone(zoneId);
+    });
+  }, []);
 
   // 3. Modal & Drawer States - Synchronously initialized from URL on mount so shared links open instantly with 0ms delay
   const [selectedBusinessForDetails, setSelectedBusinessForDetails] = useState<Business | null>(() => {
@@ -734,13 +799,13 @@ export default function App() {
     return counts;
   }, [businesses]);
 
-  // 7. Filtered and Sorted Businesses
+  // 7. Filtered and Sorted Businesses (uses deferredSearchQuery so typing has 0ms frame lag)
   const filteredBusinesses = useMemo(() => {
     return businesses
       .filter((b) => {
         // Search query matching name, description, landmark, services, subCategory, tags
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase().trim();
+        if (deferredSearchQuery.trim()) {
+          const q = deferredSearchQuery.toLowerCase().trim();
           const matchesName = b.name.toLowerCase().includes(q);
           const matchesDesc = b.description.toLowerCase().includes(q);
           const matchesLandmark = b.landmark.toLowerCase().includes(q);
@@ -791,18 +856,22 @@ export default function App() {
         if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
         return 0;
       });
-  }, [businesses, searchQuery, selectedCategory, selectedZone, housingAgentsOnly, verifiedOnly, mpesaOnly, sortBy]);
+  }, [businesses, deferredSearchQuery, selectedCategory, selectedZone, housingAgentsOnly, verifiedOnly, mpesaOnly, sortBy]);
 
-  // Handlers for Businesses
-  const handleViewDetails = (business: Business) => {
+  // Handlers for Businesses (memoized callbacks prevent re-rendering cards)
+  const handleViewDetails = useCallback((business: Business) => {
     setSelectedBusinessForDetails(business);
     window.history.replaceState(null, '', `#${business.slug}`);
-  };
+  }, []);
 
-  const handleCloseDetails = () => {
+  const handleCloseDetails = useCallback(() => {
     setSelectedBusinessForDetails(null);
     window.history.replaceState(null, '', window.location.pathname);
-  };
+  }, []);
+
+  const handleClaim = useCallback((business: Business) => {
+    setBusinessToClaim(business);
+  }, []);
 
   const handleOpenEditBusiness = (business: Business) => {
     setSelectedBusinessForEdit(business);
@@ -1254,7 +1323,7 @@ export default function App() {
           categories={CATEGORIES}
           selectedCategory={selectedCategory}
           onSelectCategory={(catId) => {
-            setSelectedCategory(catId);
+            handleSelectCategory(catId);
             setTimeout(scrollToDirectory, 100);
           }}
           categoryCounts={categoryCounts}
@@ -1373,14 +1442,14 @@ export default function App() {
           <CategoryFilter
             categories={CATEGORIES}
             selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
+            onSelectCategory={handleSelectCategory}
             categoryCounts={categoryCounts}
           />
 
           {/* Estate Zone Filter Horizontal Scroll */}
           <ZoneFilter
             selectedZone={selectedZone}
-            onSelectZone={setSelectedZone}
+            onSelectZone={handleSelectZone}
             zoneCounts={zoneCounts}
           />
         </section>
@@ -1405,7 +1474,7 @@ export default function App() {
                 key={b.id}
                 business={b}
                 onViewDetails={handleViewDetails}
-                onClaim={(biz) => setBusinessToClaim(biz)}
+                onClaim={handleClaim}
               />
             ))}
           </div>
@@ -1459,190 +1528,182 @@ export default function App() {
         zoneCounts={zoneCounts}
       />
 
-      {/* 7. Modals & Dialogs */}
+      {/* 7. Modals & Dialogs (Lazy loaded via Suspense to keep initial JS bundle minimal) */}
+      <Suspense fallback={null}>
+        {/* Central Editorial Review & Approval Desk Modal */}
+        {isEditorialReviewOpen && (
+          <EditorialReviewModal
+            isOpen={isEditorialReviewOpen}
+            onClose={() => setIsEditorialReviewOpen(false)}
+            stories={stories}
+            updates={updates}
+            claims={claims}
+            applications={applications}
+            businesses={businesses}
+            onApproveStory={handleApproveStory}
+            onRejectStory={handleRejectStory}
+            onDeleteStory={handleDeleteStory}
+            onUpdateStoryContent={handleUpdateStoryContent}
+            onApproveUpdate={handleApproveUpdate}
+            onRejectUpdate={handleRejectUpdate}
+            onDeleteUpdate={handleDeleteUpdate}
+            onApproveClaim={handleApproveClaim}
+            onRejectClaim={handleRejectClaim}
+            onDeleteClaim={handleDeleteClaim}
+            onApproveApplication={handleApproveApplication}
+            onRejectApplication={handleRejectApplication}
+            onDeleteApplication={handleDeleteApplication}
+            onEditBusiness={handleOpenEditBusiness}
+            onToggleVerifyBusiness={handleToggleVerifyBusiness}
+            onOpenSubmitModal={() => setIsSubmitStoryOpen(true)}
+            onOpenSubmitUpdateModal={() => setIsSubmitUpdateOpen(true)}
+            onRefreshCloudData={refreshCloudData}
+            isSyncingCloud={isSyncingCloud}
+            lastCloudSyncTime={lastCloudSyncTime}
+          />
+        )}
 
-      {/* Central Editorial Review & Approval Desk Modal */}
-      <EditorialReviewModal
-        isOpen={isEditorialReviewOpen}
-        onClose={() => setIsEditorialReviewOpen(false)}
-        stories={stories}
-        updates={updates}
-        claims={claims}
-        applications={applications}
-        businesses={businesses}
-        onApproveStory={handleApproveStory}
-        onRejectStory={handleRejectStory}
-        onDeleteStory={handleDeleteStory}
-        onUpdateStoryContent={handleUpdateStoryContent}
-        onApproveUpdate={handleApproveUpdate}
-        onRejectUpdate={handleRejectUpdate}
-        onDeleteUpdate={handleDeleteUpdate}
-        onApproveClaim={handleApproveClaim}
-        onRejectClaim={handleRejectClaim}
-        onDeleteClaim={handleDeleteClaim}
-        onApproveApplication={handleApproveApplication}
-        onRejectApplication={handleRejectApplication}
-        onDeleteApplication={handleDeleteApplication}
-        onEditBusiness={handleOpenEditBusiness}
-        onToggleVerifyBusiness={handleToggleVerifyBusiness}
-        onOpenSubmitModal={() => setIsSubmitStoryOpen(true)}
-        onOpenSubmitUpdateModal={() => setIsSubmitUpdateOpen(true)}
-        onRefreshCloudData={refreshCloudData}
-        isSyncingCloud={isSyncingCloud}
-        lastCloudSyncTime={lastCloudSyncTime}
-      />
+        {/* Community Spotlight Story Reader Modal */}
+        {selectedStoryForReading && (
+          <StoryReaderModal
+            story={selectedStoryForReading}
+            isOpen={Boolean(selectedStoryForReading)}
+            onClose={handleCloseStoryReader}
+            onLike={handleLikeStory}
+            onDislike={handleDislikeStory}
+            onUpdateStory={handleUpdateStoryContent}
+          />
+        )}
 
-      {/* Community Spotlight Story Reader Modal */}
-      <StoryReaderModal
-        story={selectedStoryForReading}
-        isOpen={Boolean(selectedStoryForReading)}
-        onClose={handleCloseStoryReader}
-        onLike={handleLikeStory}
-        onDislike={handleDislikeStory}
-        onUpdateStory={handleUpdateStoryContent}
-      />
+        {/* Submit Community Story Modal */}
+        {isSubmitStoryOpen && (
+          <SubmitStoryModal
+            isOpen={isSubmitStoryOpen}
+            onClose={() => setIsSubmitStoryOpen(false)}
+            onStorySubmitted={handleStorySubmitted}
+          />
+        )}
 
-      {/* Deep Link Instant Loader (Prevents directory flash when resolving a specific shared link) */}
-      {isResolvingDeepLink && (
-        <div className="fixed inset-0 z-50 bg-[#121417] flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-150">
-          <div className="w-16 h-16 rounded-2xl bg-[#1D0C06] border border-amber-600/30 flex items-center justify-center mb-4 shadow-xl">
-            <img src="/kwest-logo.png" alt="KWEST" className="w-12 h-12 object-contain rounded-xl" />
-          </div>
-          <h3 className="text-white font-bold text-base sm:text-lg mb-1">Opening Business Listing...</h3>
-          <p className="text-stone-400 text-xs max-w-xs">Connecting to Kahawa West verified directory records</p>
-          <div className="w-32 h-1.5 bg-stone-800 rounded-full mt-4 overflow-hidden">
-            <div className="w-1/2 h-full bg-emerald-500 rounded-full animate-pulse" />
-          </div>
-        </div>
-      )}
+        {/* Submit Community Update Modal */}
+        {isSubmitUpdateOpen && (
+          <SubmitUpdateModal
+            isOpen={isSubmitUpdateOpen}
+            onClose={() => setIsSubmitUpdateOpen(false)}
+            onUpdateSubmitted={handleUpdateSubmitted}
+          />
+        )}
 
-      {/* Submit Community Story Modal */}
-      <SubmitStoryModal
-        isOpen={isSubmitStoryOpen}
-        onClose={() => setIsSubmitStoryOpen(false)}
-        onStorySubmitted={handleStorySubmitted}
-      />
+        {/* Business Full Detail Modal */}
+        {selectedBusinessForDetails && (
+          <BusinessDetailModal
+            business={selectedBusinessForDetails}
+            isOpen={Boolean(selectedBusinessForDetails)}
+            onClose={handleCloseDetails}
+            onClaimClick={handleClaim}
+            onEditClick={handleOpenEditBusiness}
+            onLeaveFeedbackClick={(biz) => {
+              setBusinessForFeedback(biz);
+            }}
+          />
+        )}
 
-      {/* Submit Community Update Modal (Alerts, Events, Business Openings, Community Drives) */}
-      <SubmitUpdateModal
-        isOpen={isSubmitUpdateOpen}
-        onClose={() => setIsSubmitUpdateOpen(false)}
-        onUpdateSubmitted={handleUpdateSubmitted}
-      />
+        {/* Edit Business Modal */}
+        {isEditBusinessOpen && (
+          <EditBusinessModal
+            business={selectedBusinessForEdit}
+            isOpen={isEditBusinessOpen}
+            onClose={() => {
+              setIsEditBusinessOpen(false);
+              setSelectedBusinessForEdit(null);
+            }}
+            onBusinessUpdated={handleBusinessUpdated}
+            isAdmin={true}
+          />
+        )}
 
-      {/* Business Full Detail Modal */}
-      <BusinessDetailModal
-        business={selectedBusinessForDetails}
-        isOpen={Boolean(selectedBusinessForDetails)}
-        onClose={handleCloseDetails}
-        onClaimClick={(biz) => {
-          setBusinessToClaim(biz);
-        }}
-        onEditClick={handleOpenEditBusiness}
-        onLeaveFeedbackClick={(biz) => {
-          setBusinessForFeedback(biz);
-        }}
-      />
+        {/* Claim & Customize Business Modal */}
+        {businessToClaim && (
+          <ClaimBusinessModal
+            business={businessToClaim}
+            isOpen={Boolean(businessToClaim)}
+            onClose={() => setBusinessToClaim(null)}
+            onClaimSuccess={handleClaimSuccess}
+            onClaimSubmitted={handleClaimSubmitted}
+          />
+        )}
 
-      {/* Edit Business Modal (For Verified Owners / Claimed Listings & Editorial Desk) */}
-      {isEditBusinessOpen && (
-        <EditBusinessModal
-          business={selectedBusinessForEdit}
-          isOpen={isEditBusinessOpen}
-          onClose={() => {
-            setIsEditBusinessOpen(false);
-            setSelectedBusinessForEdit(null);
-          }}
-          onBusinessUpdated={handleBusinessUpdated}
-          isAdmin={true}
-        />
-      )}
+        {/* List New Business Modal */}
+        {isListBusinessOpen && (
+          <ListYourBusinessModal
+            isOpen={isListBusinessOpen}
+            onClose={() => setIsListBusinessOpen(false)}
+            onBusinessAdded={handleBusinessAdded}
+            onApplicationSubmitted={handleApplicationSubmitted}
+          />
+        )}
 
-      {/* Claim & Customize Business Modal */}
-      {businessToClaim && (
-        <ClaimBusinessModal
-          business={businessToClaim}
-          isOpen={Boolean(businessToClaim)}
-          onClose={() => setBusinessToClaim(null)}
-          onClaimSuccess={handleClaimSuccess}
-          onClaimSubmitted={handleClaimSubmitted}
-        />
-      )}
+        {/* Community Review / Feedback Modal */}
+        {businessForFeedback && (
+          <CommunityFeedbackModal
+            business={businessForFeedback}
+            isOpen={Boolean(businessForFeedback)}
+            onClose={() => setBusinessForFeedback(null)}
+            onFeedbackSubmitted={handleFeedbackSubmitted}
+          />
+        )}
 
-      {/* List New Business Modal */}
-      <ListYourBusinessModal
-        isOpen={isListBusinessOpen}
-        onClose={() => setIsListBusinessOpen(false)}
-        onBusinessAdded={handleBusinessAdded}
-        onApplicationSubmitted={handleApplicationSubmitted}
-      />
+        {/* Emergency Hotlines Modal */}
+        {isEmergencyOpen && (
+          <EmergencyModal
+            isOpen={isEmergencyOpen}
+            onClose={() => setIsEmergencyOpen(false)}
+          />
+        )}
 
-      {/* Community Review / Feedback Modal */}
-      {businessForFeedback && (
-        <CommunityFeedbackModal
-          business={businessForFeedback}
-          isOpen={Boolean(businessForFeedback)}
-          onClose={() => setBusinessForFeedback(null)}
-          onFeedbackSubmitted={handleFeedbackSubmitted}
-        />
-      )}
+        {/* About Kahawa West Modal */}
+        {isAboutOpen && (
+          <AboutModal
+            isOpen={isAboutOpen}
+            onClose={() => setIsAboutOpen(false)}
+          />
+        )}
 
-      {/* Emergency Hotlines Modal */}
-      <EmergencyModal
-        isOpen={isEmergencyOpen}
-        onClose={() => setIsEmergencyOpen(false)}
-      />
+        {/* Legal & Community Guidelines Modal */}
+        {legalTab && (
+          <LegalModal
+            tab={legalTab}
+            isOpen={Boolean(legalTab)}
+            onClose={() => setLegalTab(null)}
+            onSelectTab={(t) => setLegalTab(t)}
+          />
+        )}
 
-      {/* About Kahawa West Modal */}
-      <AboutModal
-        isOpen={isAboutOpen}
-        onClose={() => setIsAboutOpen(false)}
-      />
+        {/* Ad Space & Sponsorship Enquiry Modal */}
+        {isAdEnquiryOpen && (
+          <AdEnquiryModal
+            isOpen={isAdEnquiryOpen}
+            onClose={() => setIsAdEnquiryOpen(false)}
+          />
+        )}
 
-      {/* Legal & Community Guidelines Modal */}
-      {legalTab && (
-        <LegalModal
-          tab={legalTab}
-          isOpen={Boolean(legalTab)}
-          onClose={() => setLegalTab(null)}
-          onSelectTab={(t) => setLegalTab(t)}
-        />
-      )}
+        {/* PWA Home Screen Install App Modal */}
+        {isInstallAppOpen && (
+          <InstallAppModal
+            isOpen={isInstallAppOpen}
+            onClose={() => setIsInstallAppOpen(false)}
+          />
+        )}
 
-      {/* Ad Space & Sponsorship Enquiry Modal */}
-      <AdEnquiryModal
-        isOpen={isAdEnquiryOpen}
-        onClose={() => setIsAdEnquiryOpen(false)}
-      />
-
-      {/* Notification Center Drawer */}
-      <NotificationCenter
-        isOpen={isNotificationCenterOpen}
-        onClose={() => setIsNotificationCenterOpen(false)}
-        updates={updates}
-        stories={stories}
-      />
-
-      {/* Real-time Notification Toast Notification */}
-      <NotificationToast
-        notification={activeToastNotification}
-        onOpenCenter={() => setIsNotificationCenterOpen(true)}
-        onDismiss={() => setActiveToastNotification(null)}
-      />
-
-      {/* PWA Home Screen Install App Modal with Official KWEST Logo */}
-      <InstallAppModal
-        isOpen={isInstallAppOpen}
-        onClose={() => setIsInstallAppOpen(false)}
-      />
-
-      {/* SEO Sitemap & Robots.txt Webmaster Modal */}
-      <SitemapModal
-        isOpen={isSitemapOpen}
-        onClose={() => setIsSitemapOpen(false)}
-        businesses={businesses}
-        stories={stories}
-      />
+        {/* SEO Sitemap & Robots.txt Webmaster Modal */}
+        {isSitemapOpen && (
+          <SitemapModal
+            isOpen={isSitemapOpen}
+            onClose={() => setIsSitemapOpen(false)}
+            businesses={businesses}
+            stories={stories}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

@@ -41,7 +41,7 @@ interface CategoryFilterProps {
   categoryCounts?: Record<string, number>;
 }
 
-export const CategoryFilter: React.FC<CategoryFilterProps> = ({
+const CategoryFilterComponent: React.FC<CategoryFilterProps> = ({
   categories,
   selectedCategory,
   onSelectCategory,
@@ -160,3 +160,5 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
     </HorizontalScrollContainer>
   );
 };
+
+export const CategoryFilter = React.memo(CategoryFilterComponent);

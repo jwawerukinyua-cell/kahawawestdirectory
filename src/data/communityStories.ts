@@ -323,7 +323,7 @@ If your child attends **KBA, Marion, Little Angels, Green Cottage, Niceways, Mah
 Because that is the conversation Kahawa West needs: not a competition between schools, and not a judgment of parents who choose public or private education, but **honest information from parents, for parents.**
 
 *School fees and policies change. Any formal comparison published by Kahawa West Directory will be based on verified information supplemented by experiences from local parents.*`,
-    imageUrl: '/schools-in-kahawa-west.png',
+    imageUrl: '/schools-in-kahawa-west.webp',
     imageCaption: 'Schools in Kahawa West — Examining education costs, value, and parent experiences',
     isRealPhotoConfirmed: true,
     authorName: 'Mfalme Ukweli',
