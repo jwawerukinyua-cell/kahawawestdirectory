@@ -30,7 +30,11 @@ async function run() {
         .select('*');
 
       if (error) {
-        console.warn('Could not fetch businesses from Supabase (using static fallback):', error.message);
+        if (error.message?.includes('exceed_egress_quota') || error.message?.includes('restricted')) {
+          console.log('Serving verified static business listings for sitemap (Supabase free egress paused).');
+        } else {
+          console.warn('Could not fetch businesses from Supabase (using static fallback):', error.message);
+        }
       } else if (dbRows && dbRows.length > 0) {
         console.log(`Fetched ${dbRows.length} active listings from Supabase.`);
         

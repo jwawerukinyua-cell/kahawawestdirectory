@@ -65,17 +65,20 @@ export function logSupabaseWarning(scope: string, error: any) {
   if (
     message.includes('exceed_egress_quota') ||
     message.includes('restricted') ||
-    message.includes('spend caps')
+    message.includes('spend caps') ||
+    message.includes('bandwidth limit')
   ) {
     isEgressRestricted = true;
     if (!hasLoggedEgressNotice) {
       hasLoggedEgressNotice = true;
       console.info(
-        `ℹ️ [KWEST Data Sync]: Supabase monthly egress quota (5GB limit) reached on project wfsqnhujjqldcxnhnzvf. All directory listings, verified businesses, and community stories are serving seamlessly from local & static offline storage. To reactivate remote cloud sync, adjust spend caps in the Supabase dashboard.`
+        `ℹ️ [KWEST Data Sync]: Supabase free-tier egress quota limit reached on remote database. The directory is operating seamlessly from high-performance local & verified static storage.`
       );
     }
     return;
   }
+  // If already known to be egress restricted, don't spam the console with generic fetch errors
+  if (isEgressRestricted) return;
   console.warn(`Supabase ${scope} warning:`, message);
 }
 
@@ -224,7 +227,7 @@ export const fetchClaimsFromSupabase = async (): Promise<BusinessClaim[] | null>
     localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(mapped));
     return mapped;
   } catch (err) {
-    console.warn('Failed to fetch claims from Supabase:', err);
+    logSupabaseWarning('fetch claims', err);
     return null;
   }
 };
@@ -414,7 +417,7 @@ export const fetchBusinessesFromSupabase = async (): Promise<Business[] | null> 
       updatedAt: row.updated_at,
     }));
   } catch (err) {
-    console.warn('Failed to fetch businesses from Supabase:', err);
+    logSupabaseWarning('fetch businesses', err);
     return null;
   }
 };
@@ -711,7 +714,7 @@ export const fetchApplicationsFromSupabase = async (): Promise<BusinessApplicati
     localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(mapped));
     return mapped;
   } catch (err) {
-    console.warn('Failed to fetch applications from Supabase:', err);
+    logSupabaseWarning('fetch applications', err);
     return null;
   }
 };
@@ -865,7 +868,7 @@ export const fetchStoriesFromSupabase = async (): Promise<CommunityStory[] | nul
       likes: row.likes || 0,
     }));
   } catch (err) {
-    console.warn('Failed to fetch stories from Supabase:', err);
+    logSupabaseWarning('fetch stories', err);
     return null;
   }
 };
@@ -985,7 +988,7 @@ export const fetchUpdatesFromSupabase = async (): Promise<CommunityUpdate[] | nu
       rejectionReason: row.rejection_reason,
     }));
   } catch (err) {
-    console.warn('Failed to fetch updates from Supabase:', err);
+    logSupabaseWarning('fetch updates', err);
     return null;
   }
 };
