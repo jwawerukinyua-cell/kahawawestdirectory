@@ -71,13 +71,11 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   const [mpesaNumber, setMpesaNumber] = useState('');
   const [mpesaAccountName, setMpesaAccountName] = useState('');
 
-  // 5 Photos
+  // 3 Photos: 1 Main Card Hero + 2 Additional Photos (Capped to 3 for standard listings to optimize data egress)
   const [photos, setPhotos] = useState<string[]>([
     'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80',
   ]);
 
   if (!isOpen) return null;
@@ -94,7 +92,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
 
     try {
       const updatedPhotos = [...photos];
-      const maxToLoad = Math.min(files.length, 5);
+      const maxToLoad = Math.min(files.length, 3);
 
       for (let i = 0; i < maxToLoad; i++) {
         const file = files[i];
@@ -106,7 +104,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
         updatedPhotos[i] = dataUrl;
       }
-      setPhotos(updatedPhotos);
+      setPhotos(updatedPhotos.slice(0, 3));
     } catch (err) {
       console.error('Error reading files:', err);
       alert('Could not process selected image files.');
@@ -812,18 +810,18 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
               </div>
             </div>
 
-            {/* 5 Photos Section - Clean Mobile Optimized */}
+            {/* 3 Photos Section - The main and two additional photos */}
             <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-200">
                 <div>
                   <div className="flex items-center gap-2">
                     <Camera className="w-4 h-4 text-emerald-600" />
                     <span className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-                      5 Business Photos (Photo #1 is Main Card Hero)
+                      3 Business Photos (Photo #1 is Main Card Hero, Photos #2 & #3 are Gallery)
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    Select photos from your phone gallery or take new pictures.
+                    Upload 3 photos: 1 main hero photo for search cards and 2 additional photos showcasing your work or storefront.
                   </p>
                 </div>
 
@@ -840,16 +838,16 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                 </label>
               </div>
 
-              {/* 5 Responsive Photo Slots Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
-                {photos.map((p, idx) => {
+              {/* 3 Responsive Photo Slots Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {photos.slice(0, 3).map((p, idx) => {
                   const photoSrc =
                     p && p.trim() !== ''
                       ? p
                       : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
                   return (
-                  <div key={idx} className="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs space-y-1.5 flex flex-col justify-between">
-                    <div className="relative h-20 sm:h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
+                  <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-2 flex flex-col justify-between">
+                    <div className="relative h-28 sm:h-32 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
                       <img 
                         src={photoSrc} 
                         alt={`Business photo preview slot ${idx + 1}`} 
@@ -857,8 +855,8 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                         className="w-full h-full object-cover" 
                         referrerPolicy="no-referrer" 
                       />
-                      <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
-                        {idx === 0 ? '★ Main' : `#${idx + 1}`}
+                      <span className={`absolute top-1 left-1 px-2 py-0.5 rounded text-[10px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
+                        {idx === 0 ? '★ 1. Main Hero' : idx === 1 ? '2. Additional Photo' : '3. Additional Photo'}
                       </span>
 
                       <label className="absolute inset-0 bg-black/60 text-white flex flex-col items-center justify-center gap-1 cursor-pointer opacity-0 hover:opacity-100 sm:group-hover:opacity-100 transition-opacity">

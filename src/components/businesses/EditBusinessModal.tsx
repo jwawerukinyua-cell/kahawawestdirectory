@@ -195,20 +195,25 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
           : (hours.monday?.open === '00:00' && hours.monday?.close === '23:59') || hours.monday?.open === '24 Hours';
       setIs247(Boolean(isMonday24));
 
+      const isApproved = Boolean(business.isVerified);
+      const targetCount = isApproved ? 5 : 3;
+
+      const fallbackPhotos = [
+        business.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80',
+      ];
+
       const existingPhotos = (business.galleryImages && business.galleryImages.length > 0)
-        ? business.galleryImages.slice(0, 5)
-        : [
-            business.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80',
-          ];
+        ? business.galleryImages.slice(0, targetCount)
+        : fallbackPhotos.slice(0, targetCount);
       
-      while (existingPhotos.length < 5) {
+      while (existingPhotos.length < targetCount) {
         existingPhotos.push('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80');
       }
-      setPhotos(existingPhotos);
+      setPhotos(existingPhotos.slice(0, targetCount));
 
       if (business.mpesa) {
         setMpesaType(business.mpesa.type || 'Till');
@@ -237,6 +242,9 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
   }, [business, isOpen]);
 
   if (!isOpen || !business) return null;
+
+  const isApproved = Boolean(business.isVerified);
+  const maxPhotos = isApproved ? 5 : 3;
 
   const handleAddService = () => {
     if (newServiceInput.trim() && !services.includes(newServiceInput.trim())) {
@@ -282,7 +290,9 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
 
     setIsSubmitting(true);
 
-    const validPhotos = photos.map((p) => (p && p.trim() !== '' ? p : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'));
+    const validPhotos = photos
+      .slice(0, maxPhotos)
+      .map((p) => (p && p.trim() !== '' ? p : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'));
     const newSlug = generateBusinessSlug(name.trim()) || business.slug;
 
     const updatedBusiness: Business = {
@@ -447,7 +457,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
             }`}
           >
             <ImageIcon className="w-3.5 h-3.5" />
-            <span>5 Store Photos</span>
+            <span>{isApproved ? '5 Store Photos' : '3 Store Photos'}</span>
           </button>
 
           <button
@@ -806,24 +816,35 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: 5 STORE PHOTOS */}
+          {/* TAB 4: STORE PHOTOS */}
           {activeTab === 'photos' && (
             <div className="space-y-4 animate-in fade-in duration-150">
-              <div className="p-3.5 bg-stone-100 rounded-2xl border border-stone-300 flex items-center justify-between">
+              <div className="p-3.5 bg-stone-100 rounded-2xl border border-stone-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h4 className="text-xs font-bold text-stone-900">5 Photo Storefront Gallery</h4>
+                  <h4 className="text-xs font-bold text-stone-900">
+                    {isApproved
+                      ? '5 Photo Storefront Gallery (Verified Listing)'
+                      : '3 Photo Storefront Gallery (Main Hero + 2 Additional)'}
+                  </h4>
                   <p className="text-[11px] text-stone-600">
-                    Slot 1 is your Main Hero photo displayed on search cards. Upload local files or paste image URLs.
+                    {isApproved
+                      ? 'Slot 1 is your Main Hero photo displayed on search cards. Verified businesses enjoy full 5-photo showcases.'
+                      : 'Slot 1 is your Main Hero photo displayed on search cards, plus 2 additional gallery photos. (Verified businesses unlock 5 photos).'}
                   </p>
                 </div>
+                {!isApproved && (
+                  <span className="inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 w-fit shrink-0">
+                    Standard Listing: 3 Photos
+                  </span>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                {photos.map((p, idx) => {
+              <div className={`grid grid-cols-1 ${isApproved ? 'sm:grid-cols-5' : 'sm:grid-cols-3'} gap-3`}>
+                {photos.slice(0, maxPhotos).map((p, idx) => {
                   const displayImg = p && p.trim() !== '' ? p : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
                   return (
-                    <div key={idx} className="bg-white p-2 rounded-2xl border border-stone-300 shadow-2xs space-y-2 flex flex-col justify-between">
-                      <div className="relative h-24 rounded-xl overflow-hidden bg-stone-100 border border-stone-200">
+                    <div key={idx} className="bg-white p-2.5 rounded-2xl border border-stone-300 shadow-2xs space-y-2 flex flex-col justify-between">
+                      <div className={`relative ${isApproved ? 'h-24' : 'h-28 sm:h-32'} rounded-xl overflow-hidden bg-stone-100 border border-stone-200`}>
                         <img
                           src={displayImg}
                           alt={name ? `${name} photo slot ${idx + 1} - Kahawa West` : `Business photo slot ${idx + 1}`}
@@ -832,7 +853,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
                           referrerPolicy="no-referrer"
                         />
                         <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/75 text-white'}`}>
-                          {idx === 0 ? '★ Hero' : `Slot #${idx + 1}`}
+                          {idx === 0 ? '★ 1. Main Hero' : idx === 1 ? '2. Additional Photo' : idx === 2 ? '3. Additional Photo' : `Slot #${idx + 1}`}
                         </span>
                       </div>
 

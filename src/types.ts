@@ -78,8 +78,9 @@ export interface Business {
   rating: number;
   reviewCount: number;
   priceLevel: 'Budget' | 'Moderate' | 'Premium';
+  logo?: string; // Brand logo badge if available
   heroImage: string; // Main image shown on cards
-  galleryImages: string[]; // Up to 5 photos for gallery
+  galleryImages: string[]; // 3 photos for standard/claimed listings, up to 5 for verified showcases
   description: string;
   services: string[];
   features?: string[];

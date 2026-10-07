@@ -76,16 +76,14 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   const [servicesList, setServicesList] = useState<string[]>(business.services || []);
   const [newServiceInput, setNewServiceInput] = useState('');
 
-  // 5 Photos array
+  // 3 Photos array: 1 Main Hero + 2 Additional Photos (Capped to 3 for claim submissions)
   const [photos, setPhotos] = useState<string[]>(
-    business.galleryImages && business.galleryImages.length >= 5
-      ? business.galleryImages.slice(0, 5)
+    business.galleryImages && business.galleryImages.length >= 3
+      ? business.galleryImages.slice(0, 3)
       : [
           business.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&w=800&q=80',
-          'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80',
+          business.galleryImages?.[1] || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
+          business.galleryImages?.[2] || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
         ]
   );
 
@@ -132,7 +130,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
 
     try {
       const updatedPhotos = [...photos];
-      const maxToLoad = Math.min(files.length, 5);
+      const maxToLoad = Math.min(files.length, 3);
 
       for (let i = 0; i < maxToLoad; i++) {
         const file = files[i];
@@ -144,7 +142,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
         updatedPhotos[i] = dataUrl;
       }
-      setPhotos(updatedPhotos);
+      setPhotos(updatedPhotos.slice(0, 3));
     } catch (err) {
       console.error('Error reading files:', err);
       alert('Could not process selected image files.');
@@ -193,7 +191,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         customLandmark,
         customDescription,
         services: servicesList,
-        photos,
+        photos: photos.slice(0, 3),
         mpesa: mpesaNumber
           ? {
               type: mpesaType,
@@ -580,18 +578,18 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
               </div>
             ) : (
               <div className="space-y-5 min-w-0">
-                {/* 5 Photos Section */}
+                {/* 3 Photos Section */}
                 <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3.5 pb-3 border-b border-slate-200 min-w-0">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <Camera className="w-4 h-4 text-emerald-600 shrink-0" />
                         <h4 className="font-bold text-slate-900 text-xs sm:text-sm truncate">
-                          5 Business Photos (Hero + Gallery)
+                          3 Business Photos (The Main + 2 Additional Photos)
                         </h4>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Upload directly from your smartphone camera or gallery. Photo #1 is the primary cover image.
+                        Upload 3 photos: Photo #1 is the primary cover image, plus 2 additional showcase photos.
                       </p>
                     </div>
 
@@ -608,9 +606,9 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                     </label>
                   </div>
 
-                  {/* Responsive photo cards: 2 columns on mobile, 5 on desktop */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 min-w-0">
-                    {photos.map((photoUrl, idx) => {
+                  {/* Responsive photo cards: 1 column on mobile, 3 on tablet/desktop */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 min-w-0">
+                    {photos.slice(0, 3).map((photoUrl, idx) => {
                       const displayPhoto =
                         photoUrl && photoUrl.trim() !== ''
                           ? photoUrl
@@ -618,11 +616,9 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                       return (
                         <div
                           key={idx}
-                          className={`space-y-1.5 bg-white p-2 rounded-xl border border-slate-200 shadow-xs min-w-0 flex flex-col ${
-                            idx === 0 ? 'col-span-2 sm:col-span-1' : 'col-span-1'
-                          }`}
+                          className="space-y-1.5 bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs min-w-0 flex flex-col justify-between"
                         >
-                          <div className="relative h-24 sm:h-24 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group w-full">
+                          <div className="relative h-28 sm:h-32 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group w-full">
                             <img
                               src={displayPhoto}
                               alt={business.name ? `${business.name} verification photo slot ${idx + 1} - Kahawa West` : `Verification photo ${idx + 1}`}
@@ -630,13 +626,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
                             />
-                            <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white shadow-xs' : 'bg-black/70 text-white'}`}>
-                              {idx === 0 ? '★ Primary' : `#${idx + 1}`}
+                            <span className={`absolute top-1 left-1 px-2 py-0.5 rounded text-[10px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white shadow-xs' : 'bg-black/70 text-white'}`}>
+                              {idx === 0 ? '★ 1. Main Hero' : idx === 1 ? '2. Additional Photo' : '3. Additional Photo'}
                             </span>
 
                             <label className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 cursor-pointer transition-opacity duration-200">
                               <Upload className="w-4 h-4" />
-                              <span className="text-[10px] font-bold">Replace</span>
+                              <span className="text-[10px] font-bold">Replace Photo</span>
                               <input
                                 type="file"
                                 accept="image/*"
