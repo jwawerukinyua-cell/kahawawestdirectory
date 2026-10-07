@@ -3353,6 +3353,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                     onChange={(e) => setEditingStory({ ...editingStory, category: e.target.value as StoryCategory })}
                     className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
                   >
+                    <option value="Crime & Safety">Crime & Safety</option>
                     <option value="Community Initiative">Community Initiative</option>
                     <option value="Local Business & Artisan">Local Business & Artisan</option>
                     <option value="Youth & Sports">Youth & Sports</option>
@@ -3360,6 +3361,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                     <option value="Socio-Economic Development">Socio-Economic Development</option>
                     <option value="Environment & Clean-up">Environment & Clean-up</option>
                     <option value="Neighborhood Events">Neighborhood Events</option>
+                    <option value="Public Safety & Security">Public Safety & Security</option>
                   </select>
                 </div>
 

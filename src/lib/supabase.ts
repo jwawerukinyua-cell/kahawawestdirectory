@@ -52,6 +52,33 @@ if (isValidHttpUrl(SUPABASE_URL) && isSupabaseConfigured) {
 
 export const supabase: SupabaseClient | null = clientInstance;
 
+let hasLoggedEgressNotice = false;
+let isEgressRestricted = false;
+
+export function isSupabaseEgressRestricted(): boolean {
+  return isEgressRestricted;
+}
+
+export function logSupabaseWarning(scope: string, error: any) {
+  if (!error) return;
+  const message = error.message || String(error);
+  if (
+    message.includes('exceed_egress_quota') ||
+    message.includes('restricted') ||
+    message.includes('spend caps')
+  ) {
+    isEgressRestricted = true;
+    if (!hasLoggedEgressNotice) {
+      hasLoggedEgressNotice = true;
+      console.info(
+        `ℹ️ [KWEST Data Sync]: Supabase monthly egress quota (5GB limit) reached on project wfsqnhujjqldcxnhnzvf. All directory listings, verified businesses, and community stories are serving seamlessly from local & static offline storage. To reactivate remote cloud sync, adjust spend caps in the Supabase dashboard.`
+      );
+    }
+    return;
+  }
+  console.warn(`Supabase ${scope} warning:`, message);
+}
+
 // Local storage backup keys for seamless preview & persistence
 const CLAIMS_STORAGE_KEY = 'kwest_directory_claims';
 const BUSINESSES_STORAGE_KEY = 'kwest_directory_custom_businesses';
@@ -84,7 +111,7 @@ export const saveBusinessClaim = async (
       ]).select('id').single();
 
       if (error) {
-        console.warn('Supabase insert warning, falling back to local sync:', error.message);
+        logSupabaseWarning('insert claim', error);
         remoteError = error.message;
       } else {
         remoteSynced = true;
@@ -165,7 +192,7 @@ export const fetchClaimsFromSupabase = async (): Promise<BusinessClaim[] | null>
       .order('created_at', { ascending: false });
 
     if (error || !data) {
-      if (error) console.warn('Supabase fetch claims warning:', error.message);
+      if (error) logSupabaseWarning('fetch claims', error);
       return null;
     }
 
@@ -216,7 +243,7 @@ export const updateClaimStatusInSupabase = async (
         query = query.eq('business_id', claimIdOrBizId);
       }
       const { error } = await query;
-      if (error) console.warn('Supabase update claim warning:', error.message);
+      if (error) logSupabaseWarning('update claim', error);
     }
     const existing = getSavedClaims();
     const updated = existing.map((c) =>
@@ -308,7 +335,7 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
           updated_at: new Date().toISOString(),
         }
       ]);
-      if (error) console.warn('Supabase business upsert warning:', error.message);
+      if (error) logSupabaseWarning('business upsert', error);
     }
 
     // Local storage persistence
@@ -340,7 +367,7 @@ export const fetchBusinessesFromSupabase = async (): Promise<Business[] | null> 
       .order('created_at', { ascending: false });
 
     if (error || !data) {
-      if (error) console.warn('Supabase fetch businesses warning:', error.message);
+      if (error) logSupabaseWarning('fetch businesses', error);
       return null;
     }
 
@@ -612,7 +639,7 @@ export const saveBusinessApplication = async (
       ]).select('id').single();
 
       if (error) {
-        console.warn('Supabase application insert warning:', error.message);
+        logSupabaseWarning('application insert', error);
         remoteError = error.message;
       } else {
         remoteSynced = true;
@@ -653,7 +680,7 @@ export const fetchApplicationsFromSupabase = async (): Promise<BusinessApplicati
       .order('created_at', { ascending: false });
 
     if (error || !data) {
-      if (error) console.warn('Supabase fetch applications warning:', error.message);
+      if (error) logSupabaseWarning('fetch applications', error);
       return null;
     }
 
@@ -703,7 +730,7 @@ export const updateApplicationStatusInSupabase = async (
         query = query.eq('id', appId);
       }
       const { error } = await query;
-      if (error) console.warn('Supabase update application warning:', error.message);
+      if (error) logSupabaseWarning('update application', error);
     }
     const existing = getStoredApplications();
     const updated = existing.map((a) =>
@@ -764,7 +791,7 @@ export const syncStoryToSupabase = async (story: CommunityStory): Promise<boolea
         },
       ]);
       if (error) {
-        console.warn('Supabase community story sync error:', error.message);
+        logSupabaseWarning('community story sync', error);
         return false;
       }
       return true;
@@ -800,7 +827,7 @@ export const fetchStoriesFromSupabase = async (): Promise<CommunityStory[] | nul
       .order('date', { ascending: false });
 
     if (error || !data) {
-      if (error) console.warn('Supabase fetch stories warning:', error.message);
+      if (error) logSupabaseWarning('fetch stories', error);
       return null;
     }
 
@@ -899,7 +926,7 @@ export const syncUpdateToSupabase = async (update: CommunityUpdate): Promise<boo
         },
       ]);
       if (error) {
-        console.warn('Supabase community update sync warning:', error.message);
+        logSupabaseWarning('community update sync', error);
         return false;
       }
       return true;
@@ -920,7 +947,7 @@ export const fetchUpdatesFromSupabase = async (): Promise<CommunityUpdate[] | nu
       .order('created_at', { ascending: false });
 
     if (error || !data) {
-      if (error) console.warn('Supabase fetch updates warning:', error.message);
+      if (error) logSupabaseWarning('fetch updates', error);
       return null;
     }
 
@@ -1035,6 +1062,23 @@ export const testSupabaseSyncStatus = async (): Promise<SupabaseSyncReport> => {
     applicationsTableAccessible = true;
   } else {
     errorMessages.push(`Applications: ${appsCheck.error.message}`);
+  }
+
+  const isEgressBlocked = errorMessages.some(
+    (msg) => msg.includes('exceed_egress_quota') || msg.includes('restricted') || msg.includes('spend caps')
+  );
+
+  if (isEgressBlocked) {
+    return {
+      connected: true,
+      storiesTableAccessible: false,
+      updatesTableAccessible: false,
+      businessesTableAccessible: false,
+      claimsTableAccessible: false,
+      applicationsTableAccessible: false,
+      businessesInsertable: false,
+      message: 'Supabase Free Tier 5GB monthly egress quota reached for project wfsqnhujjqldcxnhnzvf. The KWEST directory is running seamlessly on its fast local storage & static cache without interruption. To restore live remote database sync, remove spend caps or upgrade your plan in your Supabase dashboard.',
+    };
   }
 
   return {

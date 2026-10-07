@@ -159,7 +159,22 @@ export interface CommunityFeedback {
   created_at: string;
 }
 
-export type UpdateType = 'alert' | 'event' | 'business' | 'community' | 'notice';
+export type UpdateType = 'alert' | 'event' | 'business' | 'community' | 'notice' | 'lost_found';
+
+export interface LostFoundDetails {
+  category: 'lost_child' | 'missing_person' | 'found_item' | 'lost_item';
+  name: string;
+  age?: string;
+  lastSeenLocation: string;
+  lastSeenTime: string;
+  physicalDescription?: string;
+  policeObNumber?: string;
+  policeStation?: string;
+  contactPerson: string;
+  contactPhone: string;
+  altPhone?: string;
+  reward?: string;
+}
 
 export interface CommunityUpdate {
   id: string;
@@ -174,6 +189,7 @@ export interface CommunityUpdate {
   authorEmail?: string;
   authorRole?: string; // e.g. "Parent / Guardian", "Estate Welfare / Elder", "Resident", "Eyewitness", "Public Official"
   obNumber?: string; // Police OB number / Reference if reporting lost child, missing person or security incident
+  lostFoundDetails?: LostFoundDetails;
   content: string;
   contact?: string;
   badge?: string;
@@ -194,7 +210,9 @@ export type StoryCategory =
   | 'Socio-Economic Development'
   | 'Environment & Clean-up'
   | 'Environment & Clean Up'
-  | 'Neighborhood Events';
+  | 'Neighborhood Events'
+  | 'Crime & Safety'
+  | 'Public Safety & Security';
 
 export interface CommunityStory {
   id: string;

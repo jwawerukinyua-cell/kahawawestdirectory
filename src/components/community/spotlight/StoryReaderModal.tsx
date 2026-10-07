@@ -33,6 +33,7 @@ import {
   toggleStoryReaction,
   StoryReactionState,
 } from '../../../lib/storyInteractions';
+import { compressImageFile, validateImageFile } from '../../../lib/imageCompression';
 
 interface StoryReaderModalProps {
   story: CommunityStory | null;
@@ -60,6 +61,7 @@ const SPOTLIGHT_ZONES: EstateZone[] = [
 ];
 
 const STORY_CATEGORIES: StoryCategory[] = [
+  'Crime & Safety',
   'Community Initiative',
   'Local Business & Artisan',
   'Youth & Sports',
@@ -67,6 +69,7 @@ const STORY_CATEGORIES: StoryCategory[] = [
   'Socio-Economic Development',
   'Environment & Clean-up',
   'Neighborhood Events',
+  'Public Safety & Security',
 ];
 
 export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
@@ -77,6 +80,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   onDislike,
   onUpdateStory,
 }) => {
+  const [activeStory, setActiveStory] = useState<CommunityStory | null>(story);
   const [copied, setCopied] = useState(false);
   const [reactionState, setReactionState] = useState<StoryReactionState>({
     userReaction: null,
@@ -95,8 +99,8 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editSubtitle, setEditSubtitle] = useState('');
-  const [editCategory, setEditCategory] = useState<StoryCategory>('Community Initiative');
-  const [editZone, setEditZone] = useState<EstateZone>('Jacaranda Estate');
+  const [editCategory, setEditCategory] = useState<StoryCategory>('Crime & Safety');
+  const [editZone, setEditZone] = useState<EstateZone>('Roundabout');
   const [editContent, setEditContent] = useState('');
   const [editImageUrl, setEditImageUrl] = useState('');
   const [editImageCaption, setEditImageCaption] = useState('');
@@ -105,10 +109,12 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   const [editAuthorPhone, setEditAuthorPhone] = useState('');
   const [editAuthorEmail, setEditAuthorEmail] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Sync state whenever story changes or opens
   useEffect(() => {
     if (story) {
+      setActiveStory(story);
       const reactions = getStoryReactions(story.id, story.likes || 0, story.dislikes || 0);
       setReactionState(reactions);
       const loadedComments = getStoryComments(story.id);
@@ -119,8 +125,8 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
       // Populate edit fields
       setEditTitle(story.title || '');
       setEditSubtitle(story.subtitle || '');
-      setEditCategory(story.category || 'Community Initiative');
-      setEditZone(story.zone || 'Jacaranda Estate');
+      setEditCategory(story.category || 'Crime & Safety');
+      setEditZone(story.zone || 'Roundabout');
       setEditContent(story.content || '');
       setEditImageUrl(story.imageUrl || '');
       setEditImageCaption(story.imageCaption || '');
@@ -130,24 +136,45 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
       setEditAuthorEmail(story.authorEmail || '');
       setIsEditing(false);
     }
-  }, [story?.id, isOpen]);
+  }, [story, isOpen]);
 
   if (!isOpen || !story) return null;
+  const currentStory = activeStory || story;
+
+  const handlePhotoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        alert(validation.error || 'Invalid photo format');
+        return;
+      }
+      try {
+        setIsUploadingPhoto(true);
+        const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+        setEditImageUrl(dataUrl);
+      } catch (err) {
+        console.error('Failed to compress story photo:', err);
+      } finally {
+        setIsUploadingPhoto(false);
+      }
+    }
+  };
 
   const getStoryUrl = () => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const storyKey = story.slug || story.id;
+    const storyKey = currentStory.slug || currentStory.id;
     return `${origin}/?view=stories&story=${encodeURIComponent(storyKey)}`;
   };
 
   const handleShare = () => {
     const shareUrl = getStoryUrl();
-    const shareTitle = `${story.title} - Read this inspiring Kahawa West community story on KWEST Directory`;
+    const shareTitle = `${currentStory.title} - Read this inspiring Kahawa West community story on KWEST Directory`;
 
     if (navigator.share) {
       navigator
         .share({
-          title: story.title,
+          title: currentStory.title,
           text: shareTitle,
           url: shareUrl,
         })
@@ -161,7 +188,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
 
   const copyLink = async () => {
     const shareUrl = getStoryUrl();
-    const shareText = `${story.title} - Read this inspiring Kahawa West community story on KWEST Directory\n${shareUrl}`;
+    const shareText = `${currentStory.title} - Read this inspiring Kahawa West community story on KWEST Directory\n${shareUrl}`;
     await copyToClipboard(shareText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -169,26 +196,26 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
 
   const handleWhatsAppShare = () => {
     const shareUrl = getStoryUrl();
-    const message = `*${story.title}*\n\nRead this inspiring Kahawa West community story on KWEST Directory:\n${shareUrl}`;
+    const message = `*${currentStory.title}*\n\nRead this inspiring Kahawa West community story on KWEST Directory:\n${shareUrl}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   // Like reaction toggle
   const handleLikeClick = () => {
-    const updated = toggleStoryReaction(story.id, 'like', story.likes || 0, story.dislikes || 0);
+    const updated = toggleStoryReaction(currentStory.id, 'like', currentStory.likes || 0, currentStory.dislikes || 0);
     setReactionState(updated);
     if (updated.userReaction === 'like' && onLike) {
-      onLike(story.id);
+      onLike(currentStory.id);
     }
   };
 
   // Dislike reaction toggle
   const handleDislikeClick = () => {
-    const updated = toggleStoryReaction(story.id, 'dislike', story.likes || 0, story.dislikes || 0);
+    const updated = toggleStoryReaction(currentStory.id, 'dislike', currentStory.likes || 0, currentStory.dislikes || 0);
     setReactionState(updated);
     if (updated.userReaction === 'dislike' && onDislike) {
-      onDislike(story.id);
+      onDislike(currentStory.id);
     }
   };
 
@@ -200,7 +227,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
 
     setIsPostingComment(true);
     const newComment = addStoryComment(
-      story.id,
+      currentStory.id,
       authorNameInput.trim() || 'Kahawa West Reader',
       text,
       'Resident / Reader'
@@ -217,7 +244,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   };
 
   const handleDeleteComment = (commentId: string) => {
-    const updated = deleteStoryComment(story.id, commentId);
+    const updated = deleteStoryComment(currentStory.id, commentId);
     setComments(updated);
   };
 
@@ -226,7 +253,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
     if (!editTitle.trim() || !editContent.trim()) return;
 
     const updatedStory: CommunityStory = {
-      ...story,
+      ...currentStory,
       title: editTitle.trim(),
       subtitle: editSubtitle.trim() || undefined,
       category: editCategory,
@@ -235,12 +262,13 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
       excerpt: editContent.trim().slice(0, 160).replace(/[#*`_]/g, '') + '...',
       imageUrl: editImageUrl.trim() || undefined,
       imageCaption: editImageCaption.trim() || undefined,
-      authorName: editAuthorName.trim() || story.authorName,
-      authorRole: editAuthorRole.trim() || story.authorRole,
-      authorPhone: editAuthorPhone.trim() || story.authorPhone,
-      authorEmail: editAuthorEmail.trim() || story.authorEmail,
+      authorName: editAuthorName.trim() || currentStory.authorName,
+      authorRole: editAuthorRole.trim() || currentStory.authorRole,
+      authorPhone: editAuthorPhone.trim() || currentStory.authorPhone,
+      authorEmail: editAuthorEmail.trim() || currentStory.authorEmail,
     };
 
+    setActiveStory(updatedStory);
     if (onUpdateStory) {
       onUpdateStory(updatedStory);
     }
@@ -262,9 +290,9 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
         <div className="bg-[#4D0202] text-white px-4 sm:px-7 py-3.5 sm:py-4 flex items-center justify-between border-b border-[#630303] flex-shrink-0 min-w-0">
           <div className="flex items-center gap-2 min-w-0 overflow-hidden">
             <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50 truncate">
-              {isEditing ? 'Editing Story' : story.category}
+              {isEditing ? 'Editing Story' : currentStory.category}
             </span>
-            {story.status === 'pending_review' ? (
+            {currentStory.status === 'pending_review' ? (
               <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-600/50 truncate">
                 Pending Review
               </span>
@@ -388,15 +416,27 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Photo URL
+                  Featured Photo (URL or File Upload)
                 </label>
-                <input
-                  type="text"
-                  value={editImageUrl}
-                  onChange={(e) => setEditImageUrl(e.target.value)}
-                  placeholder="/kwest-logo.png"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editImageUrl}
+                    onChange={(e) => setEditImageUrl(e.target.value)}
+                    placeholder="/kwest-logo.png or upload"
+                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm bg-white"
+                  />
+                  <label className="px-3 py-2 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl cursor-pointer text-xs font-bold flex items-center gap-1 shrink-0 transition text-stone-700">
+                    <Camera className="w-4 h-4 text-emerald-700" />
+                    <span>{isUploadingPhoto ? 'Uploading...' : 'Upload'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
 
               <div>
@@ -479,11 +519,11 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           {/* Title & Subtitle */}
           <div className="min-w-0">
             <h1 className="font-display text-xl sm:text-3xl md:text-4xl font-extrabold text-[#630303] tracking-tight leading-tight mb-2 break-words">
-              {story.title}
+              {currentStory.title}
             </h1>
-            {story.subtitle && (
+            {currentStory.subtitle && (
               <p className="text-sm sm:text-lg text-stone-600 font-medium leading-snug break-words">
-                {story.subtitle}
+                {currentStory.subtitle}
               </p>
             )}
           </div>
@@ -493,25 +533,25 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
                 <MapPin className="w-4 h-4 text-emerald-600" />
-                <span>{story.zone}</span>
+                <span>{currentStory.zone}</span>
               </div>
               <span className="text-stone-300">•</span>
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-stone-400" />
-                <span>{story.date}</span>
+                <span>{currentStory.date}</span>
               </div>
-              {story.readTimeMinutes && (
+              {currentStory.readTimeMinutes && (
                 <>
                   <span className="text-stone-300">•</span>
                   <div className="flex items-center gap-1.5">
                     <Clock className="w-4 h-4 text-stone-400" />
-                    <span>{story.readTimeMinutes} min read</span>
+                    <span>{currentStory.readTimeMinutes} min read</span>
                   </div>
                 </>
               )}
             </div>
 
-            {story.isRealPhotoConfirmed && (
+            {currentStory.isRealPhotoConfirmed && (
               <div className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-300 px-2.5 py-1 rounded-full">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
                 <span>Verified Real Photo (No AI)</span>
@@ -520,21 +560,21 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           </div>
 
           {/* Featured Image */}
-          {story.imageUrl && story.imageUrl.trim() !== '' && (
+          {currentStory.imageUrl && currentStory.imageUrl.trim() !== '' && (
             <div className="space-y-1.5">
-              <div className={`relative rounded-2xl overflow-hidden shadow-md max-h-[420px] flex items-center justify-center ${story.imageUrl.includes('logo') ? 'bg-stone-950 p-6' : 'bg-stone-900'}`}>
+              <div className={`relative rounded-2xl overflow-hidden shadow-md max-h-[420px] flex items-center justify-center ${currentStory.imageUrl.includes('logo') ? 'bg-stone-950 p-6' : 'bg-stone-900'}`}>
                 <ListingImage
-                  src={story.imageUrl}
-                  story={story}
-                  customCaption={story.imageCaption}
+                  src={currentStory.imageUrl}
+                  story={currentStory}
+                  customCaption={currentStory.imageCaption}
                   imageType="cover"
-                  className={story.imageUrl.includes('logo') ? 'max-h-[360px] max-w-full object-contain mx-auto' : 'w-full h-full object-cover max-h-[420px]'}
+                  className={currentStory.imageUrl.includes('logo') ? 'max-h-[360px] max-w-full object-contain mx-auto' : 'w-full h-full object-cover max-h-[420px]'}
                 />
               </div>
-              {story.imageCaption && (
+              {currentStory.imageCaption && (
                 <p className="text-xs text-stone-500 italic pl-1 flex items-center gap-1.5">
                   <Camera className="w-3.5 h-3.5 text-stone-400" />
-                  <span>{story.imageCaption}</span>
+                  <span>{currentStory.imageCaption}</span>
                 </p>
               )}
             </div>
@@ -542,7 +582,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
 
           {/* Story Narrative Content */}
           <div className="py-2">
-            <StoryMarkdownRenderer content={story.content} />
+            <StoryMarkdownRenderer content={currentStory.content} />
           </div>
 
           {/* Author Badge & Reader Interactions Bar */}
@@ -550,22 +590,22 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 font-extrabold text-base flex items-center justify-center flex-shrink-0 border border-emerald-300">
-                  {(story.authorName || 'K').charAt(0)}
+                  {(currentStory.authorName || 'K').charAt(0)}
                 </div>
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 inline-block mb-1">
                     Verified Resident Contributor
                   </span>
                   <h4 className="font-display font-bold text-stone-900 text-sm sm:text-base leading-tight">
-                    {story.authorName}
+                    {currentStory.authorName}
                   </h4>
                   <p className="text-xs text-stone-600 font-medium mt-0.5">
-                    {story.authorRole || 'Kahawa West Resident'}
+                    {currentStory.authorRole || 'Kahawa West Resident'}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] text-stone-500">
-                    <span>📍 {story.zone}</span>
+                    <span>📍 {currentStory.zone}</span>
                     <span>•</span>
-                    <span>🗓️ {story.date}</span>
+                    <span>🗓️ {currentStory.date}</span>
                   </div>
                 </div>
               </div>

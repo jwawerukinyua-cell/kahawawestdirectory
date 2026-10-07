@@ -53,6 +53,7 @@ const SPOTLIGHT_ZONES: EstateZone[] = [
 ];
 
 const STORY_CATEGORIES: StoryCategory[] = [
+  'Crime & Safety',
   'Community Initiative',
   'Local Business & Artisan',
   'Youth & Sports',
@@ -60,6 +61,7 @@ const STORY_CATEGORIES: StoryCategory[] = [
   'Socio-Economic Development',
   'Environment & Clean-up',
   'Neighborhood Events',
+  'Public Safety & Security',
 ];
 
 export const SubmitStoryModal: React.FC<SubmitStoryModalProps> = ({

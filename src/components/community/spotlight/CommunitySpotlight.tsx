@@ -76,10 +76,12 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
 
   const categories: string[] = [
     'all',
+    'Crime & Safety',
     'Environment & Clean-up',
     'Youth & Sports',
     'Local Business & Artisan',
     'Schools & Education',
+    'Community Initiative',
     'Socio-Economic Development',
   ];
 

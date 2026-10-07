@@ -25,8 +25,12 @@ import {
   Check,
   ExternalLink,
   Share2,
+  Search,
+  Baby,
+  Package,
+  HelpCircle,
 } from 'lucide-react';
-import { CommunityUpdate, EstateZone, UpdateType } from '../../../types';
+import { CommunityUpdate, EstateZone, UpdateType, LostFoundDetails } from '../../../types';
 import { Button } from '../../ui/Button';
 import { compressImageFile, validateImageFile } from '../../../lib/imageCompression';
 import {
@@ -91,6 +95,19 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
   const [urgencyLevel, setUrgencyLevel] = useState<'standard' | 'high' | 'critical'>('standard');
   const [isAccountabilityConfirmed, setIsAccountabilityConfirmed] = useState(false);
 
+  // Dedicated Lost & Found / Missing Person Specific State
+  const [lostCategory, setLostCategory] = useState<'lost_child' | 'missing_person' | 'lost_item' | 'found_item'>('lost_child');
+  const [lostName, setLostName] = useState('');
+  const [lostAge, setLostAge] = useState('');
+  const [lastSeenLocation, setLastSeenLocation] = useState('');
+  const [lastSeenTime, setLastSeenTime] = useState('');
+  const [physicalDescription, setPhysicalDescription] = useState('');
+  const [policeStation, setPoliceStation] = useState('Kahawa West Police Post');
+  const [contactPerson, setContactPerson] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [altPhone, setAltPhone] = useState('');
+  const [reward, setReward] = useState('');
+
   // Photo Attachment State
   const [imageUrl, setImageUrl] = useState('');
   const [imageCaption, setImageCaption] = useState('');
@@ -140,20 +157,68 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
     e.preventDefault();
     setError(null);
 
-    if (!title.trim()) {
-      setError('Please provide a clear update title (e.g., Missing Child Alert or Power Interruption).');
-      return;
+    // If Lost & Found type is active, validate lost & found specific essentials
+    if (type === 'lost_found') {
+      if (!lostName.trim()) {
+        setError(
+          lostCategory === 'lost_child'
+            ? 'Please enter the name of the missing child.'
+            : lostCategory === 'missing_person'
+            ? 'Please enter the name of the missing person.'
+            : 'Please describe the lost or found item (e.g. National ID for Kelvin Ochieng or Brown Wallet).'
+        );
+        return;
+      }
+      if (!lastSeenLocation.trim() && !location.trim()) {
+        setError('Please specify the location where the person/child was last seen, or where the item was lost/found.');
+        return;
+      }
+    } else {
+      if (!title.trim()) {
+        setError('Please provide a clear update title (e.g., Scheduled Water Interruption or Sports Event).');
+        return;
+      }
     }
-    if (!timeInfo.trim()) {
-      setError('Please specify the date or time (e.g., Today • 2:30 PM or Saturday • 10:00 AM).');
-      return;
+
+    const resolvedLocation = location.trim() || lastSeenLocation.trim() || 'Kahawa West';
+    const resolvedTimeInfo = timeInfo.trim() || lastSeenTime.trim() || 'Today • Recent';
+
+    // Auto-construct title for lost & found if left blank
+    let resolvedTitle = title.trim();
+    if (!resolvedTitle && type === 'lost_found') {
+      const prefix =
+        lostCategory === 'lost_child'
+          ? '🚨 MISSING CHILD'
+          : lostCategory === 'missing_person'
+          ? '🚨 MISSING PERSON'
+          : lostCategory === 'found_item'
+          ? '📦 FOUND ITEM'
+          : '🔍 LOST ITEM';
+      resolvedTitle = `${prefix}: ${lostName.trim()} (${resolvedLocation})`;
     }
-    if (!location.trim()) {
-      setError('Please provide the specific location or venue in Kahawa West.');
-      return;
+
+    // Auto-construct content for lost & found if left blank
+    let resolvedContent = content.trim();
+    if (!resolvedContent && type === 'lost_found') {
+      const categoryHeading =
+        lostCategory === 'lost_child'
+          ? '🚨 URGENT MISSING CHILD NOTICE'
+          : lostCategory === 'missing_person'
+          ? '🚨 URGENT MISSING PERSON NOTICE'
+          : lostCategory === 'found_item'
+          ? '📦 FOUND ITEM NOTICE'
+          : '🔍 LOST PROPERTY REPORT';
+
+      resolvedContent = `${categoryHeading}
+Subject / Name: ${lostName.trim()}
+${lostAge.trim() ? `Age / Details: ${lostAge.trim()}\n` : ''}Last Seen / Found: ${resolvedLocation} (${resolvedTimeInfo})
+${physicalDescription.trim() ? `Description & Identifying Features: ${physicalDescription.trim()}\n` : ''}${obNumber.trim() ? `Police Occurrence Book (OB): ${obNumber.trim()} [${policeStation.trim() || 'Kahawa West Police Post'}]\n` : ''}Contact Person: ${contactPerson.trim() || authorName.trim()}
+Emergency Phone: ${contactPhone.trim() || authorPhone.trim()}${altPhone.trim() ? ` / ${altPhone.trim()}` : ''}
+${reward.trim() ? `Token / Reward Notice: ${reward.trim()}\n` : ''}Please share widely with neighbors across Kahawa West.`;
     }
-    if (!content.trim() || content.trim().length < 25) {
-      setError('Please provide detailed information for the update (at least 25 characters).');
+
+    if (!resolvedContent || resolvedContent.length < 15) {
+      setError('Please provide detailed information for this notice (at least 15 characters).');
       return;
     }
     if (!authorName.trim()) {
@@ -169,25 +234,53 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
       return;
     }
 
+    const lostFoundDetails: LostFoundDetails | undefined =
+      type === 'lost_found'
+        ? {
+            category: lostCategory,
+            name: lostName.trim() || resolvedTitle,
+            age: lostAge.trim() || undefined,
+            lastSeenLocation: resolvedLocation,
+            lastSeenTime: resolvedTimeInfo,
+            physicalDescription: physicalDescription.trim() || undefined,
+            policeObNumber: obNumber.trim() || undefined,
+            policeStation: policeStation.trim() || undefined,
+            contactPerson: contactPerson.trim() || authorName.trim(),
+            contactPhone: contactPhone.trim() || authorPhone.trim(),
+            altPhone: altPhone.trim() || undefined,
+            reward: reward.trim() || undefined,
+          }
+        : undefined;
+
+    const computedUrgency =
+      type === 'lost_found'
+        ? lostCategory === 'lost_child' || lostCategory === 'missing_person'
+          ? 'critical'
+          : 'high'
+        : type === 'alert'
+        ? urgencyLevel
+        : 'standard';
+
     const newUpdate: CommunityUpdate = {
       id: `up-${Date.now()}`,
-      title: title.trim(),
+      title: resolvedTitle,
       type,
-      timeInfo: timeInfo.trim(),
-      location: location.trim(),
+      timeInfo: resolvedTimeInfo,
+      location: resolvedLocation,
       zone,
-      content: content.trim(),
+      content: resolvedContent,
       author: authorName.trim(),
       authorPhone: authorPhone.trim(),
       authorEmail: authorEmail.trim() || undefined,
       authorRole,
       obNumber: obNumber.trim() || undefined,
+      lostFoundDetails,
       imageUrl: imageUrl.trim() || undefined,
       imageCaption: imageCaption.trim() || undefined,
       isAccountabilityConfirmed: true,
-      urgencyLevel: type === 'alert' ? urgencyLevel : 'standard',
-      contact: contact.trim() || authorPhone.trim(),
-      date: timeInfo.split('•')[0].trim() || 'This Week',
+      urgencyLevel: computedUrgency,
+      contact: (contact.trim() || contactPhone.trim() || authorPhone.trim()),
+      date: resolvedTimeInfo.split('•')[0].trim() || 'Today',
       status: 'pending_review',
       submittedAt: new Date().toISOString(),
     };
@@ -211,6 +304,17 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
     setImageUrl('');
     setImageCaption('');
     setIsAccountabilityConfirmed(false);
+    setLostCategory('lost_child');
+    setLostName('');
+    setLostAge('');
+    setLastSeenLocation('');
+    setLastSeenTime('');
+    setPhysicalDescription('');
+    setPoliceStation('Kahawa West Police Post');
+    setContactPerson('');
+    setContactPhone('');
+    setAltPhone('');
+    setReward('');
     setSubmittedUpdate(null);
     setHasCopiedCard(false);
     setIsSubmitted(false);
@@ -363,12 +467,13 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
               <label className="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-2">
                 Notice Category *
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {[
-                  { id: 'alert', label: '🚨 Emergency / Alert', dot: 'bg-amber-500', desc: 'Lost child, utility, hazard' },
-                  { id: 'event', label: '🔵 Community Event', dot: 'bg-blue-500', desc: 'Tournament, gathering' },
-                  { id: 'business', label: '🟢 Public Notice', dot: 'bg-emerald-500', desc: 'Civic, health, blood drive' },
-                  { id: 'community', label: '💖 Estate Welfare', dot: 'bg-rose-500', desc: 'Neighborhood initiative' },
+                  { id: 'lost_found', label: '🔍 Lost & Found', dot: 'bg-amber-400', desc: 'Missing child, person, item' },
+                  { id: 'alert', label: '🚨 Emergency', dot: 'bg-red-500', desc: 'Utility cut, hazard, safety' },
+                  { id: 'event', label: '🔵 Event', dot: 'bg-blue-500', desc: 'Tournament, civic gathering' },
+                  { id: 'business', label: '🟢 Public Notice', dot: 'bg-emerald-500', desc: 'Voter reg, blood drive' },
+                  { id: 'community', label: '💖 Welfare', dot: 'bg-rose-500', desc: 'Estate initiative' },
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -389,6 +494,252 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* DEDICATED FEATURE FOR LOST CHILDREN / PERSONS / ITEMS */}
+            {type === 'lost_found' && (
+              <div className="p-4 sm:p-5 bg-gradient-to-b from-amber-950/40 via-[#181C22] to-[#14171D] rounded-2xl border border-amber-500/50 space-y-4 shadow-xl shadow-amber-950/20">
+                <div className="flex items-center justify-between pb-3 border-b border-amber-800/40">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/40">
+                      <Search className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>Lost Child / Missing Person / Property Report</span>
+                      </h4>
+                      <p className="text-[11px] text-amber-300/80">
+                        Kahawa West Rapid Trace &amp; Re-unification Notice Desk
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-sm">
+                    Priority Alert
+                  </span>
+                </div>
+
+                {/* Subcategory selector */}
+                <div>
+                  <label className="block text-[11px] font-bold text-amber-200 uppercase tracking-wider mb-1.5">
+                    Report Type *
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { id: 'lost_child', label: '👶 Lost Child', desc: 'Minor / Pupil / Toddler' },
+                      { id: 'missing_person', label: '👤 Missing Person', desc: 'Adult / Teen / Elder' },
+                      { id: 'lost_item', label: '🎒 Lost Item / Pet', desc: 'ID, Wallet, Phone, Keys' },
+                      { id: 'found_item', label: '📦 Found Item', desc: 'Item picked up in area' },
+                    ].map((sub) => (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => setLostCategory(sub.id as any)}
+                        className={`p-2.5 rounded-xl border text-left transition flex flex-col gap-0.5 ${
+                          lostCategory === sub.id
+                            ? 'bg-amber-600/30 border-amber-400 text-white ring-1 ring-amber-400/60 shadow-sm'
+                            : 'bg-[#15181E] border-stone-800 text-stone-300 hover:border-stone-700'
+                        }`}
+                      >
+                        <span className="text-xs font-bold">{sub.label}</span>
+                        <span className="text-[10px] text-stone-400">{sub.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject Name / Item Description & Age */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className={lostCategory === 'lost_child' || lostCategory === 'missing_person' ? 'sm:col-span-2' : 'sm:col-span-3'}>
+                    <label className="block text-[11px] font-bold text-stone-200 uppercase tracking-wider mb-1">
+                      {lostCategory === 'lost_child'
+                        ? 'Full Name & Nickname of Lost Child *'
+                        : lostCategory === 'missing_person'
+                        ? 'Full Name of Missing Person *'
+                        : lostCategory === 'found_item'
+                        ? 'Description of Found Item *'
+                        : 'Name / Description of Lost Item *'}
+                    </label>
+                    <input
+                      type="text"
+                      value={lostName}
+                      onChange={(e) => setLostName(e.target.value)}
+                      placeholder={
+                        lostCategory === 'lost_child'
+                          ? 'e.g. Brian Mwangi (6-year-old pupil, responds to "Junior")'
+                          : lostCategory === 'missing_person'
+                          ? 'e.g. Mzee Peter Karanja (74-year-old elder with mild memory loss)'
+                          : lostCategory === 'found_item'
+                          ? 'e.g. Black leather wallet with National ID for Kelvin Ochieng & Equity ATM card'
+                          : 'e.g. Kenyan National ID Card & Driver\'s License for Kelvin Ochieng'
+                      }
+                      className="w-full bg-[#14171D] border border-amber-700/60 focus:border-amber-400 rounded-xl px-3.5 py-2 text-xs text-white placeholder-stone-500 focus:outline-none"
+                    />
+                  </div>
+
+                  {(lostCategory === 'lost_child' || lostCategory === 'missing_person') && (
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-200 uppercase tracking-wider mb-1">
+                        Age / School / Class
+                      </label>
+                      <input
+                        type="text"
+                        value={lostAge}
+                        onChange={(e) => setLostAge(e.target.value)}
+                        placeholder="e.g. 6 years old, PP2 / Class 1"
+                        className="w-full bg-[#14171D] border border-stone-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-xs text-white placeholder-stone-500 focus:outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Last seen location & time in 2 cols */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-200 uppercase tracking-wider mb-1">
+                      {lostCategory === 'found_item' ? 'Where was it found? (Landmark) *' : 'Last Seen Location / Landmark *'}
+                    </label>
+                    <input
+                      type="text"
+                      value={lastSeenLocation}
+                      onChange={(e) => {
+                        setLastSeenLocation(e.target.value);
+                        if (!location) setLocation(e.target.value);
+                      }}
+                      placeholder="e.g. Near Stage 44 / Jacaranda Primary Gate or Congo Stage"
+                      className="w-full bg-[#14171D] border border-stone-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-xs text-white placeholder-stone-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-200 uppercase tracking-wider mb-1">
+                      {lostCategory === 'found_item' ? 'Date & Time Picked Up' : 'Date & Time Last Seen'}
+                    </label>
+                    <input
+                      type="text"
+                      value={lastSeenTime}
+                      onChange={(e) => {
+                        setLastSeenTime(e.target.value);
+                        if (!timeInfo) setTimeInfo(e.target.value);
+                      }}
+                      placeholder="e.g. Today Monday around 3:45 PM after school"
+                      className="w-full bg-[#14171D] border border-stone-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-xs text-white placeholder-stone-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Physical Description & Clothing Worn */}
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-200 uppercase tracking-wider mb-1">
+                    {lostCategory === 'lost_child' || lostCategory === 'missing_person'
+                      ? 'Clothing Worn, Physical Description & Distinguishing Marks *'
+                      : 'Distinguishing Identifiers / Serial Numbers / Markings'}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={physicalDescription}
+                    onChange={(e) => setPhysicalDescription(e.target.value)}
+                    placeholder={
+                      lostCategory === 'lost_child' || lostCategory === 'missing_person'
+                        ? 'e.g. Wearing navy blue school sweater, khaki shorts, black Bata shoes, red backpack with dinosaur print, birthmark under right eye...'
+                        : 'e.g. Brown bi-fold wallet, national ID ending with 987, black Samsung Galaxy A14 with cracked camera glass...'
+                    }
+                    className="w-full bg-[#14171D] border border-stone-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-xs text-white placeholder-stone-500 focus:outline-none leading-relaxed"
+                  />
+                </div>
+
+                {/* POLICE OCCURRENCE BOOK (OB) DETAILS */}
+                <div className="p-3.5 bg-stone-900/90 rounded-xl border border-stone-800 space-y-2.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                    <FileText className="w-4 h-4 text-amber-400" />
+                    <span>Official Police Occurrence Book (OB) Reference (Highly Recommended)</span>
+                  </div>
+                  <p className="text-[11px] text-stone-400">
+                    Entering a police OB reference helps estate elders, nyumba kumi leaders, and moderators quickly confirm authenticity with local authorities.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">
+                        Police Station / Post Reported At
+                      </label>
+                      <input
+                        type="text"
+                        value={policeStation}
+                        onChange={(e) => setPoliceStation(e.target.value)}
+                        placeholder="e.g. Kahawa West Police Post (or Kasarani Police Station)"
+                        className="w-full bg-[#181B20] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">
+                        Police OB Number / Incident Reference
+                      </label>
+                      <input
+                        type="text"
+                        value={obNumber}
+                        onChange={(e) => setObNumber(e.target.value)}
+                        placeholder="e.g. OB 28/05/10/2026"
+                        className="w-full bg-[#181B20] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Emergency Contact & Optional Reward */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                  <div>
+                    <label className="block text-[10px] font-bold text-stone-300 uppercase tracking-wider mb-1">
+                      Family / Contact Person *
+                    </label>
+                    <input
+                      type="text"
+                      value={contactPerson}
+                      onChange={(e) => setContactPerson(e.target.value)}
+                      placeholder="e.g. Esther Wanjiku (Mother)"
+                      className="w-full bg-[#14171D] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-stone-300 uppercase tracking-wider mb-1">
+                      Emergency Direct Phone *
+                    </label>
+                    <input
+                      type="tel"
+                      value={contactPhone}
+                      onChange={(e) => {
+                        setContactPhone(e.target.value);
+                        if (!authorPhone) setAuthorPhone(e.target.value);
+                      }}
+                      placeholder="e.g. 0712 345 678"
+                      className="w-full bg-[#14171D] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-stone-300 uppercase tracking-wider mb-1">
+                      Alt Phone / Relative
+                    </label>
+                    <input
+                      type="tel"
+                      value={altPhone}
+                      onChange={(e) => setAltPhone(e.target.value)}
+                      placeholder="e.g. 0733 987 654 (Father / Uncle)"
+                      className="w-full bg-[#14171D] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-stone-300 uppercase tracking-wider mb-1">
+                    Reward / Token of Appreciation (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={reward}
+                    onChange={(e) => setReward(e.target.value)}
+                    placeholder="e.g. Ksh 10,000 cash token offered for positive recovery lead"
+                    className="w-full bg-[#14171D] border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* If Alert is selected, show urgency selector */}
             {type === 'alert' && (
@@ -425,16 +776,25 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
 
             {/* Title */}
             <div>
-              <label className="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5">
-                Notice Title *
+              <label className="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>
+                  {type === 'lost_found'
+                    ? 'Notice Title (Optional — auto-generated from report details above)'
+                    : 'Notice Title *'}
+                </span>
+                {type === 'lost_found' && (
+                  <span className="text-[10px] text-amber-400 font-normal">Auto-filled if left blank</span>
+                )}
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={
-                  type === 'alert'
-                    ? 'e.g. URGENT: Missing Child / Lost 6-Yr-Old Boy near Jacaranda or Scheduled Water Interruption'
+                  type === 'lost_found'
+                    ? 'e.g. URGENT TRACE: 6-Yr-Old Boy (Brian) Last Seen Near Stage 44'
+                    : type === 'alert'
+                    ? 'e.g. Scheduled Water Interruption or Emergency Road Closure'
                     : 'e.g. Kahawa West Youth Football Tournament or Estate Clean-up Day'
                 }
                 className="w-full bg-[#181B20] border border-stone-700/80 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500 transition"
@@ -446,7 +806,9 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
               <div>
                 <label className="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                   <Clock className="w-3 h-3 text-sky-400" />
-                  <span>Time / When *</span>
+                  <span>
+                    {type === 'lost_found' ? 'Date & Time Notice (Optional)' : 'Time / When *'}
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -460,7 +822,9 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
               <div>
                 <label className="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-rose-400" />
-                  <span>Location / Specific Spot *</span>
+                  <span>
+                    {type === 'lost_found' ? 'General Area / Landmark' : 'Location / Specific Spot *'}
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -510,19 +874,28 @@ export const SubmitUpdateModal: React.FC<SubmitUpdateModalProps> = ({
 
             {/* Content / Announcement */}
             <div>
-              <label className="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5">
-                Notice Full Details *
+              <label className="block text-xs font-bold text-stone-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>
+                  {type === 'lost_found'
+                    ? 'Additional Notes / Message (Optional override — auto-assembled from above)'
+                    : 'Notice Full Details *'}
+                </span>
+                {type === 'lost_found' && (
+                  <span className="text-[10px] text-amber-400 font-normal">Auto-formatted if left blank</span>
+                )}
               </label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={3}
                 placeholder={
-                  type === 'alert'
-                    ? 'Provide full physical description, clothing worn (for lost child/person), circumstances, last seen location, who to contact or immediate instructions...'
+                  type === 'lost_found'
+                    ? 'Optional extra instructions, additional contact names, or specific warnings to neighbors...'
+                    : type === 'alert'
+                    ? 'Provide full physical description, circumstances, last seen location, who to contact or immediate instructions...'
                     : 'Provide key information residents should know, schedule, requirements, or how to participate...'
                 }
-                className="w-full bg-[#181B20] border border-stone-700/80 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500 transition leading-relaxed min-h-[110px]"
+                className="w-full bg-[#181B20] border border-stone-700/80 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500 transition leading-relaxed min-h-[100px]"
               />
             </div>
 

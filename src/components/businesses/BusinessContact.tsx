@@ -88,16 +88,39 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business, onUn
       </div>
 
       {/* Location Details */}
-      <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-100 mb-4">
-        <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-        <div>
-          <h4 className="text-xs uppercase font-bold tracking-wider text-slate-500 mb-0.5">
-            Estate Location ({business.zone})
-          </h4>
-          <p className="text-sm font-semibold text-slate-800">{business.landmark}</p>
-          {business.addressDetails && (
-            <p className="text-xs text-slate-500 mt-0.5">{business.addressDetails}</p>
-          )}
+      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 mb-4 space-y-2">
+        <div className="flex items-start gap-3">
+          <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs uppercase font-bold tracking-wider text-slate-500 mb-0.5">
+              Estate Location ({business.zone})
+            </h4>
+            <p className="text-sm font-semibold text-slate-800">{business.landmark}</p>
+            {business.addressDetails && (
+              <p className="text-xs text-slate-500 mt-0.5">{business.addressDetails}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2 flex-wrap">
+          <span className="text-[11px] text-slate-500">
+            Kahawa West, Nairobi
+          </span>
+          <a
+            href={
+              business.coordinates
+                ? `https://www.google.com/maps/search/?api=1&query=${business.coordinates.lat},${business.coordinates.lng}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${business.name}, ${business.landmark}, Kahawa West Nairobi`)}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer active:scale-95"
+            title={`View map pin for ${business.name}`}
+          >
+            <MapPin className="w-3.5 h-3.5 text-white" />
+            <span>View Map Pin &amp; Directions</span>
+            <ExternalLink className="w-3 h-3 text-emerald-100" />
+          </a>
         </div>
       </div>
 

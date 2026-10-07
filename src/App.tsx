@@ -197,9 +197,15 @@ export default function App() {
     if (typeof window === 'undefined') return null;
     try {
       const searchParams = new URLSearchParams(window.location.search);
-      const bizParam = searchParams.get('biz');
+      const bizParam = searchParams.get('biz') || searchParams.get('b') || searchParams.get('business');
       const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
-      const targetBiz = (bizParam || rawHash).toLowerCase().trim();
+      let targetBiz = (bizParam || rawHash).trim();
+      try {
+        targetBiz = decodeURIComponent(targetBiz);
+      } catch {
+        // Ignore URI decode errors
+      }
+      targetBiz = targetBiz.replace(/\/$/, '').toLowerCase().trim();
       if (!targetBiz || targetBiz.startsWith('story=') || targetBiz.startsWith('view=')) return null;
 
       const initialList = getStoredBusinesses(SEED_50_BUSINESSES);
@@ -210,7 +216,9 @@ export default function App() {
             b.id?.toLowerCase() === targetBiz ||
             (b.name && generateBusinessSlug(b.name) === targetBiz) ||
             (b.slug && (b.slug.includes(targetBiz) || targetBiz.includes(b.slug))) ||
-            (b.name && (b.name.toLowerCase().includes(targetBiz) || targetBiz.includes(b.name.toLowerCase())))
+            (b.name && (b.name.toLowerCase().includes(targetBiz) || targetBiz.includes(b.name.toLowerCase()))) ||
+            (targetBiz.includes('dreadlink') && b.id === 'kw-biz-dreadlink-salon-barbershop') ||
+            (targetBiz.includes('nishbaker') && b.id === 'kw-biz-nishbakers')
         ) || null
       );
     } catch {
@@ -599,7 +607,7 @@ export default function App() {
     const handleUrlRoute = () => {
       // A. Query Param Parsing
       const searchParams = new URLSearchParams(window.location.search);
-      const bizParam = searchParams.get('biz');
+      const bizParam = searchParams.get('biz') || searchParams.get('b') || searchParams.get('business');
       const storyParam =
         searchParams.get('story') ||
         searchParams.get('storyId') ||
@@ -743,6 +751,16 @@ export default function App() {
         if (!found && targetBiz.includes('bewai')) {
           found = businesses.find(
             (b) => b.id === 'kw-biz-bewai-transporters' || b.slug?.includes('bewai') || b.name.toLowerCase().includes('bewai')
+          );
+        }
+        if (!found && targetBiz.includes('dreadlink')) {
+          found = businesses.find(
+            (b) => b.id === 'kw-biz-dreadlink-salon-barbershop' || b.slug?.includes('dreadlink') || b.name.toLowerCase().includes('dreadlink')
+          );
+        }
+        if (!found && targetBiz.includes('nishbaker')) {
+          found = businesses.find(
+            (b) => b.id === 'kw-biz-nishbakers' || b.slug?.includes('nishbaker') || b.name.toLowerCase().includes('nishbaker')
           );
         }
 
@@ -1170,6 +1188,7 @@ export default function App() {
     saveCommunityStory(updatedStory);
     syncStoryToSupabase(updatedStory);
     setStories((prev) => prev.map((s) => (s.id === updatedStory.id ? updatedStory : s)));
+    setSelectedStoryForReading((prev) => (prev?.id === updatedStory.id ? updatedStory : prev));
   };
 
   const handleReadStory = (story: CommunityStory) => {
@@ -1737,6 +1756,37 @@ export default function App() {
             onClose={() => setIsSitemapOpen(false)}
             businesses={businesses}
             stories={stories}
+          />
+        )}
+
+        {/* Live Notification Center Panel */}
+        {isNotificationCenterOpen && (
+          <NotificationCenter
+            isOpen={isNotificationCenterOpen}
+            onClose={() => setIsNotificationCenterOpen(false)}
+            updates={updates}
+            stories={stories}
+            onSelectUpdate={() => {
+              setIsNotificationCenterOpen(false);
+              const el = document.getElementById('community-updates-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            onReadStory={(s) => {
+              setIsNotificationCenterOpen(false);
+              handleReadStory(s);
+            }}
+          />
+        )}
+
+        {/* Real-time Notification Toast Alert */}
+        {activeToastNotification && (
+          <NotificationToast
+            notification={activeToastNotification}
+            onOpenCenter={() => {
+              setActiveToastNotification(null);
+              setIsNotificationCenterOpen(true);
+            }}
+            onDismiss={() => setActiveToastNotification(null)}
           />
         )}
       </Suspense>

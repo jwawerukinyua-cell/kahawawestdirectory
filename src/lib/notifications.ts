@@ -128,12 +128,17 @@ export function generateSearchMatchAlerts(_communityUpdates: CommunityUpdate[]):
   return null;
 }
 
-// Check notification permission state
+// Check notification permission state safely (handles sandboxed iframes & restricted browser contexts)
 export function getNotificationPermission(): NotificationPermission | 'unsupported' {
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return 'unsupported';
   }
-  return Notification.permission;
+  try {
+    return Notification.permission;
+  } catch (e) {
+    // Sandboxed iframe or permission denied by document policy
+    return 'unsupported';
+  }
 }
 
 // Request permission and trigger Native PWA Notification
@@ -143,12 +148,27 @@ export async function requestNotificationPermission(): Promise<boolean> {
   }
 
   try {
+    let currentPerm: string = 'default';
+    try {
+      currentPerm = Notification.permission;
+    } catch {
+      return false;
+    }
+
+    if (currentPerm === 'granted') {
+      return true;
+    }
+
     const permission = await Notification.requestPermission();
     const granted = permission === 'granted';
-    localStorage.setItem(PUSH_PREFERENCE_KEY, granted ? 'true' : 'false');
+    try {
+      localStorage.setItem(PUSH_PREFERENCE_KEY, granted ? 'true' : 'false');
+    } catch {
+      // Ignore storage errors in restricted contexts
+    }
     return granted;
   } catch (err) {
-    console.error('Error requesting notification permission:', err);
+    console.warn('Notification permission request unavailable in current context:', err);
     return false;
   }
 }
@@ -159,12 +179,19 @@ export async function sendNativeNotification(title: string, options: Notificatio
     return false;
   }
 
-  if (Notification.permission !== 'granted') {
-    const granted = await requestNotificationPermission();
-    if (!granted) return false;
-  }
-
   try {
+    let perm: string = 'default';
+    try {
+      perm = Notification.permission;
+    } catch {
+      return false;
+    }
+
+    if (perm !== 'granted') {
+      const granted = await requestNotificationPermission();
+      if (!granted) return false;
+    }
+
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.ready;
       if (registration && registration.showNotification) {
@@ -184,7 +211,7 @@ export async function sendNativeNotification(title: string, options: Notificatio
     });
     return true;
   } catch (e) {
-    console.error('Failed to trigger notification:', e);
+    console.warn('Failed to trigger notification:', e);
     return false;
   }
 }

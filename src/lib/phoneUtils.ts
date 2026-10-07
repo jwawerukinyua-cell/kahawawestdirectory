@@ -132,6 +132,7 @@ export function setModeratorEmergencyPhone(phone: string): void {
 
 export interface EmergencyAlertFormatInput {
   title: string;
+  type?: string;
   location?: string;
   zone?: string;
   author: string;
@@ -140,21 +141,61 @@ export interface EmergencyAlertFormatInput {
   obNumber?: string;
   urgencyLevel?: 'standard' | 'high' | 'critical';
   content?: string;
+  lostFoundDetails?: {
+    category: 'lost_child' | 'missing_person' | 'lost_item' | 'found_item';
+    name: string;
+    age?: string;
+    lastSeenLocation: string;
+    lastSeenTime?: string;
+    physicalDescription?: string;
+    policeObNumber?: string;
+    policeStation?: string;
+    contactPerson: string;
+    contactPhone: string;
+    altPhone?: string;
+    reward?: string;
+  };
 }
 
 /**
  * Generates the standardized emergency alert WhatsApp card for immediate moderator dispatch
  */
 export function generateEmergencyWhatsAppAlertCard(update: EmergencyAlertFormatInput): string {
-  const isEmergency = update.urgencyLevel === 'critical' || update.urgencyLevel === 'high';
-  const header = isEmergency ? '🚨 [URGENT EMERGENCY ALERT SUBMITTED]' : '📢 [COMMUNITY UPDATE SUBMITTED]';
-  const obLine = update.obNumber ? `\nOB Number: ${update.obNumber}` : '';
+  const isLostFound = update.type === 'lost_found' || Boolean(update.lostFoundDetails);
+  const isEmergency = update.urgencyLevel === 'critical' || update.urgencyLevel === 'high' || isLostFound;
+  
+  let header = isEmergency ? '🚨 [URGENT EMERGENCY ALERT SUBMITTED]' : '📢 [COMMUNITY UPDATE SUBMITTED]';
+  if (isLostFound) {
+    const subCat = update.lostFoundDetails?.category;
+    if (subCat === 'lost_child') header = '🚨 [URGENT: MISSING / LOST CHILD ALERT]';
+    else if (subCat === 'missing_person') header = '🚨 [URGENT: MISSING PERSON ALERT]';
+    else if (subCat === 'found_item') header = '📦 [FOUND ITEM NOTICE - KAHAWA WEST]';
+    else header = '🔍 [LOST ITEM / PROPERTY REPORT]';
+  }
+
+  const obNumber = update.lostFoundDetails?.policeObNumber || update.obNumber;
+  const obLine = obNumber ? `\nPolice OB: ${obNumber}${update.lostFoundDetails?.policeStation ? ` (${update.lostFoundDetails.policeStation})` : ''}` : '';
   const roleStr = update.authorRole ? ` (${update.authorRole})` : '';
   const locStr = update.location ? `\nLocation: ${update.location}${update.zone ? ` [${update.zone}]` : ''}` : '';
   const cleanPhone = update.authorPhone || 'Not Provided';
 
+  let lostFoundInfo = '';
+  if (update.lostFoundDetails) {
+    const lf = update.lostFoundDetails;
+    lostFoundInfo = `
+Subject: ${lf.name}${lf.age ? ` (Age: ${lf.age})` : ''}
+Last Seen: ${lf.lastSeenLocation}${lf.lastSeenTime ? ` @ ${lf.lastSeenTime}` : ''}
+Family Contact: ${lf.contactPerson} - ${lf.contactPhone}${lf.altPhone ? ` / ${lf.altPhone}` : ''}`;
+    if (lf.physicalDescription) {
+      lostFoundInfo += `\nDescription: ${lf.physicalDescription}`;
+    }
+    if (lf.reward) {
+      lostFoundInfo += `\nReward: ${lf.reward}`;
+    }
+  }
+
   return `${header}
-Title: ${update.title}${locStr}
+Title: ${update.title}${locStr}${lostFoundInfo}
 Submitter: ${update.author} (${cleanPhone})${roleStr}${obLine}
 Action: Open Editorial Desk to Review & Publish`;
 }

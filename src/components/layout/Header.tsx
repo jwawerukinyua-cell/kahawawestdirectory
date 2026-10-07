@@ -74,8 +74,14 @@ export const Header: React.FC<HeaderProps> = ({
           {onOpenNotifications && (
             <button
               id="header-notification-btn"
-              onClick={onOpenNotifications}
-              className={`p-2.5 rounded-xl transition relative active:scale-95 border cursor-pointer ${
+              type="button"
+              aria-label={`View community notices and live updates (${unreadNotificationsCount} unread)`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onOpenNotifications();
+              }}
+              className={`p-2.5 rounded-xl transition relative active:scale-95 border cursor-pointer flex items-center justify-center min-w-[42px] min-h-[42px] ${
                 unreadNotificationsCount > 0
                   ? 'bg-[#4D0202] hover:bg-[#3D0101] text-white border-amber-500/60 shadow-sm'
                   : 'bg-[#4D0202]/60 hover:bg-[#3D0101] text-stone-300 hover:text-white border-[#630303]/60'

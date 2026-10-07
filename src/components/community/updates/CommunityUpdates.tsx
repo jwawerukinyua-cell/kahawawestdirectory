@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
   User,
   ShieldAlert,
+  Search,
 } from 'lucide-react';
 import { CommunityUpdate, UpdateType } from '../../../types';
 import { formatKenyanPhoneForTel, formatKenyanPhoneForWhatsApp, getWhatsAppChatUrl } from '../../../lib/phoneUtils';
@@ -43,8 +44,10 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
 
   const getDotColor = (type: UpdateType | string) => {
     switch (type) {
+      case 'lost_found':
+        return 'bg-amber-400';
       case 'alert':
-        return 'bg-amber-500';
+        return 'bg-red-500';
       case 'event':
         return 'bg-blue-500';
       case 'business':
@@ -59,6 +62,8 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
 
   const getBadgeText = (type: UpdateType | string) => {
     switch (type) {
+      case 'lost_found':
+        return 'LOST & FOUND';
       case 'alert':
         return 'ALERT';
       case 'event':
@@ -75,8 +80,10 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
 
   const getBadgeTextColor = (type: UpdateType | string) => {
     switch (type) {
+      case 'lost_found':
+        return 'text-amber-300';
       case 'alert':
-        return 'text-amber-400';
+        return 'text-red-400';
       case 'event':
         return 'text-blue-400';
       case 'business':
@@ -112,8 +119,38 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
 
       {/* 2. Sleek Dark Container */}
       <div className="max-w-4xl mx-auto bg-[#101317] text-white rounded-3xl p-5 sm:p-8 border border-[#222831] shadow-2xl">
+        {/* Category Filter Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-4 border-b border-[#1D222A]">
+          {[
+            { id: 'all', label: 'All Updates' },
+            { id: 'lost_found', label: '🔍 Lost & Found', dot: 'bg-amber-400' },
+            { id: 'alert', label: '🚨 Emergencies', dot: 'bg-red-500' },
+            { id: 'event', label: '🔵 Events', dot: 'bg-blue-500' },
+            { id: 'business', label: '🟢 Public Notices', dot: 'bg-emerald-400' },
+            { id: 'community', label: '💖 Welfare', dot: 'bg-rose-400' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedType(tab.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+                selectedType === tab.id
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-[#181D24] text-stone-300 hover:text-white hover:bg-[#202731]'
+              }`}
+            >
+              {tab.dot && <span className={`w-1.5 h-1.5 rounded-full ${tab.dot}`} />}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-3 divide-y divide-[#1D222A]">
-          {filteredUpdates.map((item, idx) => (
+          {filteredUpdates.length === 0 ? (
+            <div className="py-10 text-center text-stone-400 text-xs">
+              No updates currently listed under this category.
+            </div>
+          ) : (
+            filteredUpdates.map((item, idx) => (
             <div
               key={item.id || idx}
               onClick={() => setSelectedUpdateForDetail(item)}
@@ -144,6 +181,18 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
                   <span className={`text-[11px] font-black uppercase tracking-wider ${getBadgeTextColor(item.type)}`}>
                     {getBadgeText(item.type)}
                   </span>
+
+                  {item.lostFoundDetails && (
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-950/90 text-amber-300 border border-amber-600/50">
+                      {item.lostFoundDetails.category === 'lost_child'
+                        ? '👶 Missing Child'
+                        : item.lostFoundDetails.category === 'missing_person'
+                        ? '👤 Missing Person'
+                        : item.lostFoundDetails.category === 'found_item'
+                        ? '📦 Found Item'
+                        : '🎒 Lost Property'}
+                    </span>
+                  )}
 
                   {item.obNumber && (
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-stone-800 text-stone-300 border border-stone-700">
@@ -187,7 +236,8 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
                 </div>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* 3. Bottom CTA Button */}
@@ -283,6 +333,130 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
                 )}
               </div>
 
+              {/* DEDICATED LOST & FOUND TRACE DETAILS CARD */}
+              {selectedUpdateForDetail.lostFoundDetails && (
+                <div className="p-4 bg-gradient-to-br from-amber-950/40 via-stone-900 to-[#16191E] rounded-2xl border border-amber-500/60 space-y-3 shadow-md">
+                  <div className="flex items-center justify-between pb-2 border-b border-amber-800/40">
+                    <span className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                      <Search className="w-4 h-4 text-amber-400" />
+                      <span>
+                        {selectedUpdateForDetail.lostFoundDetails.category === 'lost_child'
+                          ? '👶 Missing Child Official Trace Record'
+                          : selectedUpdateForDetail.lostFoundDetails.category === 'missing_person'
+                          ? '👤 Missing Person Official Trace Record'
+                          : selectedUpdateForDetail.lostFoundDetails.category === 'found_item'
+                          ? '📦 Found Item Safe Custody Record'
+                          : '🔍 Lost Property / Item Record'}
+                      </span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-stone-950">
+                      Community Alert
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                    <div>
+                      <span className="text-[10px] text-stone-400 block uppercase font-bold">Subject / Name</span>
+                      <strong className="text-white text-sm">
+                        {selectedUpdateForDetail.lostFoundDetails.name}
+                      </strong>
+                    </div>
+
+                    {selectedUpdateForDetail.lostFoundDetails.age && (
+                      <div>
+                        <span className="text-[10px] text-stone-400 block uppercase font-bold">Age / School Info</span>
+                        <span className="text-amber-200 font-semibold">{selectedUpdateForDetail.lostFoundDetails.age}</span>
+                      </div>
+                    )}
+
+                    <div>
+                      <span className="text-[10px] text-stone-400 block uppercase font-bold">Last Seen / Found At</span>
+                      <span className="text-stone-200 font-medium">
+                        {selectedUpdateForDetail.lostFoundDetails.lastSeenLocation}
+                      </span>
+                    </div>
+
+                    {selectedUpdateForDetail.lostFoundDetails.lastSeenTime && (
+                      <div>
+                        <span className="text-[10px] text-stone-400 block uppercase font-bold">Date & Time</span>
+                        <span className="text-stone-200">{selectedUpdateForDetail.lostFoundDetails.lastSeenTime}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedUpdateForDetail.lostFoundDetails.physicalDescription && (
+                    <div className="p-2.5 bg-black/40 rounded-xl border border-stone-800 text-xs">
+                      <span className="text-[10px] text-amber-300 uppercase font-bold block mb-0.5">
+                        Description &amp; Clothing Worn:
+                      </span>
+                      <p className="text-stone-200 leading-relaxed">
+                        {selectedUpdateForDetail.lostFoundDetails.physicalDescription}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Police OB Details */}
+                  {(selectedUpdateForDetail.lostFoundDetails.policeObNumber || selectedUpdateForDetail.obNumber) && (
+                    <div className="p-2.5 bg-amber-950/40 rounded-xl border border-amber-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-amber-400 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-amber-300/80 uppercase font-bold block">
+                            Police Occurrence Book Reference
+                          </span>
+                          <span className="font-mono font-bold text-amber-200 text-sm">
+                            {selectedUpdateForDetail.lostFoundDetails.policeObNumber || selectedUpdateForDetail.obNumber}
+                          </span>
+                        </div>
+                      </div>
+                      {selectedUpdateForDetail.lostFoundDetails.policeStation && (
+                        <span className="text-[11px] text-stone-300 px-2 py-1 rounded-lg bg-stone-900 border border-stone-800">
+                          {selectedUpdateForDetail.lostFoundDetails.policeStation}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Family / Finder Emergency Contact */}
+                  <div className="pt-2 border-t border-stone-800 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] text-stone-400 uppercase font-bold block">Direct Emergency Contact</span>
+                      <strong className="text-white text-xs">
+                        {selectedUpdateForDetail.lostFoundDetails.contactPerson}
+                      </strong>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`tel:${formatKenyanPhoneForTel(selectedUpdateForDetail.lostFoundDetails.contactPhone)}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs shadow transition active:scale-95"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        <span>Call {selectedUpdateForDetail.lostFoundDetails.contactPhone}</span>
+                      </a>
+                      <a
+                        href={getWhatsAppChatUrl(
+                          selectedUpdateForDetail.lostFoundDetails.contactPhone,
+                          `Hello ${selectedUpdateForDetail.lostFoundDetails.contactPerson}, I am contacting you regarding your notice for "${selectedUpdateForDetail.lostFoundDetails.name}" on the Kahawa West Community Noticeboard.`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition active:scale-95"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>WhatsApp</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {selectedUpdateForDetail.lostFoundDetails.reward && (
+                    <div className="text-[11px] text-amber-300 bg-amber-900/30 px-3 py-1.5 rounded-lg border border-amber-800/40 text-center font-bold">
+                      🎁 {selectedUpdateForDetail.lostFoundDetails.reward}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="text-stone-200 text-sm leading-relaxed whitespace-pre-line bg-[#16191E] p-3.5 rounded-2xl border border-stone-800/80">
                 {selectedUpdateForDetail.content}
               </div>
@@ -363,6 +537,7 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
             <div className="p-4 bg-[#12161C] border-b border-stone-800 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
               {[
                 { id: 'all', label: 'All Updates' },
+                { id: 'lost_found', label: '🔍 Lost & Found (Person / Child / Item)' },
                 { id: 'alert', label: '🚨 Alerts & Emergencies' },
                 { id: 'event', label: '🔵 Events' },
                 { id: 'business', label: '🟢 Public Notices' },
@@ -415,6 +590,17 @@ export const CommunityUpdates: React.FC<CommunityUpdatesProps> = ({
                           <span className={`text-[11px] font-black uppercase tracking-wider ${getBadgeTextColor(item.type)}`}>
                             {getBadgeText(item.type)}
                           </span>
+                          {item.lostFoundDetails && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-950 text-amber-300 border border-amber-600/50">
+                              {item.lostFoundDetails.category === 'lost_child'
+                                ? '👶 Child'
+                                : item.lostFoundDetails.category === 'missing_person'
+                                ? '👤 Person'
+                                : item.lostFoundDetails.category === 'found_item'
+                                ? '📦 Found'
+                                : '🎒 Item'}
+                            </span>
+                          )}
                           {item.obNumber && (
                             <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-stone-800 text-stone-300 border border-stone-700">
                               OB REF

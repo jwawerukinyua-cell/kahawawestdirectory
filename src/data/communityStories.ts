@@ -337,6 +337,72 @@ Because that is the conversation Kahawa West needs: not a competition between sc
     likes: 1,
     dislikes: 0,
   },
+  {
+    id: 'story-community-safety-security-watch',
+    slug: 'community-safety-and-crime-vigilance-in-kahawa-west',
+    title: 'Community Safety & Security Watch: Vigilance, Estate Patrols & Crime Reporting Across Kahawa West',
+    subtitle: '🚨 Working with Kahawa West Police Post, Nyumba Kumi & Estate Welfare to protect our families and shops',
+    category: 'Crime & Safety',
+    zone: 'Roundabout',
+    excerpt: 'As Kahawa West grows, keeping our streets and residential courts safe requires proactive community cooperation, active Nyumba Kumi coordination, and prompt reporting to our local police post.',
+    content: `Safety and security in Kahawa West is not something we can leave to chance. Over the past year, as our commercial corridors have expanded along Congo, Station Road, Bima Road, and the Northern Bypass, our neighbourhood has faced evolving security challenges that affect business owners, commuters, and families alike.
+
+From late-night commuter muggings along dimly lit feeder routes to opportunistic break-ins, security is a priority for every resident living in Kahawa West.
+
+### 🛡️ Understanding the Security Landscape
+
+Kahawa West is served primarily by the **Kahawa West Police Post** under the **Kasarani Police Division**. Local officers conduct regular foot and mobile patrols, particularly around high-density transit zones:
+
+- **Roundabout & Matatu Stages:** Busy transit hubs where pickpocketing and bag-snatching can occur during evening rush hours.
+- **Station / Railway Corridor:** A critical pedestrian link that requires adequate lighting and sustained night patrols.
+- **Northern Bypass Underpasses & Feeder Roads:** Areas where commuters walking home after 9:00 PM are urged to remain in groups and use well-lit routes.
+- **Kamae & Soweto Perimeters:** Residential pockets that rely heavily on active Nyumba Kumi clusters and estate gate security.
+
+---
+
+### 📞 Immediate Crime Reporting & Emergency Hotlines
+
+If you witness a crime, encounter suspicious individuals, or require urgent police response in Kahawa West:
+
+1. **National Police Emergency:** Call **999** or **112** (Toll-Free, 24/7 Dispatch).
+2. **Kahawa West Police Post / Kasarani Division:** **+254 722 000 000**
+3. **Kasarani Sub-County Police Headquarters:** **+254 20 222 2181**
+4. **KWEST Community Helpline & Editorial Desk:** **+254 764 405 842**
+5. **Gender & Domestic Violence Desk:** Available 24/7 at Kahawa West Police Post with confidential OB reporting.
+
+> **Important Community Rule:** Always demand and record your **OB (Occurrence Book) Number** whenever reporting an incident at the police post. An official OB number guarantees an investigation file is opened and allows tracking of stolen goods or recovered items.
+
+---
+
+### 🤝 What Residents & Business Owners Must Do
+
+1. **Active Nyumba Kumi Participation:** Know who lives in your court. Introduce yourself to your immediate neighbours and share emergency phone numbers.
+2. **Adequate Security Lighting:** Business owners along Bima Road, Congo, and Mahiga are urged to install bright LED floodlights outside shop fronts. Well-lit corridors dramatically deter criminal elements.
+3. **CCTV Security Networks:** Collective investment in estate gate cameras provides undeniable evidence that helps police identify repeat suspects.
+4. **Boda Boda Rider Verification:** Use recognized local stages where riders have stage chairpersons rather than boarding unregistered night riders from unknown spots.
+5. **Report Early — Don't Wait:** If you notice unusual activity near an electric transformer, water meter, or residential gate, notify your court elder or police post immediately.
+
+---
+
+### 🚨 Stay Informed & Connected
+
+KWEST Community Updates features a dedicated **Security & Incident Noticeboard** where residents can post verified lost items, missing IDs, or neighborhood alerts under editorial moderation.
+
+Let us watch out for one another and keep Kahawa West a peaceful, thriving home for everyone!`,
+    imageUrl: '/kahawa-crime-safety.jpg',
+    imageCaption: 'Community security vigilance and police coordination across Kahawa West estates',
+    isRealPhotoConfirmed: true,
+    authorName: 'Mfalme Ukweli',
+    authorEmail: 'ukweliproducts@gmail.com',
+    authorPhone: '+254764405842',
+    authorRole: 'Admin - Kahawa West Directory',
+    date: '2026-10-04',
+    readTimeMinutes: 4,
+    featured: true,
+    status: 'published',
+    likes: 3,
+    dislikes: 0,
+  },
 ];
 
 const LOCAL_STORAGE_STORIES_KEY = 'kwest_community_stories_v1';

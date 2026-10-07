@@ -88,15 +88,16 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
 
   const handleShare = async () => {
     trackBusinessInteraction(business.id, 'share');
-    const shareUrl = `${window.location.origin}/#${business.slug}`;
+    const slugKey = business.slug || business.id;
+    const shareUrl = `${window.location.origin}/?biz=${encodeURIComponent(slugKey)}`;
     const shareTitle = `${business.name} | Kahawa West Directory`;
-    const shareText = `Check out *${business.name}* in Kahawa West (${business.zone}, near ${business.landmark}). Contact: ${business.phone}\n${shareUrl}`;
+    const shareText = `Check out *${business.name}* in Kahawa West (${business.zone}, near ${business.landmark}). Contact: ${business.phone || 'Available on directory'}\n${shareUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: shareTitle,
-          text: `Check out ${business.name} in Kahawa West (${business.zone}, near ${business.landmark}). Contact: ${business.phone}`,
+          text: `Check out ${business.name} in Kahawa West (${business.zone}, near ${business.landmark}). Contact: ${business.phone || 'Available on directory'}`,
           url: shareUrl,
         });
       } catch (err: any) {

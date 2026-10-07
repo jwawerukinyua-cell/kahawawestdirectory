@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bell,
   X,
@@ -11,6 +12,7 @@ import {
   Send,
   ShieldCheck,
   Check,
+  ArrowRight,
 } from 'lucide-react';
 import { CommunityUpdate, CommunityStory } from '../../types';
 import {
@@ -52,7 +54,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   useEffect(() => {
     setNotifications(buildLiveNotifications(updates, stories));
-    setPushStatus(getNotificationPermission());
+    try {
+      setPushStatus(getNotificationPermission());
+    } catch {
+      setPushStatus('unsupported');
+    }
 
     const handleUpdate = () => {
       setNotifications(buildLiveNotifications(updates, stories));
@@ -60,6 +66,26 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     window.addEventListener('kwest_notifications_updated', handleUpdate);
     return () => window.removeEventListener('kwest_notifications_updated', handleUpdate);
   }, [updates, stories, isOpen]);
+
+  // Lock body scroll and listen for Escape key when open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -99,10 +125,43 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     return true;
   });
 
-  return (
+  const handleNotificationClick = (notif: AppNotification) => {
+    markNotificationAsRead(notif.id);
+
+    // If it's a story notification, open the story reader
+    if (notif.id.startsWith('story-') && onReadStory) {
+      const cleanId = notif.id.replace('story-', '');
+      const foundStory = stories.find(
+        (s) => s.id === cleanId || s.slug === cleanId || `story-${s.id}` === notif.id
+      );
+      if (foundStory) {
+        onClose();
+        onReadStory(foundStory);
+        return;
+      }
+    }
+
+    // If it's an update notice, navigate to the update
+    if (notif.id.startsWith('up-') && onSelectUpdate) {
+      const cleanId = notif.id.replace('up-', '');
+      const foundUpdate = updates.find(
+        (u) => u.id === cleanId || `up-${u.id}` === notif.id
+      );
+      if (foundUpdate) {
+        onClose();
+        onSelectUpdate(foundUpdate);
+        return;
+      }
+    }
+  };
+
+  const content = (
     <div
       id="notification-center-drawer"
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex justify-end animate-in fade-in duration-150 font-sans"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Community Alerts & Notices"
+      className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-xs flex justify-end animate-in fade-in duration-150 font-sans"
       onClick={onClose}
     >
       <div
@@ -156,14 +215,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             {pushStatus !== 'granted' ? (
               <button
                 onClick={handleEnablePush}
-                className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-xs active:scale-95"
+                className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-xs active:scale-95 cursor-pointer"
               >
                 Enable
               </button>
             ) : (
               <button
                 onClick={handleSendTestPush}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 text-xs font-semibold border border-emerald-500/30 transition active:scale-95"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 text-xs font-semibold border border-emerald-500/30 transition active:scale-95 cursor-pointer"
               >
                 {testSent ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Send className="w-3.5 h-3.5" />}
                 <span>{testSent ? 'Sent!' : 'Test'}</span>
@@ -177,7 +236,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           <div className="flex items-center gap-1">
             <button
               onClick={() => setFilterType('all')}
-              className={`px-2.5 py-1 rounded-lg font-bold transition ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
                 filterType === 'all'
                   ? 'bg-[#630303] text-white'
                   : 'text-stone-600 hover:bg-stone-200'
@@ -187,7 +246,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </button>
             <button
               onClick={() => setFilterType('suggested')}
-              className={`px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1 cursor-pointer ${
                 filterType === 'suggested'
                   ? 'bg-emerald-800 text-white'
                   : 'text-stone-600 hover:bg-stone-200'
@@ -202,7 +261,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 flex items-center gap-1"
+                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 cursor-pointer"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 <span>Read all</span>
@@ -211,7 +270,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             {notifications.length > 0 && (
               <button
                 onClick={handleClearAll}
-                className="text-[11px] text-stone-500 hover:text-stone-800"
+                className="text-[11px] text-stone-500 hover:text-stone-800 cursor-pointer"
               >
                 Clear
               </button>
@@ -236,15 +295,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               return (
                 <div
                   key={notif.id}
-                  onClick={() => {
-                    markNotificationAsRead(notif.id);
-                  }}
-                  className={`p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer relative ${
+                  onClick={() => handleNotificationClick(notif)}
+                  className={`p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer relative hover:shadow-md ${
                     notif.isRead
-                      ? 'bg-white border-stone-200 text-stone-700'
+                      ? 'bg-white border-stone-200 text-stone-700 hover:border-stone-300'
                       : isSearchMatch
-                      ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 shadow-xs'
-                      : 'bg-rose-50/60 border-rose-200 text-slate-900 shadow-xs'
+                      ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 shadow-xs hover:border-emerald-400'
+                      : 'bg-rose-50/60 border-rose-200 text-slate-900 shadow-xs hover:border-rose-300'
                   }`}
                 >
                   {/* Unread indicator */}
@@ -298,11 +355,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                         {notif.body}
                       </p>
 
-                      {notif.relatedZone && (
-                        <span className="inline-block text-[10px] font-semibold text-emerald-800 mt-2">
-                          📍 {notif.relatedZone}
+                      <div className="flex items-center justify-between mt-2 pt-1">
+                        {notif.relatedZone ? (
+                          <span className="inline-block text-[10px] font-semibold text-emerald-800">
+                            📍 {notif.relatedZone}
+                          </span>
+                        ) : <span />}
+                        <span className="text-[10px] font-bold text-stone-400 hover:text-stone-700 inline-flex items-center gap-0.5">
+                          Open <ArrowRight className="w-3 h-3" />
                         </span>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -318,4 +380,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };
