@@ -18,17 +18,17 @@
     <link rel="preload" as="image" href="/kwest-logo.webp" type="image/webp" />
 
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <!-- Favicons compliant with Google Search SERP guidelines (multiples of 48px: 48x48, 96x96, 192x192) -->
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/icon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png" />
-    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.kahawawestdirectory.co.ke" />
@@ -47,11 +47,29 @@
       "@context": "https://schema.org",
       "@graph": [
         {
+          "@type": "Organization",
+          "@id": "https://www.kahawawestdirectory.co.ke/#organization",
+          "name": "Kahawa West Directory",
+          "alternateName": "KWEST Directory",
+          "url": "https://www.kahawawestdirectory.co.ke/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.kahawawestdirectory.co.ke/kwest-logo.png",
+            "width": 512,
+            "height": 512,
+            "caption": "Kahawa West Directory Official Logo"
+          },
+          "image": "https://www.kahawawestdirectory.co.ke/kwest-logo.png"
+        },
+        {
           "@type": "WebSite",
           "@id": "https://www.kahawawestdirectory.co.ke/#website",
           "url": "https://www.kahawawestdirectory.co.ke/",
           "name": "Kahawa West Directory",
           "alternateName": "KWEST Community Directory",
+          "publisher": {
+            "@id": "https://www.kahawawestdirectory.co.ke/#organization"
+          },
           "description": "Find trusted Kahawa West businesses, domestic specialists, verified local contacts, emergency hotlines, and estate updates in one community directory.",
           "potentialAction": {
             "@type": "SearchAction",
