@@ -40,6 +40,7 @@ import {
   deleteCommunityStory,
   getDeletedStoryIds,
   INITIAL_COMMUNITY_STORIES,
+  PURGED_STORY_IDS,
 } from './data/communityStories';
 import {
   getStoredBusinesses,
@@ -470,6 +471,9 @@ export default function App() {
         const activeRemote = remoteStories.filter(
           (s) =>
             !deletedIds.has(s.id) &&
+            !PURGED_STORY_IDS.has(s.id) &&
+            s.id !== 'story-community-safety-security-watch' &&
+            s.slug !== 'community-safety-and-crime-vigilance-in-kahawa-west' &&
             !s.id.startsWith('test-') &&
             s.id !== 'story-1788450086647' &&
             s.id !== 'story-02' &&
@@ -484,6 +488,9 @@ export default function App() {
               (p) =>
                 !remoteMap.has(p.id) &&
                 !deletedIds.has(p.id) &&
+                !PURGED_STORY_IDS.has(p.id) &&
+                p.id !== 'story-community-safety-security-watch' &&
+                p.slug !== 'community-safety-and-crime-vigilance-in-kahawa-west' &&
                 p.id !== 'story-1788450086647' &&
                 p.id !== 'story-02' &&
                 p.id !== 'story-01' &&
@@ -1175,6 +1182,9 @@ export default function App() {
   const handleDeleteStory = (storyId: string) => {
     const updated = deleteCommunityStory(storyId);
     setStories(updated);
+    if (selectedStoryForReading?.id === storyId) {
+      setSelectedStoryForReading(null);
+    }
   };
 
   const handleUpdateStoryContent = (updatedStory: CommunityStory) => {
@@ -1605,7 +1615,7 @@ export default function App() {
             onToggleVerifyBusiness={handleToggleVerifyBusiness}
             onOpenSubmitModal={() => setIsSubmitStoryOpen(true)}
             onOpenSubmitUpdateModal={() => setIsSubmitUpdateOpen(true)}
-            onRefreshCloudData={refreshCloudData}
+            onRefreshCloudData={() => refreshCloudData(true, true)}
             isSyncingCloud={isSyncingCloud}
             lastCloudSyncTime={lastCloudSyncTime}
           />

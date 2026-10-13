@@ -1161,6 +1161,18 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                 <Database className="w-3.5 h-3.5 text-emerald-400" />
                 <span>🗄️ Supabase Schema & SQL</span>
               </button>
+
+              {onRefreshCloudData && (
+                <button
+                  onClick={onRefreshCloudData}
+                  disabled={isSyncingCloud}
+                  className="ml-auto px-3.5 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/80 text-xs font-bold flex items-center gap-2 transition disabled:opacity-50 shrink-0 shadow-sm"
+                  title="Force refresh & pull fresh live records directly from Supabase Cloud"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin' : ''}`} />
+                  <span>{isSyncingCloud ? 'Syncing...' : 'Sync Live'}</span>
+                </button>
+              )}
             </div>
 
             {/* TAB CONTENT */}

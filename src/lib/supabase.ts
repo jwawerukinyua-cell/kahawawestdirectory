@@ -261,6 +261,15 @@ export const PURGED_TEST_BUSINESS_NAMES = new Set([
   'kj',
 ]);
 
+export const PURGED_STORY_IDS = new Set([
+  'story-community-safety-security-watch',
+  'story-01',
+  'story-02',
+  'story-03',
+  'story-1788450086647',
+  'story-1788342289836',
+]);
+
 export const fetchClaimsFromSupabase = async (forceRefresh = false): Promise<BusinessClaim[] | null> => {
   try {
     if (!forceRefresh) {
@@ -1050,6 +1059,9 @@ export const fetchStoriesFromSupabase = async (forceRefresh = false): Promise<Co
           .filter(
             (row: any) =>
               !row.id.startsWith('test-') &&
+              !PURGED_STORY_IDS.has(row.id) &&
+              row.id !== 'story-community-safety-security-watch' &&
+              row.slug !== 'community-safety-and-crime-vigilance-in-kahawa-west' &&
               row.id !== 'story-01' &&
               row.id !== 'story-02' &&
               row.id !== 'story-03' &&
@@ -1104,9 +1116,19 @@ export const deleteStoryFromSupabase = async (storyId: string): Promise<boolean>
     if (supabase && isSupabaseConfigured) {
       const { error } = await supabase.from('community_stories').delete().eq('id', storyId);
       if (error) console.warn('Supabase delete story warning:', error.message);
-      return !error;
     }
-    return false;
+
+    // Immediately remove from the 30-min local cache in localStorage so it can never resurrect
+    try {
+      const cached = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
+      if (cached) {
+        const list: CommunityStory[] = JSON.parse(cached);
+        const filtered = list.filter((s) => s.id !== storyId && !PURGED_STORY_IDS.has(s.id));
+        localStorage.setItem(CACHE_KEYS.STORIES_DATA, JSON.stringify(filtered));
+      }
+    } catch {}
+
+    return true;
   } catch (err) {
     console.warn('Supabase delete story error:', err);
     return false;
@@ -1118,9 +1140,19 @@ export const deleteUpdateFromSupabase = async (updateId: string): Promise<boolea
     if (supabase && isSupabaseConfigured) {
       const { error } = await supabase.from('community_updates').delete().eq('id', updateId);
       if (error) console.warn('Supabase delete update warning:', error.message);
-      return !error;
     }
-    return false;
+
+    // Immediately remove from the 30-min local cache in localStorage so it can never resurrect
+    try {
+      const cached = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
+      if (cached) {
+        const list: CommunityUpdate[] = JSON.parse(cached);
+        const filtered = list.filter((u) => u.id !== updateId);
+        localStorage.setItem(CACHE_KEYS.UPDATES_DATA, JSON.stringify(filtered));
+      }
+    } catch {}
+
+    return true;
   } catch (err) {
     console.warn('Supabase delete update error:', err);
     return false;
