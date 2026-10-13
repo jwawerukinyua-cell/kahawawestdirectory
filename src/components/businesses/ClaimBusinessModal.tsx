@@ -26,7 +26,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { Business, BusinessClaim, EstateZone, OperationType } from '../../types';
-import { saveBusinessClaim, saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
+import { saveBusinessClaim, saveCustomizedBusiness, generateBusinessSlug, checkActionRateLimit } from '../../lib/supabase';
 import { registerMerchantAccount } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
 import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
@@ -175,6 +175,13 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
       return;
     }
 
+    // Check submission rate limit to stop bot flooding and protect database egress
+    const rateLimit = checkActionRateLimit('claim', 3);
+    if (!rateLimit.allowed) {
+      alert(rateLimit.message || 'Submission limit reached. Please wait before submitting another claim.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -238,6 +245,12 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
 
       // 2. Persist to claims queue in Supabase & local storage (Does NOT mutate live business until verified)
       const saveRes = await saveBusinessClaim(claimRecord);
+      if (!saveRes.success && saveRes.error) {
+        alert(saveRes.error);
+        setIsSubmitting(false);
+        return;
+      }
+
       if (saveRes.id) {
         claimRecord.id = saveRes.id;
       }

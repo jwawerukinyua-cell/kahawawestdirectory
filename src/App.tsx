@@ -349,17 +349,17 @@ export default function App() {
   const [isSyncingCloud, setIsSyncingCloud] = useState(false);
   const [lastCloudSyncTime, setLastCloudSyncTime] = useState<Date | null>(null);
 
-  // Centralized cloud data refresher (Supabase) - optimized for low egress
-  const refreshCloudData = useCallback(async (includeAdminData = false) => {
+  // Centralized cloud data refresher (Supabase) - optimized for low egress with 30-min TTL caching
+  const refreshCloudData = useCallback(async (includeAdminData = false, forceRefresh = false) => {
     setIsSyncingCloud(true);
     try {
       const shouldFetchAdmin = includeAdminData || isEditorialReviewOpen;
       const [remoteBiz, remoteStories, remoteUpdates, remoteClaims, remoteApps] = await Promise.all([
-        fetchBusinessesFromSupabase(),
-        fetchStoriesFromSupabase(),
-        fetchUpdatesFromSupabase(),
-        shouldFetchAdmin ? fetchClaimsFromSupabase() : Promise.resolve(null),
-        shouldFetchAdmin ? fetchApplicationsFromSupabase() : Promise.resolve(null),
+        fetchBusinessesFromSupabase(forceRefresh),
+        fetchStoriesFromSupabase(forceRefresh),
+        fetchUpdatesFromSupabase(forceRefresh),
+        shouldFetchAdmin ? fetchClaimsFromSupabase(forceRefresh) : Promise.resolve(null),
+        shouldFetchAdmin ? fetchApplicationsFromSupabase(forceRefresh) : Promise.resolve(null),
       ]);
 
       if (remoteClaims !== null) {
@@ -528,13 +528,6 @@ export default function App() {
     refreshCloudData();
   }, [refreshCloudData]);
 
-  // Auto-refresh from cloud whenever the Editorial Review Desk opens
-  useEffect(() => {
-    if (isEditorialReviewOpen) {
-      refreshCloudData();
-    }
-  }, [isEditorialReviewOpen, refreshCloudData]);
-
   // Keep claims and applications reactive to window events
   useEffect(() => {
     const handleAppsUpdate = (e: any) => {
@@ -556,10 +549,10 @@ export default function App() {
     };
   }, []);
 
-  // Auto-refresh admin queues when opening Editorial Review desk
+  // Auto-refresh admin queues with live remote data when opening Editorial Review desk
   useEffect(() => {
     if (isEditorialReviewOpen) {
-      refreshCloudData(true);
+      refreshCloudData(true, true);
     }
   }, [isEditorialReviewOpen, refreshCloudData]);
 

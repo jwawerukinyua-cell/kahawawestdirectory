@@ -20,7 +20,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { Business, EstateZone, BusinessApplication, OperationType } from '../../types';
-import { saveBusinessApplication, saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
+import { saveBusinessApplication, saveCustomizedBusiness, generateBusinessSlug, checkActionRateLimit } from '../../lib/supabase';
 import { DEFAULT_OPENING_HOURS } from '../../data/defaultOpeningHours';
 import { registerMerchantAccount } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
@@ -137,6 +137,13 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
       return;
     }
 
+    // Check submission rate limit to stop bot flooding and protect database egress
+    const rateLimit = checkActionRateLimit('application', 3);
+    if (!rateLimit.allowed) {
+      alert(rateLimit.message || 'Submission limit reached. Please wait before submitting another listing.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -163,7 +170,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
           ? `${applicantName || 'Agent'} (On Behalf of ${ownerFullName || 'Owner'})`
           : `${applicantName || 'Proprietor'} (${applicantRole})`,
         claimedAt: new Date().toISOString().split('T')[0],
-        rating: 0,
+        rating: 5.0,
         reviewCount: 0,
         priceLevel: 'Moderate',
         heroImage: photos[0],
@@ -264,6 +271,12 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
 
       // Persist to applications queue in Supabase & local storage (Pending Editorial verification)
       const saveRes = await saveBusinessApplication(application);
+      if (!saveRes.success && saveRes.error) {
+        alert(saveRes.error);
+        setIsSubmitting(false);
+        return;
+      }
+
       if (saveRes.id) {
         application.id = saveRes.id;
       }

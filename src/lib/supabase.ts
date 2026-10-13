@@ -88,6 +88,81 @@ const BUSINESSES_STORAGE_KEY = 'kwest_directory_custom_businesses';
 const FEEDBACK_STORAGE_KEY = 'kwest_directory_feedback';
 const APPLICATIONS_STORAGE_KEY = 'kwest_directory_applications';
 
+// 30-Minute Stale-While-Revalidate TTL Cache Configuration (Prevents Supabase Egress Exhaustion)
+export const SUPABASE_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes for public directory data
+export const SUPABASE_ADMIN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes for admin queues
+
+const CACHE_KEYS = {
+  BUSINESSES_DATA: 'kwest_cache_businesses_data',
+  BUSINESSES_TIME: 'kwest_cache_businesses_timestamp',
+  STORIES_DATA: 'kwest_cache_stories_data',
+  STORIES_TIME: 'kwest_cache_stories_timestamp',
+  UPDATES_DATA: 'kwest_cache_updates_data',
+  UPDATES_TIME: 'kwest_cache_updates_timestamp',
+  CLAIMS_DATA: 'kwest_cache_claims_data',
+  CLAIMS_TIME: 'kwest_cache_claims_timestamp',
+  APPLICATIONS_DATA: 'kwest_cache_applications_data',
+  APPLICATIONS_TIME: 'kwest_cache_applications_timestamp',
+};
+
+// In-flight query deduplication to prevent concurrent duplicate network requests
+let inFlightBusinessesPromise: Promise<Business[] | null> | null = null;
+let inFlightStoriesPromise: Promise<CommunityStory[] | null> | null = null;
+let inFlightUpdatesPromise: Promise<CommunityUpdate[] | null> | null = null;
+let inFlightClaimsPromise: Promise<BusinessClaim[] | null> | null = null;
+let inFlightAppsPromise: Promise<BusinessApplication[] | null> | null = null;
+
+// Client-side submission rate limiting (Guards against spam attacks & runaway database egress)
+export interface RateLimitCheckResult {
+  allowed: boolean;
+  message?: string;
+  remainingSeconds?: number;
+}
+
+export const checkActionRateLimit = (
+  actionType: 'claim' | 'application' | 'feedback',
+  maxAllowed = 3,
+  windowMs = 15 * 60 * 1000 // 15 minutes window
+): RateLimitCheckResult => {
+  try {
+    const key = `kwest_rate_limit_${actionType}`;
+    const raw = localStorage.getItem(key);
+    const timestamps: number[] = raw ? JSON.parse(raw) : [];
+    const now = Date.now();
+    const validTimestamps = timestamps.filter((t) => typeof t === 'number' && now - t < windowMs);
+
+    if (validTimestamps.length >= maxAllowed) {
+      const oldestInWindow = Math.min(...validTimestamps);
+      const remainingSeconds = Math.max(1, Math.ceil((oldestInWindow + windowMs - now) / 1000));
+      const remainingMins = Math.ceil(remainingSeconds / 60);
+      return {
+        allowed: false,
+        remainingSeconds,
+        message: `Submission limit reached (${maxAllowed} submissions per 15 mins). Please wait ${remainingMins} minute${remainingMins > 1 ? 's' : ''} before submitting another ${actionType} to maintain directory stability.`,
+      };
+    }
+
+    return { allowed: true };
+  } catch {
+    return { allowed: true };
+  }
+};
+
+export const recordActionRateLimit = (actionType: 'claim' | 'application' | 'feedback'): void => {
+  try {
+    const key = `kwest_rate_limit_${actionType}`;
+    const raw = localStorage.getItem(key);
+    const timestamps: number[] = raw ? JSON.parse(raw) : [];
+    const now = Date.now();
+    const windowMs = 15 * 60 * 1000;
+    const validTimestamps = timestamps.filter((t) => typeof t === 'number' && now - t < windowMs);
+    validTimestamps.push(now);
+    localStorage.setItem(key, JSON.stringify(validTimestamps));
+  } catch {
+    // Ignore storage errors
+  }
+};
+
 export const saveBusinessClaim = async (
   claim: BusinessClaim
 ): Promise<{ success: boolean; error?: string; remoteSynced?: boolean; id?: string }> => {
@@ -186,47 +261,78 @@ export const PURGED_TEST_BUSINESS_NAMES = new Set([
   'kj',
 ]);
 
-export const fetchClaimsFromSupabase = async (): Promise<BusinessClaim[] | null> => {
+export const fetchClaimsFromSupabase = async (forceRefresh = false): Promise<BusinessClaim[] | null> => {
   try {
-    if (!supabase || !isSupabaseConfigured) return null;
-    const { data, error } = await supabase
-      .from('claims')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error || !data) {
-      if (error) logSupabaseWarning('fetch claims', error);
-      return null;
+    if (!forceRefresh) {
+      try {
+        const cachedTime = localStorage.getItem(CACHE_KEYS.CLAIMS_TIME);
+        const cachedData = localStorage.getItem(CACHE_KEYS.CLAIMS_DATA);
+        if (cachedTime && cachedData && Date.now() - Number(cachedTime) < SUPABASE_ADMIN_CACHE_TTL_MS) {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch {}
     }
 
-    const filtered = data.filter(
-      (row: any) =>
-        !PURGED_CLAIM_IDS.has(row.id) &&
-        !PURGED_CLAIM_IDS.has(row.business_id) &&
-        row.status !== 'rejected' &&
-        row.status !== 'archived'
-    );
+    if (inFlightClaimsPromise) return inFlightClaimsPromise;
 
-    const mapped: BusinessClaim[] = filtered.map((row: any): BusinessClaim => ({
-      id: row.id,
-      business_id: row.business_id,
-      business_name: row.business_name,
-      full_name: row.full_name,
-      phone_number: row.phone_number,
-      whatsapp_number: row.whatsapp_number,
-      email: row.email,
-      business_role: row.business_role,
-      national_id: row.national_id,
-      notes: row.notes,
-      status: row.status || 'pending',
-      claimed_details: row.claimed_details || {},
-      created_at: row.created_at,
-    }));
+    inFlightClaimsPromise = (async () => {
+      try {
+        if (!supabase || !isSupabaseConfigured) return null;
+        const { data, error } = await supabase
+          .from('claims')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-    // Cache to local storage
-    localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(mapped));
-    return mapped;
+        if (error || !data) {
+          if (error) logSupabaseWarning('fetch claims', error);
+          try {
+            const cachedData = localStorage.getItem(CACHE_KEYS.CLAIMS_DATA);
+            if (cachedData) return JSON.parse(cachedData);
+          } catch {}
+          return null;
+        }
+
+        const filtered = data.filter(
+          (row: any) =>
+            !PURGED_CLAIM_IDS.has(row.id) &&
+            !PURGED_CLAIM_IDS.has(row.business_id) &&
+            row.status !== 'rejected' &&
+            row.status !== 'archived'
+        );
+
+        const mapped: BusinessClaim[] = filtered.map((row: any): BusinessClaim => ({
+          id: row.id,
+          business_id: row.business_id,
+          business_name: row.business_name,
+          full_name: row.full_name,
+          phone_number: row.phone_number,
+          whatsapp_number: row.whatsapp_number,
+          email: row.email,
+          business_role: row.business_role,
+          national_id: row.national_id,
+          notes: row.notes,
+          status: row.status || 'pending',
+          claimed_details: row.claimed_details || {},
+          created_at: row.created_at,
+        }));
+
+        // Cache to local storage with timestamp
+        try {
+          localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(mapped));
+          localStorage.setItem(CACHE_KEYS.CLAIMS_DATA, JSON.stringify(mapped));
+          localStorage.setItem(CACHE_KEYS.CLAIMS_TIME, String(Date.now()));
+        } catch {}
+
+        return mapped;
+      } finally {
+        inFlightClaimsPromise = null;
+      }
+    })();
+
+    return inFlightClaimsPromise;
   } catch (err) {
+    inFlightClaimsPromise = null;
     logSupabaseWarning('fetch claims', err);
     return null;
   }
@@ -341,10 +447,24 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
       if (error) logSupabaseWarning('business upsert', error);
     }
 
-    // Local storage persistence
+    // Local storage persistence and 30-min cache sync
     const existing: Record<string, Business> = JSON.parse(localStorage.getItem(BUSINESSES_STORAGE_KEY) || '{}');
     existing[normalizedBusiness.id] = normalizedBusiness;
     localStorage.setItem(BUSINESSES_STORAGE_KEY, JSON.stringify(existing));
+
+    try {
+      const cached = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
+      if (cached) {
+        const list: Business[] = JSON.parse(cached);
+        const idx = list.findIndex((b) => b.id === normalizedBusiness.id);
+        if (idx >= 0) {
+          list[idx] = normalizedBusiness;
+        } else {
+          list.unshift(normalizedBusiness);
+        }
+        localStorage.setItem(CACHE_KEYS.BUSINESSES_DATA, JSON.stringify(list));
+      }
+    } catch {}
 
     return { success: true };
   } catch (err: any) {
@@ -361,62 +481,98 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
   }
 };
 
-export const fetchBusinessesFromSupabase = async (): Promise<Business[] | null> => {
+export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise<Business[] | null> => {
   try {
-    if (!supabase || !isSupabaseConfigured) return null;
-    const { data, error } = await supabase
-      .from('businesses')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error || !data) {
-      if (error) logSupabaseWarning('fetch businesses', error);
-      return null;
+    if (!forceRefresh) {
+      try {
+        const cachedTime = localStorage.getItem(CACHE_KEYS.BUSINESSES_TIME);
+        const cachedData = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
+        if (cachedTime && cachedData && Date.now() - Number(cachedTime) < SUPABASE_CACHE_TTL_MS) {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch {}
     }
 
-    return data
-      .filter((row: any) => {
-        if (row.status === 'archived' || row.status === 'rejected') return false;
-        if (PURGED_TEST_BUSINESS_IDS.has(row.id)) return false;
-        const norm = (row.name || '').toLowerCase().trim();
-        if (PURGED_TEST_BUSINESS_NAMES.has(norm)) return false;
-        return true;
-      })
-      .map((row: any): Business => ({
-      id: row.id,
-      slug: row.slug || generateBusinessSlug(row.name),
-      name: row.name,
-      tagline: row.tagline || `${row.name} in Kahawa West`,
-      category: row.category,
-      subCategory: row.sub_category,
-      zone: row.zone || 'Station / Railway',
-      landmark: row.landmark || 'Kahawa West',
-      addressDetails: row.address_details,
-      phone: row.phone,
-      whatsapp: row.whatsapp || row.phone,
-      email: row.email,
-      isVerified: Boolean(row.is_verified),
-      isClaimed: Boolean(row.is_claimed),
-      claimedBy: row.claimed_by,
-      rating: typeof row.rating === 'number' ? row.rating : 5.0,
-      reviewCount: typeof row.review_count === 'number' ? row.review_count : 1,
-      priceLevel: row.price_level || 'Moderate',
-      heroImage: row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-      galleryImages: Array.isArray(row.gallery_images) && row.gallery_images.length > 0
-        ? row.gallery_images
-        : [row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
-      description: row.description || `${row.name} in Kahawa West`,
-      services: Array.isArray(row.services) ? row.services : [],
-      features: Array.isArray(row.features) ? row.features : [],
-      mpesa: row.mpesa,
-      socialLinks: row.social_links,
-      openingHours: DEFAULT_OPENING_HOURS,
-      specialOffer: row.special_offer,
-      coordinates: row.coordinates || { lat: -1.1850, lng: 36.8850 },
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
+    if (inFlightBusinessesPromise) return inFlightBusinessesPromise;
+
+    inFlightBusinessesPromise = (async () => {
+      try {
+        if (!supabase || !isSupabaseConfigured) return null;
+        const { data, error } = await supabase
+          .from('businesses')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error || !data) {
+          if (error) logSupabaseWarning('fetch businesses', error);
+          try {
+            const cachedData = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
+            if (cachedData) return JSON.parse(cachedData);
+          } catch {}
+          return null;
+        }
+
+        const mapped: Business[] = data
+          .filter((row: any) => {
+            if (row.status === 'archived' || row.status === 'rejected') return false;
+            if (PURGED_TEST_BUSINESS_IDS.has(row.id)) return false;
+            const norm = (row.name || '').toLowerCase().trim();
+            if (PURGED_TEST_BUSINESS_NAMES.has(norm)) return false;
+            return true;
+          })
+          .map((row: any): Business => ({
+            id: row.id,
+            slug: row.slug || generateBusinessSlug(row.name),
+            name: row.name,
+            tagline: row.tagline || `${row.name} in Kahawa West`,
+            category: row.category,
+            subCategory: row.sub_category,
+            zone: row.zone || 'Station / Railway',
+            landmark: row.landmark || 'Kahawa West',
+            addressDetails: row.address_details,
+            phone: row.phone,
+            whatsapp: row.whatsapp || row.phone,
+            email: row.email,
+            isVerified: Boolean(row.is_verified),
+            isClaimed: Boolean(row.is_claimed),
+            claimedBy: row.claimed_by,
+            rating: typeof row.rating === 'number' ? row.rating : 5.0,
+            reviewCount: typeof row.review_count === 'number' ? row.review_count : 1,
+            priceLevel: row.price_level || 'Moderate',
+            heroImage: row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+            galleryImages: Array.isArray(row.gallery_images) && row.gallery_images.length > 0
+              ? row.gallery_images
+              : [row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
+            description: row.description || `${row.name} in Kahawa West`,
+            services: Array.isArray(row.services) ? row.services : [],
+            features: Array.isArray(row.features) ? row.features : [],
+            mpesa: row.mpesa,
+            socialLinks: row.social_links,
+            openingHours: DEFAULT_OPENING_HOURS,
+            specialOffer: row.special_offer,
+            coordinates: row.coordinates || { lat: -1.1850, lng: 36.8850 },
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          }));
+
+        // Cache 30-min window in localStorage
+        try {
+          localStorage.setItem(CACHE_KEYS.BUSINESSES_DATA, JSON.stringify(mapped));
+          localStorage.setItem(CACHE_KEYS.BUSINESSES_TIME, String(Date.now()));
+        } catch {}
+
+        return mapped;
+      } finally {
+        inFlightBusinessesPromise = null;
+      }
+    })();
+
+    return inFlightBusinessesPromise;
   } catch (err) {
+    inFlightBusinessesPromise = null;
     logSupabaseWarning('fetch businesses', err);
     return null;
   }
@@ -605,6 +761,10 @@ export const getStoredFeedback = (businessId?: string): CommunityFeedback[] => {
 export const saveBusinessApplication = async (
   app: BusinessApplication
 ): Promise<{ success: boolean; error?: string; remoteSynced?: boolean; id?: string }> => {
+  const rateLimit = checkActionRateLimit('application', 3);
+  if (!rateLimit.allowed) {
+    return { success: false, error: rateLimit.message, remoteSynced: false };
+  }
   let remoteSynced = false;
   let remoteError: string | undefined;
 
@@ -657,6 +817,8 @@ export const saveBusinessApplication = async (
     filtered.unshift(appWithId);
     localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(filtered));
 
+    recordActionRateLimit('application');
+
     window.dispatchEvent(new CustomEvent('kwest_applications_updated', { detail: filtered }));
 
     return { success: true, remoteSynced, error: remoteError, id: appWithId.id };
@@ -674,46 +836,77 @@ export const getStoredApplications = (): BusinessApplication[] => {
   }
 };
 
-export const fetchApplicationsFromSupabase = async (): Promise<BusinessApplication[] | null> => {
+export const fetchApplicationsFromSupabase = async (forceRefresh = false): Promise<BusinessApplication[] | null> => {
   try {
-    if (!supabase || !isSupabaseConfigured) return null;
-    const { data, error } = await supabase
-      .from('applications')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error || !data) {
-      if (error) logSupabaseWarning('fetch applications', error);
-      return null;
+    if (!forceRefresh) {
+      try {
+        const cachedTime = localStorage.getItem(CACHE_KEYS.APPLICATIONS_TIME);
+        const cachedData = localStorage.getItem(CACHE_KEYS.APPLICATIONS_DATA);
+        if (cachedTime && cachedData && Date.now() - Number(cachedTime) < SUPABASE_ADMIN_CACHE_TTL_MS) {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch {}
     }
 
-    const mapped: BusinessApplication[] = data.map((row: any): BusinessApplication => ({
-      id: row.id,
-      name: row.name,
-      category: row.category,
-      operationType: row.operation_type,
-      zone: row.zone,
-      landmark: row.landmark,
-      phone: row.phone,
-      whatsapp: row.whatsapp,
-      email: row.email,
-      description: row.description,
-      services: Array.isArray(row.services) ? row.services : [],
-      mpesaType: row.mpesa_type,
-      mpesaNumber: row.mpesa_number,
-      heroImage: row.hero_image,
-      galleryImages: Array.isArray(row.gallery_images) ? row.gallery_images : [],
-      applicantName: row.applicant_name,
-      applicantPhone: row.applicant_phone,
-      applicantRole: row.applicant_role,
-      notes: row.notes,
-      status: row.status || 'pending',
-      created_at: row.created_at,
-    }));
+    if (inFlightAppsPromise) return inFlightAppsPromise;
 
-    localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(mapped));
-    return mapped;
+    inFlightAppsPromise = (async () => {
+      try {
+        if (!supabase || !isSupabaseConfigured) return null;
+        const { data, error } = await supabase
+          .from('applications')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error || !data) {
+          if (error) logSupabaseWarning('fetch applications', error);
+          try {
+            const cachedData = localStorage.getItem(CACHE_KEYS.APPLICATIONS_DATA);
+            if (cachedData) return JSON.parse(cachedData);
+          } catch {}
+          return null;
+        }
+
+        const mapped: BusinessApplication[] = data.map((row: any): BusinessApplication => ({
+          id: row.id,
+          name: row.name,
+          category: row.category,
+          operationType: row.operation_type,
+          zone: row.zone,
+          landmark: row.landmark,
+          phone: row.phone,
+          whatsapp: row.whatsapp,
+          email: row.email,
+          description: row.description,
+          services: Array.isArray(row.services) ? row.services : [],
+          mpesaType: row.mpesa_type,
+          mpesaNumber: row.mpesa_number,
+          heroImage: row.hero_image,
+          galleryImages: Array.isArray(row.gallery_images) ? row.gallery_images : [],
+          applicantName: row.applicant_name,
+          applicantPhone: row.applicant_phone,
+          applicantRole: row.applicant_role,
+          notes: row.notes,
+          status: row.status || 'pending',
+          created_at: row.created_at,
+        }));
+
+        try {
+          localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(mapped));
+          localStorage.setItem(CACHE_KEYS.APPLICATIONS_DATA, JSON.stringify(mapped));
+          localStorage.setItem(CACHE_KEYS.APPLICATIONS_TIME, String(Date.now()));
+        } catch {}
+
+        return mapped;
+      } finally {
+        inFlightAppsPromise = null;
+      }
+    })();
+
+    return inFlightAppsPromise;
   } catch (err) {
+    inFlightAppsPromise = null;
     logSupabaseWarning('fetch applications', err);
     return null;
   }
@@ -821,53 +1014,86 @@ export function normalizeContentStatus(status?: string): 'published' | 'pending_
   return 'published';
 }
 
-export const fetchStoriesFromSupabase = async (): Promise<CommunityStory[] | null> => {
+export const fetchStoriesFromSupabase = async (forceRefresh = false): Promise<CommunityStory[] | null> => {
   try {
-    if (!supabase || !isSupabaseConfigured) return null;
-    const { data, error } = await supabase
-      .from('community_stories')
-      .select('*')
-      .order('date', { ascending: false });
-
-    if (error || !data) {
-      if (error) logSupabaseWarning('fetch stories', error);
-      return null;
+    if (!forceRefresh) {
+      try {
+        const cachedTime = localStorage.getItem(CACHE_KEYS.STORIES_TIME);
+        const cachedData = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
+        if (cachedTime && cachedData && Date.now() - Number(cachedTime) < SUPABASE_CACHE_TTL_MS) {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
     }
 
-    return data
-      .filter(
-        (row: any) =>
-          !row.id.startsWith('test-') &&
-          row.id !== 'story-01' &&
-          row.id !== 'story-02' &&
-          row.id !== 'story-03' &&
-          row.id !== 'story-1788450086647' &&
-          row.id !== 'story-1788342289836'
-      )
-      .map((row: any): CommunityStory => ({
-      id: row.id,
-      slug: row.slug || (row.id === 'story-1788450086647' || row.id === 'story-1788342289836' ? 'kahawa-pride-fc' : row.id),
-      title: row.title,
-      subtitle: row.subtitle,
-      category: row.category,
-      zone: row.zone,
-      content: row.content,
-      excerpt: row.excerpt || row.content.slice(0, 160) + '...',
-      imageUrl: row.image_url,
-      imageCaption: row.image_caption,
-      isRealPhotoConfirmed: Boolean(row.is_real_photo_confirmed),
-      authorName: row.author_name,
-      authorRole: row.author_role,
-      authorEmail: row.author_email,
-      authorPhone: row.author_phone,
-      date: row.date,
-      readTimeMinutes: row.read_time_minutes || 3,
-      featured: Boolean(row.featured),
-      status: normalizeContentStatus(row.status),
-      rejectionReason: row.rejection_reason,
-      likes: row.likes || 0,
-    }));
+    if (inFlightStoriesPromise) return inFlightStoriesPromise;
+
+    inFlightStoriesPromise = (async () => {
+      try {
+        if (!supabase || !isSupabaseConfigured) return null;
+        const { data, error } = await supabase
+          .from('community_stories')
+          .select('*')
+          .order('date', { ascending: false });
+
+        if (error || !data) {
+          if (error) logSupabaseWarning('fetch stories', error);
+          try {
+            const cachedData = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
+            if (cachedData) return JSON.parse(cachedData);
+          } catch {}
+          return null;
+        }
+
+        const mapped: CommunityStory[] = data
+          .filter(
+            (row: any) =>
+              !row.id.startsWith('test-') &&
+              row.id !== 'story-01' &&
+              row.id !== 'story-02' &&
+              row.id !== 'story-03' &&
+              row.id !== 'story-1788450086647' &&
+              row.id !== 'story-1788342289836'
+          )
+          .map((row: any): CommunityStory => ({
+            id: row.id,
+            slug: row.slug || (row.id === 'story-1788450086647' || row.id === 'story-1788342289836' ? 'kahawa-pride-fc' : row.id),
+            title: row.title,
+            subtitle: row.subtitle,
+            category: row.category,
+            zone: row.zone,
+            content: row.content,
+            excerpt: row.excerpt || row.content.slice(0, 160) + '...',
+            imageUrl: row.image_url,
+            imageCaption: row.image_caption,
+            isRealPhotoConfirmed: Boolean(row.is_real_photo_confirmed),
+            authorName: row.author_name,
+            authorRole: row.author_role,
+            authorEmail: row.author_email,
+            authorPhone: row.author_phone,
+            date: row.date,
+            readTimeMinutes: row.read_time_minutes || 3,
+            featured: Boolean(row.featured),
+            status: normalizeContentStatus(row.status),
+            rejectionReason: row.rejection_reason,
+            likes: row.likes || 0,
+          }));
+
+        try {
+          localStorage.setItem(CACHE_KEYS.STORIES_DATA, JSON.stringify(mapped));
+          localStorage.setItem(CACHE_KEYS.STORIES_TIME, String(Date.now()));
+        } catch {}
+
+        return mapped;
+      } finally {
+        inFlightStoriesPromise = null;
+      }
+    })();
+
+    return inFlightStoriesPromise;
   } catch (err) {
+    inFlightStoriesPromise = null;
     logSupabaseWarning('fetch stories', err);
     return null;
   }
@@ -941,53 +1167,86 @@ export const syncUpdateToSupabase = async (update: CommunityUpdate): Promise<boo
   }
 };
 
-export const fetchUpdatesFromSupabase = async (): Promise<CommunityUpdate[] | null> => {
+export const fetchUpdatesFromSupabase = async (forceRefresh = false): Promise<CommunityUpdate[] | null> => {
   try {
-    if (!supabase || !isSupabaseConfigured) return null;
-    const { data, error } = await supabase
-      .from('community_updates')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error || !data) {
-      if (error) logSupabaseWarning('fetch updates', error);
-      return null;
+    if (!forceRefresh) {
+      try {
+        const cachedTime = localStorage.getItem(CACHE_KEYS.UPDATES_TIME);
+        const cachedData = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
+        if (cachedTime && cachedData && Date.now() - Number(cachedTime) < SUPABASE_CACHE_TTL_MS) {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
     }
 
-    return data
-      .filter(
-        (row: any) =>
-          !row.id.startsWith('test-') &&
-          row.id !== 'up-01' &&
-          row.id !== 'up-02' &&
-          row.id !== 'up-03' &&
-          row.id !== 'up-04' &&
-          row.id !== 'up-05' &&
-          row.id !== 'up-06'
-      )
-      .map((row: any): CommunityUpdate => ({
-      id: row.id,
-      type: row.type || (row.id === 'up-iebc-voter-reg-2026' ? 'business' : 'community'),
-      title: row.title,
-      timeInfo: row.time_info || row.date,
-      location: row.location || 'Kahawa West',
-      zone: row.zone,
-      content: row.content,
-      author: row.author,
-      authorPhone: row.author_phone,
-      authorEmail: row.author_email,
-      authorRole: row.author_role || (row.id === 'up-iebc-voter-reg-2026' ? 'Local Resident / Neighbor' : undefined),
-      contact: row.contact || row.author_phone || (row.id === 'up-iebc-voter-reg-2026' ? '0764405842' : undefined),
-      badge: row.badge || (row.id === 'up-iebc-voter-reg-2026' ? 'Public Notice' : undefined),
-      imageUrl: row.image_url || (row.id === 'up-iebc-voter-reg-2026' ? '/iebc-logo.png' : undefined),
-      imageCaption: row.image_caption || (row.id === 'up-iebc-voter-reg-2026' ? 'Independent Electoral and Boundaries Commission (IEBC) voter registration notice' : undefined),
-      isAccountabilityConfirmed: row.is_accountability_confirmed ?? true,
-      urgencyLevel: row.urgency_level || 'standard',
-      date: row.date,
-      status: normalizeContentStatus(row.status),
-      rejectionReason: row.rejection_reason,
-    }));
+    if (inFlightUpdatesPromise) return inFlightUpdatesPromise;
+
+    inFlightUpdatesPromise = (async () => {
+      try {
+        if (!supabase || !isSupabaseConfigured) return null;
+        const { data, error } = await supabase
+          .from('community_updates')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error || !data) {
+          if (error) logSupabaseWarning('fetch updates', error);
+          try {
+            const cachedData = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
+            if (cachedData) return JSON.parse(cachedData);
+          } catch {}
+          return null;
+        }
+
+        const mapped: CommunityUpdate[] = data
+          .filter(
+            (row: any) =>
+              !row.id.startsWith('test-') &&
+              row.id !== 'up-01' &&
+              row.id !== 'up-02' &&
+              row.id !== 'up-03' &&
+              row.id !== 'up-04' &&
+              row.id !== 'up-05' &&
+              row.id !== 'up-06'
+          )
+          .map((row: any): CommunityUpdate => ({
+            id: row.id,
+            type: row.type || (row.id === 'up-iebc-voter-reg-2026' ? 'business' : 'community'),
+            title: row.title,
+            timeInfo: row.time_info || row.date,
+            location: row.location || 'Kahawa West',
+            zone: row.zone,
+            content: row.content,
+            author: row.author,
+            authorPhone: row.author_phone,
+            authorEmail: row.author_email,
+            authorRole: row.author_role || (row.id === 'up-iebc-voter-reg-2026' ? 'Local Resident / Neighbor' : undefined),
+            contact: row.contact || row.author_phone || (row.id === 'up-iebc-voter-reg-2026' ? '0764405842' : undefined),
+            badge: row.badge || (row.id === 'up-iebc-voter-reg-2026' ? 'Public Notice' : undefined),
+            imageUrl: row.image_url || (row.id === 'up-iebc-voter-reg-2026' ? '/iebc-logo.png' : undefined),
+            imageCaption: row.image_caption || (row.id === 'up-iebc-voter-reg-2026' ? 'Independent Electoral and Boundaries Commission (IEBC) voter registration notice' : undefined),
+            isAccountabilityConfirmed: row.is_accountability_confirmed ?? true,
+            urgencyLevel: row.urgency_level || 'standard',
+            date: row.date,
+            status: normalizeContentStatus(row.status),
+            rejectionReason: row.rejection_reason,
+          }));
+
+        try {
+          localStorage.setItem(CACHE_KEYS.UPDATES_DATA, JSON.stringify(mapped));
+          localStorage.setItem(CACHE_KEYS.UPDATES_TIME, String(Date.now()));
+        } catch {}
+
+        return mapped;
+      } finally {
+        inFlightUpdatesPromise = null;
+      }
+    })();
+
+    return inFlightUpdatesPromise;
   } catch (err) {
+    inFlightUpdatesPromise = null;
     logSupabaseWarning('fetch updates', err);
     return null;
   }
