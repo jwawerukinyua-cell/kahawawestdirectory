@@ -1159,7 +1159,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                 }`}
               >
                 <Database className="w-3.5 h-3.5 text-emerald-400" />
-                <span>🗄️ Supabase Schema & SQL</span>
+                <span>🔥 Cloud Sync & Database</span>
               </button>
 
               {onRefreshCloudData && (
@@ -1654,7 +1654,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                             Business Claim Verification Queue
                           </h4>
                           <p className="text-xs text-stone-400">
-                            Incoming claims submitted to the Supabase <code>claims</code> table by local merchants and authorized agents.
+                            Incoming claims submitted to the Firestore <code>claims</code> collection by local merchants and authorized agents.
                           </p>
                         </div>
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#260101] text-rose-300 border border-rose-800">
@@ -1790,7 +1790,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                             New Business Listing Applications
                           </h4>
                           <p className="text-xs text-stone-400">
-                            Merchant listings submitted via &quot;List Your Business&quot;. Gated in the Supabase <code>applications</code> queue until verified by the Editorial Desk.
+                            Merchant listings submitted via &quot;List Your Business&quot;. Gated in the Firestore <code>applications</code> collection until verified by the Editorial Desk.
                           </p>
                         </div>
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#260101] text-rose-300 border border-rose-800">
@@ -2807,16 +2807,16 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                 </div>
               )}
 
-              {/* TAB 5: SUPABASE GUIDE */}
+              {/* TAB 5: CLOUD DATABASE & FIREBASE SYNC */}
               {activeMainTab === 'supabase_guide' && (
                 <div className="space-y-4 max-w-4xl">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-display font-bold text-white text-base">
-                        Supabase Database Setup Script
+                        Google Firebase Firestore Live Cloud Sync
                       </h4>
                       <p className="text-xs text-stone-400">
-                        Copy & execute in your Supabase SQL editor for persistent multi-device storage.
+                        Enterprise NoSQL cloud database with real-time listeners and zero egress restriction.
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -2830,10 +2830,10 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                       </button>
                       <button
                         onClick={handleCopySql}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
+                        className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs flex items-center gap-1.5 transition border border-stone-700 shadow-sm"
                       >
                         {copiedSql ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        <span>{copiedSql ? 'Copied SQL!' : 'Copy SQL Schema'}</span>
+                        <span>{copiedSql ? 'Copied SQL!' : 'Copy SQL Schema Backup'}</span>
                       </button>
                     </div>
                   </div>
@@ -2841,39 +2841,47 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                   {syncReport && (
                     <div
                       className={`p-4 rounded-xl border text-xs leading-relaxed ${
-                        syncReport.storiesTableAccessible && syncReport.updatesTableAccessible
+                        syncReport.connected
                           ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'
                           : 'bg-amber-950/40 border-amber-800/60 text-amber-300'
                       }`}
                     >
                       <div className="font-bold flex items-center gap-1.5 mb-1 text-sm">
-                        {syncReport.storiesTableAccessible && syncReport.updatesTableAccessible ? (
+                        {syncReport.connected ? (
                           <>
                             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                            <span>Supabase Live Sync Active & Configured!</span>
+                            <span>Google Firebase Live Sync Active & Configured!</span>
                           </>
                         ) : (
                           <>
                             <ShieldAlert className="w-4 h-4 text-amber-400" />
-                            <span>Supabase SQL Setup Required</span>
+                            <span>Firebase Connection Notice</span>
                           </>
                         )}
                       </div>
                       <p className="text-stone-300 mb-2">{syncReport.message}</p>
-                      {(!syncReport.storiesTableAccessible || !syncReport.updatesTableAccessible) && (
-                        <p className="text-stone-400">
-                          <strong>Quick Fix:</strong> Click <em>"Copy SQL Schema"</em> above, open your{' '}
-                          <a
-                            href="https://supabase.com/dashboard"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline text-amber-200 hover:text-white"
-                          >
-                            Supabase SQL Editor
-                          </a>
-                          , paste and click <strong>Run</strong>. Then click <em>"Test Live Connection"</em> again!
-                        </p>
-                      )}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-stone-800/80 text-[11px]">
+                        <div className="flex items-center gap-1">
+                          <span className={syncReport.applicationsTableAccessible ? 'text-emerald-400 font-bold' : 'text-stone-500'}>
+                            {syncReport.applicationsTableAccessible ? '✓' : '•'} Applications
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className={syncReport.claimsTableAccessible ? 'text-emerald-400 font-bold' : 'text-stone-500'}>
+                            {syncReport.claimsTableAccessible ? '✓' : '•'} Claims
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className={syncReport.storiesTableAccessible ? 'text-emerald-400 font-bold' : 'text-stone-500'}>
+                            {syncReport.storiesTableAccessible ? '✓' : '•'} Stories
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className={syncReport.updatesTableAccessible ? 'text-emerald-400 font-bold' : 'text-stone-500'}>
+                            {syncReport.updatesTableAccessible ? '✓' : '•'} Updates
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   )}
 

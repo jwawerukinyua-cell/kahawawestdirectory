@@ -219,22 +219,6 @@
         window.__kwestInstallPrompt = e;
         window.dispatchEvent(new CustomEvent('kwest_prompt_ready'));
       });
-
-      // Clean up any stale service workers or caches to ensure fresh Vite modules
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (const registration of registrations) {
-            registration.unregister();
-          }
-        }).catch(() => {});
-        if ('caches' in window) {
-          caches.keys().then((keys) => {
-            for (const key of keys) {
-              caches.delete(key);
-            }
-          }).catch(() => {});
-        }
-      }
     </script>
   </head>
   <body class="bg-slate-950/5 text-slate-900 antialiased font-sans">

@@ -1,8 +1,43 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Business, BusinessClaim, CommunityFeedback, BusinessApplication, CommunityStory, CommunityUpdate } from '../types';
+import {
+  Business,
+  BusinessClaim,
+  CommunityFeedback,
+  BusinessApplication,
+  CommunityStory,
+  CommunityUpdate,
+} from '../types';
 import { DEFAULT_OPENING_HOURS } from '../data/defaultOpeningHours';
+import {
+  saveBusinessToFirestore,
+  fetchBusinessesFromFirestore,
+  saveClaimToFirestore,
+  fetchClaimsFromFirestore,
+  updateClaimInFirestore,
+  deleteClaimFromFirestore,
+  saveApplicationToFirestore,
+  fetchApplicationsFromFirestore,
+  updateApplicationInFirestore,
+  deleteApplicationFromFirestore,
+  saveStoryToFirestore,
+  fetchStoriesFromFirestore,
+  deleteStoryFromFirestore,
+  saveUpdateToFirestore,
+  fetchUpdatesFromFirestore,
+  deleteUpdateFromFirestore,
+  saveFeedbackToFirestore,
+  testFirebaseSyncStatus,
+  subscribeToApplications,
+  subscribeToClaims,
+  FirebaseSyncReport,
+} from './firebase';
 
-// The user's Supabase project URL and anon key with bulletproof production fallback
+export {
+  subscribeToApplications,
+  subscribeToClaims,
+};
+
+// Supabase legacy client maintained as passive secondary fallback
 export const DEFAULT_SUPABASE_URL = 'https://wfsqnhujjqldcxnhnzvf.supabase.co';
 export const DEFAULT_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmc3FuaHVqanFsZGN4bmhuenZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2Mjc0NTEsImV4cCI6MjEwMjIwMzQ1MX0.BAVXjSjkw5IPbmeZLaN2uOrM4mnIhB_wbZsk1lbgT4A';
@@ -24,15 +59,14 @@ export function isUuid(str?: string | null): boolean {
 const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
 const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
 
-export const SUPABASE_URL = (envUrl && isValidHttpUrl(envUrl)) ? envUrl.trim() : DEFAULT_SUPABASE_URL;
-export const SUPABASE_ANON_KEY = (envKey && typeof envKey === 'string' && envKey.trim().length > 20)
-  ? envKey.trim()
-  : DEFAULT_SUPABASE_ANON_KEY;
+export const SUPABASE_URL = envUrl && isValidHttpUrl(envUrl) ? envUrl.trim() : DEFAULT_SUPABASE_URL;
+export const SUPABASE_ANON_KEY =
+  envKey && typeof envKey === 'string' && envKey.trim().length > 20
+    ? envKey.trim()
+    : DEFAULT_SUPABASE_ANON_KEY;
 
 export const isSupabaseConfigured = Boolean(
-  SUPABASE_ANON_KEY &&
-  SUPABASE_ANON_KEY.length > 20 &&
-  SUPABASE_ANON_KEY !== 'dummy_anon_fallback'
+  SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 20 && SUPABASE_ANON_KEY !== 'dummy_anon_fallback'
 );
 
 let clientInstance: SupabaseClient | null = null;
@@ -45,56 +79,34 @@ if (isValidHttpUrl(SUPABASE_URL) && isSupabaseConfigured) {
       },
     });
   } catch (initErr) {
-    console.warn('Supabase client initialization warning, using local storage fallback:', initErr);
     clientInstance = null;
   }
 }
 
 export const supabase: SupabaseClient | null = clientInstance;
 
-let hasLoggedEgressNotice = false;
-let isEgressRestricted = false;
-
+// Firebase is active! Egress restriction is removed.
 export function isSupabaseEgressRestricted(): boolean {
-  return isEgressRestricted;
+  return false;
 }
 
 export function logSupabaseWarning(scope: string, error: any) {
   if (!error) return;
-  const message = error.message || String(error);
-  if (
-    message.includes('exceed_egress_quota') ||
-    message.includes('restricted') ||
-    message.includes('spend caps') ||
-    message.includes('bandwidth limit')
-  ) {
-    isEgressRestricted = true;
-    if (!hasLoggedEgressNotice) {
-      hasLoggedEgressNotice = true;
-      console.info(
-        `ℹ️ [KWEST Data Sync]: Supabase free-tier egress quota limit reached on remote database. The directory is operating seamlessly from high-performance local & verified static storage.`
-      );
-    }
-    return;
-  }
-  // If already known to be egress restricted, don't spam the console with generic fetch errors
-  if (isEgressRestricted) return;
-  console.warn(`Supabase ${scope} warning:`, message);
+  console.info(`[KWEST Sync] ${scope}:`, error.message || error);
 }
 
-// Local storage backup keys for seamless preview & persistence
+// Local storage backup keys for seamless offline persistence
 const CLAIMS_STORAGE_KEY = 'kwest_directory_claims';
 const BUSINESSES_STORAGE_KEY = 'kwest_directory_custom_businesses';
 const FEEDBACK_STORAGE_KEY = 'kwest_directory_feedback';
 const APPLICATIONS_STORAGE_KEY = 'kwest_directory_applications';
 
-// 30-Minute Stale-While-Revalidate TTL Cache Configuration (Prevents Supabase Egress Exhaustion)
-export const SUPABASE_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes for public directory data
-export const SUPABASE_ADMIN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes for admin queues
+export const SUPABASE_CACHE_TTL_MS = 10 * 60 * 1000;
+export const SUPABASE_ADMIN_CACHE_TTL_MS = 2 * 60 * 1000;
 
 const CACHE_KEYS = {
-  BUSINESSES_DATA: 'kwest_cache_businesses_data',
-  BUSINESSES_TIME: 'kwest_cache_businesses_timestamp',
+  BUSINESSES_DATA: 'kwest_cache_businesses_data_v2',
+  BUSINESSES_TIME: 'kwest_cache_businesses_timestamp_v2',
   STORIES_DATA: 'kwest_cache_stories_data',
   STORIES_TIME: 'kwest_cache_stories_timestamp',
   UPDATES_DATA: 'kwest_cache_updates_data',
@@ -105,14 +117,14 @@ const CACHE_KEYS = {
   APPLICATIONS_TIME: 'kwest_cache_applications_timestamp',
 };
 
-// In-flight query deduplication to prevent concurrent duplicate network requests
+// In-flight query deduplication
 let inFlightBusinessesPromise: Promise<Business[] | null> | null = null;
 let inFlightStoriesPromise: Promise<CommunityStory[] | null> | null = null;
 let inFlightUpdatesPromise: Promise<CommunityUpdate[] | null> | null = null;
 let inFlightClaimsPromise: Promise<BusinessClaim[] | null> | null = null;
 let inFlightAppsPromise: Promise<BusinessApplication[] | null> | null = null;
 
-// Client-side submission rate limiting (Guards against spam attacks & runaway database egress)
+// Rate limiting logic
 export interface RateLimitCheckResult {
   allowed: boolean;
   message?: string;
@@ -121,8 +133,8 @@ export interface RateLimitCheckResult {
 
 export const checkActionRateLimit = (
   actionType: 'claim' | 'application' | 'feedback',
-  maxAllowed = 3,
-  windowMs = 15 * 60 * 1000 // 15 minutes window
+  maxAllowed = 10,
+  windowMs = 15 * 60 * 1000
 ): RateLimitCheckResult => {
   try {
     const key = `kwest_rate_limit_${actionType}`;
@@ -138,7 +150,7 @@ export const checkActionRateLimit = (
       return {
         allowed: false,
         remainingSeconds,
-        message: `Submission limit reached (${maxAllowed} submissions per 15 mins). Please wait ${remainingMins} minute${remainingMins > 1 ? 's' : ''} before submitting another ${actionType} to maintain directory stability.`,
+        message: `Submission limit reached. Please wait ${remainingMins} minute${remainingMins > 1 ? 's' : ''} before submitting another ${actionType}.`,
       };
     }
 
@@ -158,11 +170,12 @@ export const recordActionRateLimit = (actionType: 'claim' | 'application' | 'fee
     const validTimestamps = timestamps.filter((t) => typeof t === 'number' && now - t < windowMs);
     validTimestamps.push(now);
     localStorage.setItem(key, JSON.stringify(validTimestamps));
-  } catch {
-    // Ignore storage errors
-  }
+  } catch {}
 };
 
+// ----------------------------------------------------
+// CLAIMS MANAGEMENT (Firebase Firestore)
+// ----------------------------------------------------
 export const saveBusinessClaim = async (
   claim: BusinessClaim
 ): Promise<{ success: boolean; error?: string; remoteSynced?: boolean; id?: string }> => {
@@ -170,33 +183,16 @@ export const saveBusinessClaim = async (
   let remoteError: string | undefined;
 
   try {
-    // 1. If Supabase is connected with active key, write to claims table
-    if (supabase && isSupabaseConfigured) {
-      const { data, error } = await supabase.from('claims').insert([
-        {
-          business_id: claim.business_id,
-          business_name: claim.business_name || null,
-          full_name: claim.full_name,
-          phone_number: claim.phone_number,
-          whatsapp_number: claim.whatsapp_number || claim.phone_number,
-          email: claim.email,
-          business_role: claim.business_role,
-          notes: claim.notes || null,
-          status: claim.status || 'pending',
-          claimed_details: claim.claimed_details || {},
-          created_at: claim.created_at || new Date().toISOString(),
-        }
-      ]).select('id').single();
-
-      if (error) {
-        logSupabaseWarning('insert claim', error);
-        remoteError = error.message;
-      } else {
+    // 1. Save directly to Google Firebase Firestore
+    try {
+      const res = await saveClaimToFirestore(claim);
+      if (res && res.id) {
+        claim.id = res.id;
         remoteSynced = true;
-        if (data?.id) {
-          claim.id = data.id;
-        }
       }
+    } catch (fbErr: any) {
+      console.warn('Firebase save claim fallback to local:', fbErr);
+      remoteError = fbErr.message;
     }
 
     // 2. Persist locally to browser storage for instantaneous UI updates
@@ -210,12 +206,6 @@ export const saveBusinessClaim = async (
     return { success: true, remoteSynced, error: remoteError, id: claim.id };
   } catch (err: any) {
     console.error('Error saving claim:', err);
-    // Fallback save locally
-    const existingClaims: BusinessClaim[] = JSON.parse(localStorage.getItem(CLAIMS_STORAGE_KEY) || '[]');
-    const filtered = existingClaims.filter((c) => c.business_id !== claim.business_id && c.id !== claim.id);
-    filtered.unshift(claim);
-    localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(filtered));
-    window.dispatchEvent(new CustomEvent('kwest_claims_updated', { detail: filtered }));
     return { success: true, remoteSynced: false, error: err?.message, id: claim.id };
   }
 };
@@ -247,6 +237,9 @@ export const PURGED_TEST_BUSINESS_IDS = new Set([
   'kw-test-approved-123',
   'kw-biz-muriithi-hardware',
   'kw-biz-kj-fresh-foods',
+  'kw-biz-21d5f6e4-e129-4f9a-a389-a93a4a1153e7',
+  'kw-biz-42144f4f-a522-411c-9a4a-dac54c91d558',
+  'kw-biz-7025cfba-a0d6-4add-9a56-ee3c9e99dab6',
 ]);
 
 export const PURGED_TEST_BUSINESS_NAMES = new Set([
@@ -287,53 +280,39 @@ export const fetchClaimsFromSupabase = async (forceRefresh = false): Promise<Bus
 
     inFlightClaimsPromise = (async () => {
       try {
-        if (!supabase || !isSupabaseConfigured) return null;
-        const { data, error } = await supabase
-          .from('claims')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error || !data) {
-          if (error) logSupabaseWarning('fetch claims', error);
-          try {
-            const cachedData = localStorage.getItem(CACHE_KEYS.CLAIMS_DATA);
-            if (cachedData) return JSON.parse(cachedData);
-          } catch {}
-          return null;
-        }
-
-        const filtered = data.filter(
-          (row: any) =>
-            !PURGED_CLAIM_IDS.has(row.id) &&
+        // Fetch from Firebase Firestore
+        const fbClaims = await fetchClaimsFromFirestore();
+        const filtered = (fbClaims || []).filter(
+          (row) =>
+            !PURGED_CLAIM_IDS.has(row.id || '') &&
             !PURGED_CLAIM_IDS.has(row.business_id) &&
-            row.status !== 'rejected' &&
-            row.status !== 'archived'
+            (row.status as string) !== 'rejected' &&
+            (row.status as string) !== 'archived'
         );
 
-        const mapped: BusinessClaim[] = filtered.map((row: any): BusinessClaim => ({
-          id: row.id,
-          business_id: row.business_id,
-          business_name: row.business_name,
-          full_name: row.full_name,
-          phone_number: row.phone_number,
-          whatsapp_number: row.whatsapp_number,
-          email: row.email,
-          business_role: row.business_role,
-          national_id: row.national_id,
-          notes: row.notes,
-          status: row.status || 'pending',
-          claimed_details: row.claimed_details || {},
-          created_at: row.created_at,
-        }));
+        // Merge with any local offline claims not yet in cloud
+        const local = getSavedClaims();
+        const mergedMap = new Map<string, BusinessClaim>();
+        filtered.forEach((c) => mergedMap.set(c.id || c.business_id, c));
+        local.forEach((c) => {
+          if (!mergedMap.has(c.id || c.business_id) && !PURGED_CLAIM_IDS.has(c.id || c.business_id)) {
+            mergedMap.set(c.id || c.business_id, c);
+          }
+        });
 
-        // Cache to local storage with timestamp
+        const result = Array.from(mergedMap.values());
         try {
-          localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(mapped));
-          localStorage.setItem(CACHE_KEYS.CLAIMS_DATA, JSON.stringify(mapped));
+          localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(result));
+          localStorage.setItem(CACHE_KEYS.CLAIMS_DATA, JSON.stringify(result));
           localStorage.setItem(CACHE_KEYS.CLAIMS_TIME, String(Date.now()));
         } catch {}
 
-        return mapped;
+        return result;
+      } catch (fbErr) {
+        console.warn('Firebase fetch claims failed, falling back to local storage:', fbErr);
+        const cachedData = localStorage.getItem(CACHE_KEYS.CLAIMS_DATA);
+        if (cachedData) return JSON.parse(cachedData);
+        return getSavedClaims();
       } finally {
         inFlightClaimsPromise = null;
       }
@@ -342,8 +321,7 @@ export const fetchClaimsFromSupabase = async (forceRefresh = false): Promise<Bus
     return inFlightClaimsPromise;
   } catch (err) {
     inFlightClaimsPromise = null;
-    logSupabaseWarning('fetch claims', err);
-    return null;
+    return getSavedClaims();
   }
 };
 
@@ -353,16 +331,8 @@ export const updateClaimStatusInSupabase = async (
   notes?: string
 ): Promise<boolean> => {
   try {
-    if (supabase && isSupabaseConfigured) {
-      let query = supabase.from('claims').update({ status, ...(notes ? { notes } : {}) });
-      if (isUuid(claimIdOrBizId)) {
-        query = query.eq('id', claimIdOrBizId);
-      } else {
-        query = query.eq('business_id', claimIdOrBizId);
-      }
-      const { error } = await query;
-      if (error) logSupabaseWarning('update claim', error);
-    }
+    await updateClaimInFirestore(claimIdOrBizId, { status, ...(notes ? { notes } : {}) });
+
     const existing = getSavedClaims();
     const updated = existing.map((c) =>
       c.id === claimIdOrBizId || c.business_id === claimIdOrBizId
@@ -373,31 +343,22 @@ export const updateClaimStatusInSupabase = async (
     window.dispatchEvent(new CustomEvent('kwest_claims_updated', { detail: updated }));
     return true;
   } catch (err) {
-    console.warn('Failed to update claim status:', err);
+    console.warn('Failed to update claim status in Firebase:', err);
     return false;
   }
 };
 
 export const deleteClaimFromSupabase = async (claimIdOrBizId: string): Promise<boolean> => {
   try {
-    if (supabase && isSupabaseConfigured) {
-      let query = supabase.from('claims').delete();
-      if (isUuid(claimIdOrBizId)) {
-        query = query.eq('id', claimIdOrBizId);
-      } else {
-        query = query.eq('business_id', claimIdOrBizId);
-      }
-      await query;
-    }
+    await deleteClaimFromFirestore(claimIdOrBizId);
+
     const existing = getSavedClaims();
-    const updated = existing.filter(
-      (c) => c.id !== claimIdOrBizId && c.business_id !== claimIdOrBizId
-    );
+    const updated = existing.filter((c) => c.id !== claimIdOrBizId && c.business_id !== claimIdOrBizId);
     localStorage.setItem(CLAIMS_STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('kwest_claims_updated', { detail: updated }));
     return true;
   } catch (err) {
-    console.warn('Failed to delete claim:', err);
+    console.warn('Failed to delete claim from Firebase:', err);
     return false;
   }
 };
@@ -410,7 +371,12 @@ export const generateBusinessSlug = (name: string): string => {
     .replace(/(^-|-$)/g, '');
 };
 
-export const saveCustomizedBusiness = async (business: Business): Promise<{ success: boolean; error?: string }> => {
+// ----------------------------------------------------
+// BUSINESSES MANAGEMENT (Firebase Firestore)
+// ----------------------------------------------------
+export const saveCustomizedBusiness = async (
+  business: Business
+): Promise<{ success: boolean; error?: string }> => {
   try {
     const slug = business.slug || generateBusinessSlug(business.name);
     const normalizedBusiness: Business = {
@@ -418,46 +384,13 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
       slug,
     };
 
-    if (supabase && isSupabaseConfigured) {
-      // Supabase 'businesses' table schema columns
-      const { error } = await supabase.from('businesses').upsert([
-        {
-          id: normalizedBusiness.id,
-          slug: normalizedBusiness.slug,
-          name: normalizedBusiness.name,
-          tagline: normalizedBusiness.tagline || '',
-          category: normalizedBusiness.category,
-          sub_category: normalizedBusiness.subCategory || null,
-          zone: normalizedBusiness.zone,
-          landmark: normalizedBusiness.landmark || 'Kahawa West',
-          phone: normalizedBusiness.phone,
-          whatsapp: normalizedBusiness.whatsapp || normalizedBusiness.phone,
-          email: normalizedBusiness.email || null,
-          is_verified: normalizedBusiness.isVerified ?? true,
-          is_claimed: normalizedBusiness.isClaimed ?? true,
-          claimed_by: normalizedBusiness.claimedBy || null,
-          claimed_at: normalizedBusiness.claimedAt || new Date().toISOString().split('T')[0],
-          rating: normalizedBusiness.rating || 5.0,
-          review_count: normalizedBusiness.reviewCount || 1,
-          price_level: normalizedBusiness.priceLevel || 'Moderate',
-          hero_image: normalizedBusiness.heroImage || null,
-          gallery_images: normalizedBusiness.galleryImages || [],
-          description: normalizedBusiness.description || '',
-          services: normalizedBusiness.services || [],
-          features: normalizedBusiness.features || [],
-          mpesa: normalizedBusiness.mpesa || null,
-          social_links: normalizedBusiness.socialLinks || null,
-          special_offer: normalizedBusiness.specialOffer || null,
-          status: 'published',
-          created_at: normalizedBusiness.createdAt || new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-      ]);
-      if (error) logSupabaseWarning('business upsert', error);
-    }
+    // Save to Firebase Firestore
+    await saveBusinessToFirestore(normalizedBusiness);
 
-    // Local storage persistence and 30-min cache sync
-    const existing: Record<string, Business> = JSON.parse(localStorage.getItem(BUSINESSES_STORAGE_KEY) || '{}');
+    // Save to local storage for instant offline capability
+    const existing: Record<string, Business> = JSON.parse(
+      localStorage.getItem(BUSINESSES_STORAGE_KEY) || '{}'
+    );
     existing[normalizedBusiness.id] = normalizedBusiness;
     localStorage.setItem(BUSINESSES_STORAGE_KEY, JSON.stringify(existing));
 
@@ -477,15 +410,7 @@ export const saveCustomizedBusiness = async (business: Business): Promise<{ succ
 
     return { success: true };
   } catch (err: any) {
-    console.error('Error saving customized business:', err);
-    const slug = business.slug || generateBusinessSlug(business.name);
-    const normalizedBusiness: Business = {
-      ...business,
-      slug,
-    };
-    const existing: Record<string, Business> = JSON.parse(localStorage.getItem(BUSINESSES_STORAGE_KEY) || '{}');
-    existing[normalizedBusiness.id] = normalizedBusiness;
-    localStorage.setItem(BUSINESSES_STORAGE_KEY, JSON.stringify(existing));
+    console.error('Error saving business to Firebase:', err);
     return { success: true };
   }
 };
@@ -498,7 +423,7 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
         const cachedData = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
         if (cachedTime && cachedData && Date.now() - Number(cachedTime) < SUPABASE_CACHE_TTL_MS) {
           const parsed = JSON.parse(cachedData);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             return parsed;
           }
         }
@@ -509,22 +434,9 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
 
     inFlightBusinessesPromise = (async () => {
       try {
-        if (!supabase || !isSupabaseConfigured) return null;
-        const { data, error } = await supabase
-          .from('businesses')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const data = await fetchBusinessesFromFirestore();
 
-        if (error || !data) {
-          if (error) logSupabaseWarning('fetch businesses', error);
-          try {
-            const cachedData = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
-            if (cachedData) return JSON.parse(cachedData);
-          } catch {}
-          return null;
-        }
-
-        const mapped: Business[] = data
+        const mapped: Business[] = (data || [])
           .filter((row: any) => {
             if (row.status === 'archived' || row.status === 'rejected') return false;
             if (PURGED_TEST_BUSINESS_IDS.has(row.id)) return false;
@@ -538,42 +450,52 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
             name: row.name,
             tagline: row.tagline || `${row.name} in Kahawa West`,
             category: row.category,
-            subCategory: row.sub_category,
+            subCategory: row.subCategory || row.sub_category,
             zone: row.zone || 'Station / Railway',
             landmark: row.landmark || 'Kahawa West',
-            addressDetails: row.address_details,
+            addressDetails: row.addressDetails || row.address_details,
             phone: row.phone,
             whatsapp: row.whatsapp || row.phone,
             email: row.email,
-            isVerified: Boolean(row.is_verified),
-            isClaimed: Boolean(row.is_claimed),
-            claimedBy: row.claimed_by,
+            isVerified: Boolean(row.isVerified ?? row.is_verified),
+            isClaimed: Boolean(row.isClaimed ?? row.is_claimed),
+            claimedBy: row.claimedBy || row.claimed_by,
             rating: typeof row.rating === 'number' ? row.rating : 5.0,
-            reviewCount: typeof row.review_count === 'number' ? row.review_count : 1,
-            priceLevel: row.price_level || 'Moderate',
-            heroImage: row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-            galleryImages: Array.isArray(row.gallery_images) && row.gallery_images.length > 0
-              ? row.gallery_images
-              : [row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
+            reviewCount: typeof row.reviewCount === 'number' ? row.reviewCount : 1,
+            priceLevel: row.priceLevel || row.price_level || 'Moderate',
+            heroImage:
+              row.heroImage ||
+              row.hero_image ||
+              'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+            galleryImages:
+              Array.isArray(row.galleryImages) && row.galleryImages.length > 0
+                ? row.galleryImages
+                : Array.isArray(row.gallery_images) && row.gallery_images.length > 0
+                ? row.gallery_images
+                : [row.heroImage || row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
             description: row.description || `${row.name} in Kahawa West`,
             services: Array.isArray(row.services) ? row.services : [],
             features: Array.isArray(row.features) ? row.features : [],
             mpesa: row.mpesa,
-            socialLinks: row.social_links,
+            socialLinks: row.socialLinks || row.social_links,
             openingHours: DEFAULT_OPENING_HOURS,
-            specialOffer: row.special_offer,
-            coordinates: row.coordinates || { lat: -1.1850, lng: 36.8850 },
-            createdAt: row.created_at,
-            updatedAt: row.updated_at,
+            specialOffer: row.specialOffer || row.special_offer,
+            coordinates: row.coordinates || { lat: -1.185, lng: 36.885 },
+            createdAt: row.createdAt || row.created_at,
+            updatedAt: row.updatedAt || row.updated_at,
           }));
 
-        // Cache 30-min window in localStorage
         try {
           localStorage.setItem(CACHE_KEYS.BUSINESSES_DATA, JSON.stringify(mapped));
           localStorage.setItem(CACHE_KEYS.BUSINESSES_TIME, String(Date.now()));
         } catch {}
 
         return mapped;
+      } catch (fbErr) {
+        console.warn('Firebase fetch businesses fallback:', fbErr);
+        const cachedData = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
+        if (cachedData) return JSON.parse(cachedData);
+        return null;
       } finally {
         inFlightBusinessesPromise = null;
       }
@@ -582,14 +504,26 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
     return inFlightBusinessesPromise;
   } catch (err) {
     inFlightBusinessesPromise = null;
-    logSupabaseWarning('fetch businesses', err);
     return null;
   }
 };
 
 export const getCustomizedBusinesses = (): Record<string, Business> => {
   try {
-    return JSON.parse(localStorage.getItem(BUSINESSES_STORAGE_KEY) || '{}');
+    const raw = JSON.parse(localStorage.getItem(BUSINESSES_STORAGE_KEY) || '{}');
+    let changed = false;
+    PURGED_TEST_BUSINESS_IDS.forEach((id) => {
+      if (raw[id]) {
+        delete raw[id];
+        changed = true;
+      }
+    });
+    if (changed) {
+      try {
+        localStorage.setItem(BUSINESSES_STORAGE_KEY, JSON.stringify(raw));
+      } catch {}
+    }
+    return raw;
   } catch {
     return {};
   }
@@ -600,14 +534,12 @@ export const getStoredBusinesses = (seedBusinesses: Business[]): Business[] => {
     const custom = getCustomizedBusinesses();
     const seedMap = new Map<string, Business>();
 
-    // 1. Process and merge seed businesses
     const mergedSeeds = seedBusinesses.map((seed) => {
       seedMap.set(seed.id, seed);
       if (custom[seed.id]) {
         const c = custom[seed.id];
-        // Ensure slug is synced with updated name if name changed
         const currentSlug = c.slug || generateBusinessSlug(c.name || seed.name);
-        const resolvedCategory = seed.id === 'kw-biz-10' ? 'home-rentals' : (c.category || seed.category);
+        const resolvedCategory = seed.id === 'kw-biz-10' ? 'home-rentals' : c.category || seed.category;
         return {
           ...seed,
           ...c,
@@ -618,12 +550,10 @@ export const getStoredBusinesses = (seedBusinesses: Business[]): Business[] => {
       return seed;
     });
 
-    // 2. Only retrieve explicitly verified custom listed businesses not in seeds
     const newCustomListings: Business[] = [];
     Object.keys(custom).forEach((id) => {
       if (!seedMap.has(id)) {
         const item = custom[id];
-        // Strictly require verified status for custom businesses to be visible in the directory
         if (item.isVerified === true) {
           newCustomListings.push({
             ...item,
@@ -646,7 +576,9 @@ export const getStoredBusinesses = (seedBusinesses: Business[]): Business[] => {
   }
 };
 
-// Initial sample seed feedback for realistic neighborhood reviews
+// ----------------------------------------------------
+// FEEDBACK & REVIEWS
+// ----------------------------------------------------
 const DEFAULT_INITIAL_FEEDBACK: CommunityFeedback[] = [
   {
     id: 'fb-seed-01',
@@ -657,11 +589,12 @@ const DEFAULT_INITIAL_FEEDBACK: CommunityFeedback[] = [
     experience: 'Better',
     rating: 5,
     tags: ['Verified Resident', 'Better'],
-    comment: 'Super fast roast and the mbuzi choma was tender and hot. The mukimo was fresh without too much oil. Great place for weekend family lunch.',
+    comment:
+      'Super fast roast and the mbuzi choma was tender and hot. The mukimo was fresh without too much oil. Great place for weekend family lunch.',
     businessResponse: {
       respondedBy: 'Mama Njeri (Proprietor)',
       responseDate: '2026-08-25',
-      message: 'Asante sana Peter! We always source fresh meat every morning from local suppliers. Welcome back anytime with family!'
+      message: 'Asante sana Peter! We always source fresh meat every morning from local suppliers. Welcome back anytime with family!',
     },
     created_at: '2026-08-24T14:20:00Z',
   },
@@ -674,11 +607,12 @@ const DEFAULT_INITIAL_FEEDBACK: CommunityFeedback[] = [
     experience: 'Good',
     rating: 4,
     tags: ['Verified Resident', 'Good'],
-    comment: 'Good chicken taste and the soup was rich. Delivery to Jacaranda took 35 mins which was okay, but packaging was very neat.',
+    comment:
+      'Good chicken taste and the soup was rich. Delivery to Jacaranda took 35 mins which was okay, but packaging was very neat.',
     businessResponse: {
       respondedBy: 'Maina (Kitchen Supervisor)',
       responseDate: '2026-08-28',
-      message: 'Thank you Grace for the review. We are currently testing new thermal rider bags to make Jacaranda deliveries even faster!'
+      message: 'Thank you Grace for the review. We are currently testing new thermal rider bags to make Jacaranda deliveries even faster!',
     },
     created_at: '2026-08-27T18:45:00Z',
   },
@@ -691,33 +625,20 @@ const DEFAULT_INITIAL_FEEDBACK: CommunityFeedback[] = [
     experience: 'Better',
     rating: 5,
     tags: ['Verified Resident', 'Better'],
-    comment: 'Solid hardwood mahogany frame with heavy fabric that doesn’t fray. Finished and delivered right on time to my apartment near Soweto.',
+    comment:
+      'Solid hardwood mahogany frame with heavy fabric that doesn’t fray. Finished and delivered right on time to my apartment near Soweto.',
     businessResponse: {
       respondedBy: 'Fundi Kanyi (Master Craftsman)',
       responseDate: '2026-08-22',
-      message: 'Thank you Dennis! We take pride in real treated wood construction that lasts decades. Enjoy your living room set!'
+      message: 'Thank you Dennis! We take pride in real treated wood construction that lasts decades. Enjoy your living room set!',
     },
     created_at: '2026-08-20T11:15:00Z',
   },
-  {
-    id: 'fb-seed-04',
-    businessId: 'kw-biz-02',
-    businessName: 'St. Francis 24/7 Chemist & Diagnostic Clinic',
-    authorName: 'Mama Stacy',
-    serviceOrProduct: 'Prescription Antibiotics & Child Blood Pressure Check',
-    experience: 'Better',
-    rating: 5,
-    tags: ['Verified Resident', 'Better'],
-    comment: 'Opened promptly at 11 PM during an emergency. The pharmacist explained the dosage clearly and was very patient with my sick daughter.',
-    created_at: '2026-08-28T23:10:00Z',
-  }
 ];
 
 export const saveCommunityFeedback = async (feedback: CommunityFeedback): Promise<boolean> => {
   try {
-    if (supabase && isSupabaseConfigured) {
-      await supabase.from('feedback').insert([feedback]);
-    }
+    await saveFeedbackToFirestore(feedback);
     const existing: CommunityFeedback[] = JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY) || '[]');
     existing.unshift(feedback);
     localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(existing));
@@ -767,10 +688,13 @@ export const getStoredFeedback = (businessId?: string): CommunityFeedback[] => {
   }
 };
 
+// ----------------------------------------------------
+// APPLICATIONS MANAGEMENT (Shop Listings via Firebase)
+// ----------------------------------------------------
 export const saveBusinessApplication = async (
   app: BusinessApplication
 ): Promise<{ success: boolean; error?: string; remoteSynced?: boolean; id?: string }> => {
-  const rateLimit = checkActionRateLimit('application', 3);
+  const rateLimit = checkActionRateLimit('application', 10);
   if (!rateLimit.allowed) {
     return { success: false, error: rateLimit.message, remoteSynced: false };
   }
@@ -780,54 +704,30 @@ export const saveBusinessApplication = async (
   try {
     const appWithId: BusinessApplication = {
       ...app,
-      id: app.id || `app-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      id: app.id || `app-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       status: 'pending',
     };
 
-    if (supabase && isSupabaseConfigured) {
-      const { data, error } = await supabase.from('applications').insert([
-        {
-          name: appWithId.name,
-          category: appWithId.category,
-          operation_type: appWithId.operationType || null,
-          zone: appWithId.zone,
-          landmark: appWithId.landmark,
-          phone: appWithId.phone,
-          whatsapp: appWithId.whatsapp || null,
-          email: appWithId.email || null,
-          description: appWithId.description,
-          services: appWithId.services || [],
-          mpesa_type: appWithId.mpesaType || null,
-          mpesa_number: appWithId.mpesaNumber || null,
-          hero_image: appWithId.heroImage || null,
-          gallery_images: appWithId.galleryImages || [],
-          applicant_name: appWithId.applicantName,
-          applicant_phone: appWithId.applicantPhone,
-          applicant_role: appWithId.applicantRole,
-          notes: appWithId.notes || (appWithId.merchantPin ? `[PIN: ${appWithId.merchantPin}]` : null),
-          status: 'pending',
-          created_at: appWithId.created_at || new Date().toISOString(),
-        }
-      ]).select('id').single();
-
-      if (error) {
-        logSupabaseWarning('application insert', error);
-        remoteError = error.message;
-      } else {
+    // Save directly to Firebase Firestore
+    try {
+      const res = await saveApplicationToFirestore(appWithId);
+      if (res && res.id) {
+        appWithId.id = res.id;
         remoteSynced = true;
-        if (data?.id) {
-          appWithId.id = data.id;
-        }
       }
+    } catch (fbErr: any) {
+      console.warn('Firebase save application fallback:', fbErr);
+      remoteError = fbErr.message;
     }
 
-    const existing: BusinessApplication[] = JSON.parse(localStorage.getItem(APPLICATIONS_STORAGE_KEY) || '[]');
+    const existing: BusinessApplication[] = JSON.parse(
+      localStorage.getItem(APPLICATIONS_STORAGE_KEY) || '[]'
+    );
     const filtered = existing.filter((a) => a.id !== appWithId.id);
     filtered.unshift(appWithId);
     localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(filtered));
 
     recordActionRateLimit('application');
-
     window.dispatchEvent(new CustomEvent('kwest_applications_updated', { detail: filtered }));
 
     return { success: true, remoteSynced, error: remoteError, id: appWithId.id };
@@ -845,7 +745,9 @@ export const getStoredApplications = (): BusinessApplication[] => {
   }
 };
 
-export const fetchApplicationsFromSupabase = async (forceRefresh = false): Promise<BusinessApplication[] | null> => {
+export const fetchApplicationsFromSupabase = async (
+  forceRefresh = false
+): Promise<BusinessApplication[] | null> => {
   try {
     if (!forceRefresh) {
       try {
@@ -862,52 +764,31 @@ export const fetchApplicationsFromSupabase = async (forceRefresh = false): Promi
 
     inFlightAppsPromise = (async () => {
       try {
-        if (!supabase || !isSupabaseConfigured) return null;
-        const { data, error } = await supabase
-          .from('applications')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const fbApps = await fetchApplicationsFromFirestore();
 
-        if (error || !data) {
-          if (error) logSupabaseWarning('fetch applications', error);
-          try {
-            const cachedData = localStorage.getItem(CACHE_KEYS.APPLICATIONS_DATA);
-            if (cachedData) return JSON.parse(cachedData);
-          } catch {}
-          return null;
-        }
+        // Merge with locally stored applications so nothing is lost
+        const local = getStoredApplications();
+        const mergedMap = new Map<string, BusinessApplication>();
+        (fbApps || []).forEach((a) => mergedMap.set(a.id, a));
+        local.forEach((a) => {
+          if (!mergedMap.has(a.id)) {
+            mergedMap.set(a.id, a);
+          }
+        });
 
-        const mapped: BusinessApplication[] = data.map((row: any): BusinessApplication => ({
-          id: row.id,
-          name: row.name,
-          category: row.category,
-          operationType: row.operation_type,
-          zone: row.zone,
-          landmark: row.landmark,
-          phone: row.phone,
-          whatsapp: row.whatsapp,
-          email: row.email,
-          description: row.description,
-          services: Array.isArray(row.services) ? row.services : [],
-          mpesaType: row.mpesa_type,
-          mpesaNumber: row.mpesa_number,
-          heroImage: row.hero_image,
-          galleryImages: Array.isArray(row.gallery_images) ? row.gallery_images : [],
-          applicantName: row.applicant_name,
-          applicantPhone: row.applicant_phone,
-          applicantRole: row.applicant_role,
-          notes: row.notes,
-          status: row.status || 'pending',
-          created_at: row.created_at,
-        }));
-
+        const result = Array.from(mergedMap.values());
         try {
-          localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(mapped));
-          localStorage.setItem(CACHE_KEYS.APPLICATIONS_DATA, JSON.stringify(mapped));
+          localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(result));
+          localStorage.setItem(CACHE_KEYS.APPLICATIONS_DATA, JSON.stringify(result));
           localStorage.setItem(CACHE_KEYS.APPLICATIONS_TIME, String(Date.now()));
         } catch {}
 
-        return mapped;
+        return result;
+      } catch (fbErr) {
+        console.warn('Firebase fetch applications fallback to local storage:', fbErr);
+        const cachedData = localStorage.getItem(CACHE_KEYS.APPLICATIONS_DATA);
+        if (cachedData) return JSON.parse(cachedData);
+        return getStoredApplications();
       } finally {
         inFlightAppsPromise = null;
       }
@@ -916,8 +797,7 @@ export const fetchApplicationsFromSupabase = async (forceRefresh = false): Promi
     return inFlightAppsPromise;
   } catch (err) {
     inFlightAppsPromise = null;
-    logSupabaseWarning('fetch applications', err);
-    return null;
+    return getStoredApplications();
   }
 };
 
@@ -927,83 +807,43 @@ export const updateApplicationStatusInSupabase = async (
   notes?: string
 ): Promise<boolean> => {
   try {
-    if (supabase && isSupabaseConfigured) {
-      let query = supabase.from('applications').update({ status, ...(notes ? { notes } : {}) });
-      if (isUuid(appId)) {
-        query = query.eq('id', appId);
-      } else {
-        query = query.eq('id', appId);
-      }
-      const { error } = await query;
-      if (error) logSupabaseWarning('update application', error);
-    }
+    await updateApplicationInFirestore(appId, { status, ...(notes ? { notes } : {}) });
+
     const existing = getStoredApplications();
-    const updated = existing.map((a) =>
-      a.id === appId ? { ...a, status, ...(notes ? { notes } : {}) } : a
-    );
+    const updated = existing.map((a) => (a.id === appId ? { ...a, status, ...(notes ? { notes } : {}) } : a));
     localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('kwest_applications_updated', { detail: updated }));
     return true;
   } catch (err) {
-    console.warn('Failed to update application status:', err);
+    console.warn('Failed to update application status in Firebase:', err);
     return false;
   }
 };
 
 export const deleteApplicationFromSupabase = async (appId: string): Promise<boolean> => {
   try {
-    if (supabase && isSupabaseConfigured) {
-      if (isUuid(appId)) {
-        await supabase.from('applications').delete().eq('id', appId);
-      }
-    }
+    await deleteApplicationFromFirestore(appId);
+
     const existing = getStoredApplications();
     const updated = existing.filter((a) => a.id !== appId);
     localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('kwest_applications_updated', { detail: updated }));
     return true;
   } catch (err) {
-    console.warn('Failed to delete application:', err);
+    console.warn('Failed to delete application from Firebase:', err);
     return false;
   }
 };
 
+// ----------------------------------------------------
+// COMMUNITY STORIES (Firebase Firestore)
+// ----------------------------------------------------
 export const syncStoryToSupabase = async (story: CommunityStory): Promise<boolean> => {
   try {
-    if (supabase && isSupabaseConfigured) {
-      const { error } = await supabase.from('community_stories').upsert([
-        {
-          id: story.id,
-          title: story.title,
-          subtitle: story.subtitle || null,
-          category: story.category,
-          zone: story.zone,
-          content: story.content,
-          excerpt: story.excerpt || null,
-          image_url: story.imageUrl || null,
-          image_caption: story.imageCaption || null,
-          is_real_photo_confirmed: story.isRealPhotoConfirmed ?? true,
-          author_name: story.authorName,
-          author_role: story.authorRole,
-          author_email: story.authorEmail,
-          author_phone: story.authorPhone,
-          date: story.date || new Date().toISOString().split('T')[0],
-          read_time_minutes: story.readTimeMinutes || 3,
-          featured: story.featured || false,
-          status: story.status || 'pending_review',
-          rejection_reason: story.rejectionReason || null,
-          likes: story.likes || 0,
-        },
-      ]);
-      if (error) {
-        logSupabaseWarning('community story sync', error);
-        return false;
-      }
-      return true;
-    }
-    return false;
+    await saveStoryToFirestore(story);
+    return true;
   } catch (err) {
-    console.warn('Supabase community story sync error:', err);
+    console.warn('Firebase community story sync error:', err);
     return false;
   }
 };
@@ -1031,7 +871,7 @@ export const fetchStoriesFromSupabase = async (forceRefresh = false): Promise<Co
         const cachedData = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
         if (cachedTime && cachedData && Date.now() - Number(cachedTime) < SUPABASE_CACHE_TTL_MS) {
           const parsed = JSON.parse(cachedData);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed)) return parsed;
         }
       } catch {}
     }
@@ -1040,22 +880,9 @@ export const fetchStoriesFromSupabase = async (forceRefresh = false): Promise<Co
 
     inFlightStoriesPromise = (async () => {
       try {
-        if (!supabase || !isSupabaseConfigured) return null;
-        const { data, error } = await supabase
-          .from('community_stories')
-          .select('*')
-          .order('date', { ascending: false });
+        const data = await fetchStoriesFromFirestore();
 
-        if (error || !data) {
-          if (error) logSupabaseWarning('fetch stories', error);
-          try {
-            const cachedData = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
-            if (cachedData) return JSON.parse(cachedData);
-          } catch {}
-          return null;
-        }
-
-        const mapped: CommunityStory[] = data
+        const mapped: CommunityStory[] = (data || [])
           .filter(
             (row: any) =>
               !row.id.startsWith('test-') &&
@@ -1070,25 +897,25 @@ export const fetchStoriesFromSupabase = async (forceRefresh = false): Promise<Co
           )
           .map((row: any): CommunityStory => ({
             id: row.id,
-            slug: row.slug || (row.id === 'story-1788450086647' || row.id === 'story-1788342289836' ? 'kahawa-pride-fc' : row.id),
+            slug: row.slug || row.id,
             title: row.title,
             subtitle: row.subtitle,
             category: row.category,
             zone: row.zone,
             content: row.content,
             excerpt: row.excerpt || row.content.slice(0, 160) + '...',
-            imageUrl: row.image_url,
-            imageCaption: row.image_caption,
-            isRealPhotoConfirmed: Boolean(row.is_real_photo_confirmed),
-            authorName: row.author_name,
-            authorRole: row.author_role,
-            authorEmail: row.author_email,
-            authorPhone: row.author_phone,
+            imageUrl: row.imageUrl || row.image_url,
+            imageCaption: row.imageCaption || row.image_caption,
+            isRealPhotoConfirmed: Boolean(row.isRealPhotoConfirmed ?? row.is_real_photo_confirmed),
+            authorName: row.authorName || row.author_name,
+            authorRole: row.authorRole || row.author_role,
+            authorEmail: row.authorEmail || row.author_email,
+            authorPhone: row.authorPhone || row.author_phone,
             date: row.date,
-            readTimeMinutes: row.read_time_minutes || 3,
+            readTimeMinutes: row.readTimeMinutes || row.read_time_minutes || 3,
             featured: Boolean(row.featured),
             status: normalizeContentStatus(row.status),
-            rejectionReason: row.rejection_reason,
+            rejectionReason: row.rejectionReason || row.rejection_reason,
             likes: row.likes || 0,
           }));
 
@@ -1098,6 +925,11 @@ export const fetchStoriesFromSupabase = async (forceRefresh = false): Promise<Co
         } catch {}
 
         return mapped;
+      } catch (fbErr) {
+        console.warn('Firebase fetch stories fallback:', fbErr);
+        const cachedData = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
+        if (cachedData) return JSON.parse(cachedData);
+        return null;
       } finally {
         inFlightStoriesPromise = null;
       }
@@ -1106,19 +938,14 @@ export const fetchStoriesFromSupabase = async (forceRefresh = false): Promise<Co
     return inFlightStoriesPromise;
   } catch (err) {
     inFlightStoriesPromise = null;
-    logSupabaseWarning('fetch stories', err);
     return null;
   }
 };
 
 export const deleteStoryFromSupabase = async (storyId: string): Promise<boolean> => {
   try {
-    if (supabase && isSupabaseConfigured) {
-      const { error } = await supabase.from('community_stories').delete().eq('id', storyId);
-      if (error) console.warn('Supabase delete story warning:', error.message);
-    }
+    await deleteStoryFromFirestore(storyId);
 
-    // Immediately remove from the 30-min local cache in localStorage so it can never resurrect
     try {
       const cached = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
       if (cached) {
@@ -1130,71 +957,20 @@ export const deleteStoryFromSupabase = async (storyId: string): Promise<boolean>
 
     return true;
   } catch (err) {
-    console.warn('Supabase delete story error:', err);
+    console.warn('Firebase delete story error:', err);
     return false;
   }
 };
 
-export const deleteUpdateFromSupabase = async (updateId: string): Promise<boolean> => {
-  try {
-    if (supabase && isSupabaseConfigured) {
-      const { error } = await supabase.from('community_updates').delete().eq('id', updateId);
-      if (error) console.warn('Supabase delete update warning:', error.message);
-    }
-
-    // Immediately remove from the 30-min local cache in localStorage so it can never resurrect
-    try {
-      const cached = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
-      if (cached) {
-        const list: CommunityUpdate[] = JSON.parse(cached);
-        const filtered = list.filter((u) => u.id !== updateId);
-        localStorage.setItem(CACHE_KEYS.UPDATES_DATA, JSON.stringify(filtered));
-      }
-    } catch {}
-
-    return true;
-  } catch (err) {
-    console.warn('Supabase delete update error:', err);
-    return false;
-  }
-};
-
+// ----------------------------------------------------
+// COMMUNITY UPDATES (Firebase Firestore)
+// ----------------------------------------------------
 export const syncUpdateToSupabase = async (update: CommunityUpdate): Promise<boolean> => {
   try {
-    if (supabase && isSupabaseConfigured) {
-      const { error } = await supabase.from('community_updates').upsert([
-        {
-          id: update.id,
-          title: update.title,
-          type: update.type,
-          time_info: update.timeInfo,
-          location: update.location,
-          zone: update.zone || null,
-          content: update.content,
-          author: update.author,
-          author_phone: update.authorPhone || null,
-          author_email: update.authorEmail || null,
-          author_role: update.authorRole || null,
-          contact: update.contact || null,
-          badge: update.badge || null,
-          image_url: update.imageUrl || null,
-          image_caption: update.imageCaption || null,
-          is_accountability_confirmed: update.isAccountabilityConfirmed ?? true,
-          urgency_level: update.urgencyLevel || 'standard',
-          date: update.date || new Date().toISOString().split('T')[0],
-          status: update.status || 'pending_review',
-          rejection_reason: update.rejectionReason || null,
-        },
-      ]);
-      if (error) {
-        logSupabaseWarning('community update sync', error);
-        return false;
-      }
-      return true;
-    }
-    return false;
+    await saveUpdateToFirestore(update);
+    return true;
   } catch (err) {
-    console.warn('Supabase community update sync error:', err);
+    console.warn('Firebase community update sync error:', err);
     return false;
   }
 };
@@ -1207,7 +983,7 @@ export const fetchUpdatesFromSupabase = async (forceRefresh = false): Promise<Co
         const cachedData = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
         if (cachedTime && cachedData && Date.now() - Number(cachedTime) < SUPABASE_CACHE_TTL_MS) {
           const parsed = JSON.parse(cachedData);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed)) return parsed;
         }
       } catch {}
     }
@@ -1216,22 +992,9 @@ export const fetchUpdatesFromSupabase = async (forceRefresh = false): Promise<Co
 
     inFlightUpdatesPromise = (async () => {
       try {
-        if (!supabase || !isSupabaseConfigured) return null;
-        const { data, error } = await supabase
-          .from('community_updates')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const data = await fetchUpdatesFromFirestore();
 
-        if (error || !data) {
-          if (error) logSupabaseWarning('fetch updates', error);
-          try {
-            const cachedData = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
-            if (cachedData) return JSON.parse(cachedData);
-          } catch {}
-          return null;
-        }
-
-        const mapped: CommunityUpdate[] = data
+        const mapped: CommunityUpdate[] = (data || [])
           .filter(
             (row: any) =>
               !row.id.startsWith('test-') &&
@@ -1246,23 +1009,23 @@ export const fetchUpdatesFromSupabase = async (forceRefresh = false): Promise<Co
             id: row.id,
             type: row.type || (row.id === 'up-iebc-voter-reg-2026' ? 'business' : 'community'),
             title: row.title,
-            timeInfo: row.time_info || row.date,
+            timeInfo: row.timeInfo || row.time_info || row.date,
             location: row.location || 'Kahawa West',
             zone: row.zone,
             content: row.content,
             author: row.author,
-            authorPhone: row.author_phone,
-            authorEmail: row.author_email,
-            authorRole: row.author_role || (row.id === 'up-iebc-voter-reg-2026' ? 'Local Resident / Neighbor' : undefined),
-            contact: row.contact || row.author_phone || (row.id === 'up-iebc-voter-reg-2026' ? '0764405842' : undefined),
-            badge: row.badge || (row.id === 'up-iebc-voter-reg-2026' ? 'Public Notice' : undefined),
-            imageUrl: row.image_url || (row.id === 'up-iebc-voter-reg-2026' ? '/iebc-logo.png' : undefined),
-            imageCaption: row.image_caption || (row.id === 'up-iebc-voter-reg-2026' ? 'Independent Electoral and Boundaries Commission (IEBC) voter registration notice' : undefined),
-            isAccountabilityConfirmed: row.is_accountability_confirmed ?? true,
-            urgencyLevel: row.urgency_level || 'standard',
+            authorPhone: row.authorPhone || row.author_phone,
+            authorEmail: row.authorEmail || row.author_email,
+            authorRole: row.authorRole || row.author_role,
+            contact: row.contact,
+            badge: row.badge,
+            imageUrl: row.imageUrl || row.image_url,
+            imageCaption: row.imageCaption || row.image_caption,
+            isAccountabilityConfirmed: Boolean(row.isAccountabilityConfirmed ?? row.is_accountability_confirmed),
+            urgencyLevel: row.urgencyLevel || row.urgency_level || 'standard',
             date: row.date,
             status: normalizeContentStatus(row.status),
-            rejectionReason: row.rejection_reason,
+            rejectionReason: row.rejectionReason || row.rejection_reason,
           }));
 
         try {
@@ -1271,6 +1034,11 @@ export const fetchUpdatesFromSupabase = async (forceRefresh = false): Promise<Co
         } catch {}
 
         return mapped;
+      } catch (fbErr) {
+        console.warn('Firebase fetch updates fallback:', fbErr);
+        const cachedData = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
+        if (cachedData) return JSON.parse(cachedData);
+        return null;
       } finally {
         inFlightUpdatesPromise = null;
       }
@@ -1279,11 +1047,33 @@ export const fetchUpdatesFromSupabase = async (forceRefresh = false): Promise<Co
     return inFlightUpdatesPromise;
   } catch (err) {
     inFlightUpdatesPromise = null;
-    logSupabaseWarning('fetch updates', err);
     return null;
   }
 };
 
+export const deleteUpdateFromSupabase = async (updateId: string): Promise<boolean> => {
+  try {
+    await deleteUpdateFromFirestore(updateId);
+
+    try {
+      const cached = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
+      if (cached) {
+        const list: CommunityUpdate[] = JSON.parse(cached);
+        const filtered = list.filter((u) => u.id !== updateId);
+        localStorage.setItem(CACHE_KEYS.UPDATES_DATA, JSON.stringify(filtered));
+      }
+    } catch {}
+
+    return true;
+  } catch (err) {
+    console.warn('Firebase delete update error:', err);
+    return false;
+  }
+};
+
+// ----------------------------------------------------
+// SYNC STATUS TEST REPORT (Tests Google Firebase Firestore)
+// ----------------------------------------------------
 export interface SupabaseSyncReport {
   connected: boolean;
   storiesTableAccessible: boolean;
@@ -1297,7 +1087,19 @@ export interface SupabaseSyncReport {
 }
 
 export const testSupabaseSyncStatus = async (): Promise<SupabaseSyncReport> => {
-  if (!supabase || !isSupabaseConfigured) {
+  try {
+    const fbReport: FirebaseSyncReport = await testFirebaseSyncStatus();
+    return {
+      connected: fbReport.connected,
+      storiesTableAccessible: fbReport.storiesTableAccessible,
+      updatesTableAccessible: fbReport.updatesTableAccessible,
+      businessesTableAccessible: fbReport.businessesTableAccessible,
+      claimsTableAccessible: fbReport.claimsTableAccessible,
+      applicationsTableAccessible: fbReport.applicationsTableAccessible,
+      businessesInsertable: fbReport.businessesInsertable,
+      message: fbReport.message,
+    };
+  } catch (err: any) {
     return {
       connected: false,
       storiesTableAccessible: false,
@@ -1306,84 +1108,7 @@ export const testSupabaseSyncStatus = async (): Promise<SupabaseSyncReport> => {
       claimsTableAccessible: false,
       applicationsTableAccessible: false,
       businessesInsertable: false,
-      message: 'Supabase credentials are not configured.',
+      message: `Firebase Sync Status check: ${err?.message || err}`,
     };
   }
-
-  let storiesTableAccessible = false;
-  let updatesTableAccessible = false;
-  let businessesTableAccessible = false;
-  let claimsTableAccessible = false;
-  let applicationsTableAccessible = false;
-  let businessesInsertable = false;
-  let errorMessages: string[] = [];
-
-  // 1. Test stories SELECT
-  const storiesCheck = await supabase.from('community_stories').select('id').limit(1);
-  if (!storiesCheck.error) {
-    storiesTableAccessible = true;
-  } else {
-    errorMessages.push(`Stories: ${storiesCheck.error.message}`);
-  }
-
-  // 2. Test updates SELECT
-  const updatesCheck = await supabase.from('community_updates').select('id').limit(1);
-  if (!updatesCheck.error) {
-    updatesTableAccessible = true;
-  } else {
-    errorMessages.push(`Updates: ${updatesCheck.error.message}`);
-  }
-
-  // 3. Test businesses SELECT
-  const bizCheck = await supabase.from('businesses').select('id').limit(1);
-  if (!bizCheck.error) {
-    businessesTableAccessible = true;
-  } else {
-    errorMessages.push(`Businesses: ${bizCheck.error.message}`);
-  }
-
-  // 4. Test claims SELECT
-  const claimsCheck = await supabase.from('claims').select('id').limit(1);
-  if (!claimsCheck.error) {
-    claimsTableAccessible = true;
-  } else {
-    errorMessages.push(`Claims: ${claimsCheck.error.message}`);
-  }
-
-  // 5. Test applications SELECT
-  const appsCheck = await supabase.from('applications').select('id').limit(1);
-  if (!appsCheck.error) {
-    applicationsTableAccessible = true;
-  } else {
-    errorMessages.push(`Applications: ${appsCheck.error.message}`);
-  }
-
-  const isEgressBlocked = errorMessages.some(
-    (msg) => msg.includes('exceed_egress_quota') || msg.includes('restricted') || msg.includes('spend caps')
-  );
-
-  if (isEgressBlocked) {
-    return {
-      connected: true,
-      storiesTableAccessible: false,
-      updatesTableAccessible: false,
-      businessesTableAccessible: false,
-      claimsTableAccessible: false,
-      applicationsTableAccessible: false,
-      businessesInsertable: false,
-      message: 'Supabase Free Tier 5GB monthly egress quota reached for project wfsqnhujjqldcxnhnzvf. The KWEST directory is running seamlessly on its fast local storage & static cache without interruption. To restore live remote database sync, remove spend caps or upgrade your plan in your Supabase dashboard.',
-    };
-  }
-
-  return {
-    connected: true,
-    storiesTableAccessible,
-    updatesTableAccessible,
-    businessesTableAccessible,
-    claimsTableAccessible,
-    applicationsTableAccessible,
-    businessesInsertable,
-    message: errorMessages.length > 0 ? errorMessages.join(' | ') : 'All tables accessible and syncing.',
-  };
 };
-

@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Default deny all unknown collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Connection test document
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+
+    // Businesses collection
+    match /businesses/{businessId} {
+      allow read: if true;
+      allow create: if isValidId(businessId) &&
+        incoming().name is string && incoming().name.size() <= 200 &&
+        incoming().category is string && incoming().category.size() <= 100 &&
+        incoming().phone is string && incoming().phone.size() <= 50;
+      allow update: if isValidId(businessId) &&
+        incoming().name is string && incoming().name.size() <= 200;
+      allow delete: if isValidId(businessId);
+    }
+
+    // Merchant Claims collection
+    match /claims/{claimId} {
+      allow read: if true;
+      allow create: if isValidId(claimId) &&
+        incoming().business_id is string && incoming().business_id.size() <= 128 &&
+        incoming().full_name is string && incoming().full_name.size() <= 150 &&
+        incoming().phone_number is string && incoming().phone_number.size() <= 50;
+      allow update: if isValidId(claimId);
+      allow delete: if isValidId(claimId);
+    }
+
+    // Business Applications collection
+    match /applications/{applicationId} {
+      allow read: if true;
+      allow create: if isValidId(applicationId) &&
+        incoming().name is string && incoming().name.size() <= 200 &&
+        incoming().category is string && incoming().category.size() <= 100 &&
+        incoming().phone is string && incoming().phone.size() <= 50 &&
+        incoming().applicantName is string && incoming().applicantName.size() <= 150;
+      allow update: if isValidId(applicationId);
+      allow delete: if isValidId(applicationId);
+    }
+
+    // Community Stories collection
+    match /community_stories/{storyId} {
+      allow read: if true;
+      allow create: if isValidId(storyId) &&
+        incoming().title is string && incoming().title.size() <= 250 &&
+        incoming().content is string && incoming().content.size() <= 25000;
+      allow update: if isValidId(storyId);
+      allow delete: if isValidId(storyId);
+    }
+
+    // Community Updates collection
+    match /community_updates/{updateId} {
+      allow read: if true;
+      allow create: if isValidId(updateId) &&
+        incoming().title is string && incoming().title.size() <= 250 &&
+        incoming().content is string && incoming().content.size() <= 15000;
+      allow update: if isValidId(updateId);
+      allow delete: if isValidId(updateId);
+    }
+
+    // Feedback collection
+    match /feedback/{feedbackId} {
+      allow read: if true;
+      allow create: if isValidId(feedbackId) &&
+        incoming().businessId is string && incoming().businessId.size() <= 128 &&
+        incoming().rating is number && incoming().rating >= 1 && incoming().rating <= 5 &&
+        incoming().comment is string && incoming().comment.size() <= 3000;
+      allow update: if isValidId(feedbackId);
+      allow delete: if isValidId(feedbackId);
+    }
+  }
+}

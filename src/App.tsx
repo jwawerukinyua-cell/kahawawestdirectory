@@ -62,6 +62,8 @@ import {
   deleteApplicationFromSupabase,
   fetchBusinessesFromSupabase,
   generateBusinessSlug,
+  subscribeToApplications,
+  subscribeToClaims,
   supabase,
   isSupabaseConfigured,
   PURGED_TEST_BUSINESS_IDS,
@@ -563,38 +565,43 @@ export default function App() {
     }
   }, [isEditorialReviewOpen, refreshCloudData]);
 
-  // Realtime multi-device subscription to Supabase changes
+  // Realtime multi-device subscription to Google Firebase Firestore changes
   useEffect(() => {
-    if (!supabase || !isSupabaseConfigured) return;
-    try {
-      const channel = supabase
-        .channel('public:realtime-kwest-changes')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'applications' },
-          () => {
-            fetchApplicationsFromSupabase().then((remoteApps) => {
-              if (remoteApps !== null) setApplications(remoteApps);
-            });
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'claims' },
-          () => {
-            fetchClaimsFromSupabase().then((remoteClaims) => {
-              if (remoteClaims !== null) setClaims(remoteClaims);
-            });
-          }
-        )
-        .subscribe();
+    let unsubApps: (() => void) | undefined;
+    let unsubClaims: (() => void) | undefined;
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
+    try {
+      unsubApps = subscribeToApplications((remoteApps) => {
+        if (Array.isArray(remoteApps) && remoteApps.length > 0) {
+          setApplications(remoteApps);
+        }
+      });
     } catch (err) {
-      console.warn('Realtime channel error:', err);
+      console.warn('Realtime Firebase applications subscription notice:', err);
     }
+
+    try {
+      unsubClaims = subscribeToClaims((remoteClaims) => {
+        if (Array.isArray(remoteClaims)) {
+          setClaims(
+            remoteClaims.filter(
+              (c) =>
+                !PURGED_CLAIM_IDS.has(c.id || '') &&
+                !PURGED_CLAIM_IDS.has(c.business_id) &&
+                (c.status as string) !== 'rejected' &&
+                (c.status as string) !== 'archived'
+            )
+          );
+        }
+      });
+    } catch (err) {
+      console.warn('Realtime Firebase claims subscription notice:', err);
+    }
+
+    return () => {
+      if (unsubApps) unsubApps();
+      if (unsubClaims) unsubClaims();
+    };
   }, []);
 
   // 3b. Businesses with active special resident offers

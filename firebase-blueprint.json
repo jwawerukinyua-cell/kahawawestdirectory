@@ -1,0 +1,182 @@
+{
+  "entities": {
+    "business": {
+      "title": "Business Listing",
+      "description": "A verified or community business listed in Kahawa West Directory",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "slug": { "type": "string", "maxLength": 150 },
+        "name": { "type": "string", "maxLength": 200 },
+        "tagline": { "type": "string", "maxLength": 300 },
+        "category": { "type": "string", "maxLength": 100 },
+        "subCategory": { "type": "string", "maxLength": 100 },
+        "zone": { "type": "string", "maxLength": 100 },
+        "landmark": { "type": "string", "maxLength": 200 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "whatsapp": { "type": "string", "maxLength": 50 },
+        "email": { "type": "string", "maxLength": 150 },
+        "isVerified": { "type": "boolean" },
+        "isClaimed": { "type": "boolean" },
+        "claimedBy": { "type": "string", "maxLength": 150 },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "priceLevel": { "type": "string", "maxLength": 50 },
+        "heroImage": { "type": "string", "maxLength": 2048 },
+        "description": { "type": "string", "maxLength": 5000 },
+        "mpesa": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "maxLength": 100 },
+        "updatedAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["id", "name", "category", "zone", "phone"]
+    },
+    "claim": {
+      "title": "Business Claim",
+      "description": "A merchant claim requesting verification of a business listing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "business_id": { "type": "string", "maxLength": 128 },
+        "business_name": { "type": "string", "maxLength": 200 },
+        "full_name": { "type": "string", "maxLength": 150 },
+        "phone_number": { "type": "string", "maxLength": 50 },
+        "whatsapp_number": { "type": "string", "maxLength": 50 },
+        "email": { "type": "string", "maxLength": 150 },
+        "business_role": { "type": "string", "maxLength": 100 },
+        "national_id": { "type": "string", "maxLength": 50 },
+        "notes": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "maxLength": 50 },
+        "created_at": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["business_id", "full_name", "phone_number", "email", "business_role"]
+    },
+    "application": {
+      "title": "Business Application",
+      "description": "A new business listing application submitted by a business owner",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 100 },
+        "operationType": { "type": "string", "maxLength": 100 },
+        "zone": { "type": "string", "maxLength": 100 },
+        "landmark": { "type": "string", "maxLength": 200 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "whatsapp": { "type": "string", "maxLength": 50 },
+        "email": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 5000 },
+        "mpesaType": { "type": "string", "maxLength": 50 },
+        "mpesaNumber": { "type": "string", "maxLength": 100 },
+        "heroImage": { "type": "string", "maxLength": 2048 },
+        "applicantName": { "type": "string", "maxLength": 150 },
+        "applicantPhone": { "type": "string", "maxLength": 50 },
+        "applicantRole": { "type": "string", "maxLength": 100 },
+        "notes": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "maxLength": 50 },
+        "created_at": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["name", "category", "zone", "phone", "description", "applicantName", "applicantPhone"]
+    },
+    "communityStory": {
+      "title": "Community Story",
+      "description": "Local neighborhood spotlights, business features, and resident stories",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "slug": { "type": "string", "maxLength": 200 },
+        "title": { "type": "string", "maxLength": 250 },
+        "subtitle": { "type": "string", "maxLength": 300 },
+        "category": { "type": "string", "maxLength": 100 },
+        "zone": { "type": "string", "maxLength": 100 },
+        "content": { "type": "string", "maxLength": 20000 },
+        "excerpt": { "type": "string", "maxLength": 500 },
+        "imageUrl": { "type": "string", "maxLength": 2048 },
+        "imageCaption": { "type": "string", "maxLength": 500 },
+        "isRealPhotoConfirmed": { "type": "boolean" },
+        "authorName": { "type": "string", "maxLength": 150 },
+        "authorRole": { "type": "string", "maxLength": 100 },
+        "authorEmail": { "type": "string", "maxLength": 150 },
+        "authorPhone": { "type": "string", "maxLength": 50 },
+        "date": { "type": "string", "maxLength": 100 },
+        "readTimeMinutes": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "status": { "type": "string", "maxLength": 50 },
+        "rejectionReason": { "type": "string", "maxLength": 1000 },
+        "likes": { "type": "number" }
+      },
+      "required": ["id", "title", "content", "category", "authorName"]
+    },
+    "communityUpdate": {
+      "title": "Community Update",
+      "description": "Neighborhood bulletin notices, alerts, and utility updates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "maxLength": 50 },
+        "title": { "type": "string", "maxLength": 250 },
+        "timeInfo": { "type": "string", "maxLength": 150 },
+        "location": { "type": "string", "maxLength": 200 },
+        "zone": { "type": "string", "maxLength": 100 },
+        "content": { "type": "string", "maxLength": 10000 },
+        "author": { "type": "string", "maxLength": 150 },
+        "authorPhone": { "type": "string", "maxLength": 50 },
+        "authorEmail": { "type": "string", "maxLength": 150 },
+        "authorRole": { "type": "string", "maxLength": 100 },
+        "contact": { "type": "string", "maxLength": 100 },
+        "badge": { "type": "string", "maxLength": 100 },
+        "imageUrl": { "type": "string", "maxLength": 2048 },
+        "imageCaption": { "type": "string", "maxLength": 500 },
+        "isAccountabilityConfirmed": { "type": "boolean" },
+        "urgencyLevel": { "type": "string", "maxLength": 50 },
+        "date": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "maxLength": 50 },
+        "rejectionReason": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["id", "title", "content", "author"]
+    },
+    "communityFeedback": {
+      "title": "Community Feedback",
+      "description": "Customer reviews and feedback for businesses in Kahawa West",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "businessId": { "type": "string", "maxLength": 128 },
+        "businessName": { "type": "string", "maxLength": 200 },
+        "authorName": { "type": "string", "maxLength": 150 },
+        "serviceOrProduct": { "type": "string", "maxLength": 200 },
+        "experience": { "type": "string", "maxLength": 100 },
+        "rating": { "type": "number" },
+        "comment": { "type": "string", "maxLength": 3000 },
+        "created_at": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["businessId", "authorName", "rating", "comment"]
+    }
+  },
+  "firestore": {
+    "/businesses/{businessId}": {
+      "schema": "business",
+      "description": "Verified directory listings in Kahawa West"
+    },
+    "/claims/{claimId}": {
+      "schema": "claim",
+      "description": "Verification claims submitted by local shopkeepers and business owners"
+    },
+    "/applications/{applicationId}": {
+      "schema": "application",
+      "description": "New business registration applications submitted for directory review"
+    },
+    "/community_stories/{storyId}": {
+      "schema": "communityStory",
+      "description": "Editorial spotlights and neighborhood features"
+    },
+    "/community_updates/{updateId}": {
+      "schema": "communityUpdate",
+      "description": "Community alerts, security notices, and public notices"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "communityFeedback",
+      "description": "Resident reviews and ratings"
+    }
+  }
+}
