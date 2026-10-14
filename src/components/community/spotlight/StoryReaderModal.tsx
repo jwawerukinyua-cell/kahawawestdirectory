@@ -151,7 +151,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
       }
       try {
         setIsUploadingPhoto(true);
-        const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+        const dataUrl = await compressImageFile(file, { maxWidth: 800, maxHeight: 800, quality: 0.72 });
         setEditImageUrl(dataUrl);
       } catch (err) {
         console.error('Failed to compress story photo:', err);

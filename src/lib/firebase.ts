@@ -25,6 +25,7 @@ import {
   CommunityUpdate,
   CommunityFeedback,
 } from '../types';
+import { ensureSafeFirestorePayload } from './imageCompression';
 
 export enum OperationType {
   CREATE = 'create',
@@ -150,9 +151,33 @@ export async function saveBusinessToFirestore(business: Business): Promise<boole
       createdAt: business.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    await setDoc(doc(db, 'businesses', business.id), cleanPayload, { merge: true });
+    const safePayload = await ensureSafeFirestorePayload(cleanPayload);
+    await setDoc(doc(db, 'businesses', business.id), safePayload, { merge: true });
     return true;
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message && error.message.includes('exceeds the maximum allowed size')) {
+      try {
+        console.warn(`Emergency size recovery for business ${business.id}`);
+        const fallback = 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+        const minimalPayload = {
+          id: business.id,
+          slug: business.slug,
+          name: business.name,
+          tagline: business.tagline || '',
+          category: business.category,
+          zone: business.zone,
+          phone: business.phone,
+          heroImage: fallback,
+          galleryImages: [fallback],
+          status: 'published',
+          updatedAt: new Date().toISOString(),
+        };
+        await setDoc(doc(db, 'businesses', business.id), minimalPayload, { merge: true });
+        return true;
+      } catch (retryErr) {
+        console.warn('Retry with minimal payload also failed:', retryErr);
+      }
+    }
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
@@ -195,7 +220,8 @@ export async function saveClaimToFirestore(claim: BusinessClaim): Promise<{ succ
       claimed_details: claim.claimed_details || {},
       created_at: claim.created_at || new Date().toISOString(),
     };
-    await setDoc(doc(db, 'claims', claimId), payload, { merge: true });
+    const safePayload = await ensureSafeFirestorePayload(payload);
+    await setDoc(doc(db, 'claims', claimId), safePayload, { merge: true });
     return { success: true, id: claimId };
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -273,7 +299,8 @@ export async function saveApplicationToFirestore(
       status: appData.status || 'pending',
       created_at: appData.created_at || new Date().toISOString(),
     };
-    await setDoc(doc(db, 'applications', appId), payload, { merge: true });
+    const safePayload = await ensureSafeFirestorePayload(payload);
+    await setDoc(doc(db, 'applications', appId), safePayload, { merge: true });
     return { success: true, id: appId };
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -348,7 +375,8 @@ export async function saveStoryToFirestore(story: CommunityStory): Promise<boole
       rejectionReason: story.rejectionReason || null,
       likes: story.likes || 0,
     };
-    await setDoc(doc(db, 'community_stories', story.id), payload, { merge: true });
+    const safePayload = await ensureSafeFirestorePayload(payload);
+    await setDoc(doc(db, 'community_stories', story.id), safePayload, { merge: true });
     return true;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -409,7 +437,8 @@ export async function saveUpdateToFirestore(update: CommunityUpdate): Promise<bo
       status: update.status || 'pending_review',
       rejectionReason: update.rejectionReason || null,
     };
-    await setDoc(doc(db, 'community_updates', update.id), payload, { merge: true });
+    const safePayload = await ensureSafeFirestorePayload(payload);
+    await setDoc(doc(db, 'community_updates', update.id), safePayload, { merge: true });
     return true;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);

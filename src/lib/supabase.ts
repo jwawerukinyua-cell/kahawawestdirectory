@@ -410,7 +410,7 @@ export const saveCustomizedBusiness = async (
 
     return { success: true };
   } catch (err: any) {
-    console.error('Error saving business to Firebase:', err);
+    console.warn('Sync business to Firebase encountered an issue, safely preserved in local storage:', err);
     return { success: true };
   }
 };

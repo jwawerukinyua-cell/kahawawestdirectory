@@ -170,7 +170,7 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
     }
 
     try {
-      const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+      const dataUrl = await compressImageFile(file, { maxWidth: 800, maxHeight: 800, quality: 0.72 });
       setAdImage(dataUrl);
     } catch (err) {
       console.error('Failed to compress ad image:', err);

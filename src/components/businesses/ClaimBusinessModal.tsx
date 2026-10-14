@@ -139,7 +139,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
           alert(validation.error || 'Invalid photo format');
           continue;
         }
-        const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+        const dataUrl = await compressImageFile(file, { maxWidth: 800, maxHeight: 800, quality: 0.72 });
         updatedPhotos[i] = dataUrl;
       }
       setPhotos(updatedPhotos.slice(0, 3));
@@ -160,7 +160,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         alert(validation.error || 'Invalid photo format');
         return;
       }
-      const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+      const dataUrl = await compressImageFile(file, { maxWidth: 800, maxHeight: 800, quality: 0.72 });
       handlePhotoChange(index, dataUrl);
     } catch (err) {
       console.error('Error reading file for slot:', err);

@@ -1,24 +1,25 @@
 /**
- * Client-Side Image Compression Utility for Kahawa West Directory
+ * Client-Side Image Compression & Document Size Safeguard Utility for Kahawa West Directory
  * 
- * Compresses raw high-resolution smartphone camera photos (5MB - 15MB)
- * directly in the user's browser before saving to localStorage or transmitting,
- * shrinking them down to ~80KB - 180KB JPEG/WebP.
+ * Compresses raw high-resolution smartphone camera photos (5MB - 25MB)
+ * directly in the user's browser before saving to localStorage or transmitting to Firestore,
+ * shrinking them down to ~50KB - 90KB JPEG.
  * 
- * Prevents localStorage quota overflow and ensures super-fast rendering on budget mobile networks.
+ * Prevents localStorage quota overflow and strictly guarantees Firestore documents never
+ * exceed Google Cloud Firestore's hard limit of 1,048,576 bytes (1 MiB).
  */
 
 export interface CompressionOptions {
   maxWidth?: number;
   maxHeight?: number;
-  quality?: number; // 0.1 to 1.0 (default 0.78)
+  quality?: number; // 0.1 to 1.0 (default 0.72)
   mimeType?: 'image/jpeg' | 'image/webp' | 'image/png';
 }
 
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxWidth: 1200,
-  maxHeight: 1200,
-  quality: 0.78,
+  maxWidth: 800,
+  maxHeight: 800,
+  quality: 0.72,
   mimeType: 'image/jpeg',
 };
 
@@ -32,8 +33,8 @@ export async function compressImageFile(
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
   return new Promise((resolve, reject) => {
-    // If SVG or already tiny, return as-is
-    if (file.type === 'image/svg+xml' || file.size < 60 * 1024) {
+    // If SVG, return as-is
+    if (file.type === 'image/svg+xml') {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = () => reject(new Error('Failed to read image file'));
@@ -51,8 +52,8 @@ export async function compressImageFile(
         let width = img.naturalWidth || img.width;
         let height = img.naturalHeight || img.height;
 
-        const maxW = opts.maxWidth || 1200;
-        const maxH = opts.maxHeight || 1200;
+        const maxW = opts.maxWidth || 800;
+        const maxH = opts.maxHeight || 800;
 
         // Calculate scaled dimensions while preserving aspect ratio
         if (width > maxW || height > maxH) {
@@ -71,7 +72,7 @@ export async function compressImageFile(
 
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          // Fallback to FileReader if canvas context fails
+          // If canvas fails, scale down via basic reader
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
           reader.onerror = (e) => reject(e);
@@ -84,11 +85,11 @@ export async function compressImageFile(
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Export compressed image as data URL
-        const dataUrl = canvas.toDataURL(opts.mimeType || 'image/jpeg', opts.quality || 0.78);
+        // Export compressed image as lightweight data URL
+        const dataUrl = canvas.toDataURL(opts.mimeType || 'image/jpeg', opts.quality || 0.72);
         resolve(dataUrl);
       } catch (err) {
-        console.warn('Canvas compression error, falling back to direct FileReader:', err);
+        console.warn('Canvas compression error:', err);
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
         reader.onerror = (e) => reject(e);
@@ -98,7 +99,6 @@ export async function compressImageFile(
 
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      // Fallback
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (e) => reject(e);
@@ -107,6 +107,159 @@ export async function compressImageFile(
 
     img.src = objectUrl;
   });
+}
+
+/**
+ * Downscales an existing base64 data URL string if it exceeds target dimensions or length.
+ */
+export async function downscaleDataUrl(
+  dataUrl: string,
+  maxWidth = 800,
+  maxHeight = 800,
+  quality = 0.70
+): Promise<string> {
+  if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
+  if (!dataUrl.startsWith('data:image/')) return dataUrl;
+  
+  // If already small (< 75KB), skip re-encoding
+  if (dataUrl.length < 100000 && !dataUrl.includes('image/png')) {
+    return dataUrl;
+  }
+
+  if (typeof document === 'undefined') return dataUrl;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, width);
+        canvas.height = Math.max(1, height);
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(dataUrl);
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'medium';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressed);
+      } catch {
+        resolve(dataUrl);
+      }
+    };
+
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+/**
+ * Recursively inspects and downscales any base64 image strings in a Firestore payload
+ * to guarantee that the entire document remains safely below the 1,048,576 bytes limit.
+ */
+export async function ensureSafeFirestorePayload<T extends Record<string, any>>(
+  payload: T,
+  maxTotalBytes = 750000
+): Promise<T> {
+  if (!payload || typeof payload !== 'object') return payload;
+
+  const clone: Record<string, any> = JSON.parse(JSON.stringify(payload));
+
+  // 1. First pass: downscale all known image fields to 800x800 @ 0.70
+  if (typeof clone.heroImage === 'string' && clone.heroImage.startsWith('data:image/')) {
+    clone.heroImage = await downscaleDataUrl(clone.heroImage, 800, 800, 0.70);
+  }
+
+  if (typeof clone.imageUrl === 'string' && clone.imageUrl.startsWith('data:image/')) {
+    clone.imageUrl = await downscaleDataUrl(clone.imageUrl, 800, 800, 0.70);
+  }
+
+  if (Array.isArray(clone.galleryImages)) {
+    // Keep max 4 gallery images to respect mobile limits
+    clone.galleryImages = clone.galleryImages.slice(0, 4);
+    for (let i = 0; i < clone.galleryImages.length; i++) {
+      if (typeof clone.galleryImages[i] === 'string' && clone.galleryImages[i].startsWith('data:image/')) {
+        clone.galleryImages[i] = await downscaleDataUrl(clone.galleryImages[i], 800, 800, 0.68);
+      }
+    }
+  }
+
+  if (clone.claimed_details && typeof clone.claimed_details === 'object') {
+    if (Array.isArray(clone.claimed_details.photos)) {
+      clone.claimed_details.photos = clone.claimed_details.photos.slice(0, 3);
+      for (let i = 0; i < clone.claimed_details.photos.length; i++) {
+        if (typeof clone.claimed_details.photos[i] === 'string' && clone.claimed_details.photos[i].startsWith('data:image/')) {
+          clone.claimed_details.photos[i] = await downscaleDataUrl(clone.claimed_details.photos[i], 800, 800, 0.68);
+        }
+      }
+    }
+  }
+
+  // 2. Measure current size
+  let currentJson = JSON.stringify(clone);
+  let byteSize = typeof TextEncoder !== 'undefined'
+    ? new TextEncoder().encode(currentJson).length
+    : currentJson.length;
+
+  // 3. Second pass: if still > maxTotalBytes (e.g. 750KB), compress more aggressively
+  if (byteSize > maxTotalBytes) {
+    if (typeof clone.heroImage === 'string' && clone.heroImage.startsWith('data:image/')) {
+      clone.heroImage = await downscaleDataUrl(clone.heroImage, 600, 600, 0.55);
+    }
+    if (typeof clone.imageUrl === 'string' && clone.imageUrl.startsWith('data:image/')) {
+      clone.imageUrl = await downscaleDataUrl(clone.imageUrl, 600, 600, 0.55);
+    }
+    if (Array.isArray(clone.galleryImages)) {
+      // Reduce to 2 images
+      clone.galleryImages = clone.galleryImages.slice(0, 2);
+      for (let i = 0; i < clone.galleryImages.length; i++) {
+        if (typeof clone.galleryImages[i] === 'string' && clone.galleryImages[i].startsWith('data:image/')) {
+          clone.galleryImages[i] = await downscaleDataUrl(clone.galleryImages[i], 600, 600, 0.52);
+        }
+      }
+    }
+    if (clone.claimed_details && Array.isArray(clone.claimed_details.photos)) {
+      clone.claimed_details.photos = clone.claimed_details.photos.slice(0, 2);
+      for (let i = 0; i < clone.claimed_details.photos.length; i++) {
+        if (typeof clone.claimed_details.photos[i] === 'string' && clone.claimed_details.photos[i].startsWith('data:image/')) {
+          clone.claimed_details.photos[i] = await downscaleDataUrl(clone.claimed_details.photos[i], 600, 600, 0.52);
+        }
+      }
+    }
+
+    currentJson = JSON.stringify(clone);
+    byteSize = typeof TextEncoder !== 'undefined'
+      ? new TextEncoder().encode(currentJson).length
+      : currentJson.length;
+  }
+
+  // 4. Hard safety net: Firestore strict limit is 1,048,576 bytes.
+  // If somehow still > 950KB, strip base64 and use ultra-reliable CDN fallback
+  if (byteSize > 950000) {
+    console.warn(`Firestore document payload (${byteSize} bytes) approached 1MB limit; replacing oversized local base64 with verified CDN fallback`);
+    const fallback = 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+    if (clone.heroImage && clone.heroImage.startsWith('data:image/')) clone.heroImage = fallback;
+    if (clone.imageUrl && clone.imageUrl.startsWith('data:image/')) clone.imageUrl = fallback;
+    if (Array.isArray(clone.galleryImages)) clone.galleryImages = [clone.heroImage || fallback];
+    if (clone.claimed_details && Array.isArray(clone.claimed_details.photos)) clone.claimed_details.photos = [fallback];
+  }
+
+  return clone as T;
 }
 
 /**

@@ -99,7 +99,7 @@ export const SubmitStoryModal: React.FC<SubmitStoryModalProps> = ({
         return;
       }
       try {
-        const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.78 });
+        const dataUrl = await compressImageFile(file, { maxWidth: 800, maxHeight: 800, quality: 0.72 });
         setImageUrl(dataUrl);
       } catch (err) {
         console.error('Failed to compress story photo:', err);
