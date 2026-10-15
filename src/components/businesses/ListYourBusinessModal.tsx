@@ -58,6 +58,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   const [category, setCategory] = useState('food-dining');
   const [subCategory, setSubCategory] = useState('');
   const [zone, setZone] = useState<EstateZone>('Congo');
+  const [customZone, setCustomZone] = useState('');
   const [landmark, setLandmark] = useState('');
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -150,17 +151,20 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
       const newId = `kw-custom-${Date.now()}`;
       const slug = generateBusinessSlug(name);
       const effectiveRole = isListingOnBehalf ? 'Listing on Behalf of Owner' : applicantRole;
+      const displayZone = zone === 'Other (Kahawa West Area)' && customZone.trim() ? customZone.trim() : zone;
 
       const newBusinessRecord: Business = {
         id: newId,
         slug: slug,
         name: name,
-        tagline: tagline || `${name} in ${zone}, Kahawa West`,
+        tagline: tagline || `${name} in ${displayZone}, Kahawa West`,
         category: category,
         subCategory: subCategory || undefined,
         operationType: operationType,
         zone: zone,
+        customZone: zone === 'Other (Kahawa West Area)' ? customZone.trim() : undefined,
         landmark: landmark,
+        addressDetails: `${landmark}, ${displayZone}, Kahawa West`,
         phone: phone,
         whatsapp: whatsapp ? whatsapp.replace(/[^0-9]/g, '') : phone.replace(/[^0-9]/g, ''),
         email: email || undefined,
@@ -194,7 +198,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
             : undefined,
           whatsapp: whatsapp ? whatsapp.replace(/[^0-9]/g, '') : undefined,
         } : undefined,
-        description: description || `Welcome to ${name}, serving residents in ${zone}, Kahawa West.`,
+        description: description || `Welcome to ${name}, serving residents in ${displayZone}, Kahawa West.`,
         services: ['Local Service in Kahawa West', 'Direct Resident Support'],
         mpesa: mpesaNumber
           ? {
@@ -213,6 +217,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         category,
         operationType,
         zone,
+        customZone: zone === 'Other (Kahawa West Area)' ? customZone.trim() : undefined,
         landmark,
         phone,
         whatsapp: whatsapp ? whatsapp.replace(/[^0-9]/g, '') : phone.replace(/[^0-9]/g, ''),
@@ -307,6 +312,8 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
     'Mahiga',
     'Kamiti Road',
     'Kiamumbi Border',
+    'Karura Estate',
+    'Other (Kahawa West Area)',
   ];
 
   return (
@@ -356,7 +363,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
               </div>
               {isRemoteSynced ? (
                 <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Synced to Supabase Cloud Desk
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Synced to Firebase Cloud Desk
                 </div>
               ) : (
                 <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
@@ -574,7 +581,25 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                     ))}
                   </select>
                 </div>
-                {operationType !== 'physical_shop' && (
+                {zone === 'Other (Kahawa West Area)' && (
+                  <div className="mt-2.5 p-3 rounded-xl bg-emerald-50/90 border border-emerald-300 animate-in fade-in duration-200">
+                    <label className="block text-xs font-bold text-emerald-950 uppercase tracking-wider mb-1">
+                      Specify Your Neighborhood / Area *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={customZone}
+                      onChange={(e) => setCustomZone(e.target.value)}
+                      placeholder="e.g. Near Kiambu border, Kamiti Corner, Stage 44 bypass lane, Court 7"
+                      className="w-full px-3 py-2 rounded-lg border border-emerald-400 bg-white text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder:text-slate-400 font-medium"
+                    />
+                    <p className="text-[11px] text-emerald-800 font-medium mt-1">
+                      Your business will be tagged with this neighborhood so local customers can easily find you.
+                    </p>
+                  </div>
+                )}
+                {operationType !== 'physical_shop' && zone !== 'Other (Kahawa West Area)' && (
                   <p className="text-[11px] text-emerald-700 font-medium mt-1">
                     💡 Freelancers & home-based providers: select the zone where you live/operate from.
                   </p>

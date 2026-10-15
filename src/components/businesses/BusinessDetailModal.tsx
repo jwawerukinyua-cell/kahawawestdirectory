@@ -91,13 +91,14 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
     const slugKey = business.slug || business.id;
     const shareUrl = `${window.location.origin}/?biz=${encodeURIComponent(slugKey)}`;
     const shareTitle = `${business.name} | Kahawa West Directory`;
-    const shareText = `Check out *${business.name}* in Kahawa West (${business.zone}, near ${business.landmark}). Contact: ${business.phone || 'Available on directory'}\n${shareUrl}`;
+    const shareZone = business.customZone || business.zone;
+    const shareText = `Check out *${business.name}* in Kahawa West (${shareZone}, near ${business.landmark}). Contact: ${business.phone || 'Available on directory'}\n${shareUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: shareTitle,
-          text: `Check out ${business.name} in Kahawa West (${business.zone}, near ${business.landmark}). Contact: ${business.phone || 'Available on directory'}`,
+          text: `Check out ${business.name} in Kahawa West (${shareZone}, near ${business.landmark}). Contact: ${business.phone || 'Available on directory'}`,
           url: shareUrl,
         });
       } catch (err: any) {
@@ -146,7 +147,7 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
 
           <div className="text-xs text-rose-200/90 font-medium hidden sm:flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span>Kahawa West Directory • {business.zone}</span>
+            <span>Kahawa West Directory • {business.customZone || business.zone}</span>
           </div>
 
           <div className="flex items-center gap-2">

@@ -58,6 +58,8 @@ export const ESTATE_ZONES_LIST: EstateZone[] = [
   'Mahiga',
   'Kamiti Road',
   'Kiamumbi Border',
+  'Karura Estate',
+  'Other (Kahawa West Area)',
 ];
 
 export const DEFAULT_PRODUCTION_BASE_URL = 'https://www.kahawawestdirectory.co.ke';

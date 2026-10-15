@@ -396,12 +396,13 @@ export default function App() {
                 id: newBizId,
                 slug: newSlug,
                 name: app.name,
-                tagline: `${app.category} in ${app.zone}, Kahawa West`,
+                tagline: `${app.category} in ${app.customZone || app.zone}, Kahawa West`,
                 category: app.category,
                 subCategory: app.subCategory,
                 zone: app.zone,
+                customZone: app.customZone,
                 landmark: app.landmark,
-                addressDetails: `${app.landmark}, ${app.zone}, Kahawa West`,
+                addressDetails: `${app.landmark}, ${app.customZone || app.zone}, Kahawa West`,
                 phone: app.phone,
                 whatsapp: app.whatsapp || app.phone,
                 email: app.email,
@@ -839,7 +840,7 @@ export default function App() {
           const matchesName = b.name.toLowerCase().includes(q);
           const matchesDesc = b.description.toLowerCase().includes(q);
           const matchesLandmark = b.landmark.toLowerCase().includes(q);
-          const matchesZone = b.zone.toLowerCase().includes(q);
+          const matchesZone = b.zone.toLowerCase().includes(q) || (b.customZone ? b.customZone.toLowerCase().includes(q) : false);
           const matchesSubCat = b.subCategory?.toLowerCase().includes(q);
           const matchesServices = b.services?.some((s) => s.toLowerCase().includes(q));
 
@@ -854,8 +855,12 @@ export default function App() {
         }
 
         // Zone filter
-        if (selectedZone !== 'all' && b.zone !== selectedZone) {
-          return false;
+        if (selectedZone !== 'all') {
+          if (selectedZone === 'Other (Kahawa West Area)') {
+            if (b.zone !== 'Other (Kahawa West Area)') return false;
+          } else if (b.zone !== selectedZone) {
+            return false;
+          }
         }
 
         // Housing & Rent Collecting Agents filter
@@ -1026,12 +1031,13 @@ export default function App() {
       id: newBizId,
       slug: newSlug,
       name: app.name,
-      tagline: `${app.category} in ${app.zone}, Kahawa West`,
+      tagline: `${app.category} in ${app.customZone || app.zone}, Kahawa West`,
       category: app.category,
       subCategory: app.subCategory,
       zone: app.zone,
+      customZone: app.customZone,
       landmark: app.landmark,
-      addressDetails: `${app.landmark}, ${app.zone}, Kahawa West`,
+      addressDetails: `${app.landmark}, ${app.customZone || app.zone}, Kahawa West`,
       phone: app.phone,
       whatsapp: app.whatsapp || app.phone,
       email: app.email,

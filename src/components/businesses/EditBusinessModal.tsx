@@ -47,6 +47,8 @@ const ESTATE_ZONES: EstateZone[] = [
   'Mahiga',
   'Kware / Quarry',
   'Kiamumbi Border',
+  'Karura Estate',
+  'Other (Kahawa West Area)',
 ];
 
 const CATEGORIES = [
@@ -118,6 +120,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
   const [category, setCategory] = useState('');
   const [operationType, setOperationType] = useState<OperationType>('physical_shop');
   const [zone, setZone] = useState<EstateZone>('Kamiti Road');
+  const [customZone, setCustomZone] = useState('');
   const [landmark, setLandmark] = useState('');
   const [addressDetails, setAddressDetails] = useState('');
   const [description, setDescription] = useState('');
@@ -167,6 +170,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
       setCategory(business.category || 'Groceries & Fresh Food');
       setOperationType(business.operationType || 'physical_shop');
       setZone(business.zone || 'Kamiti Road');
+      setCustomZone(business.customZone || '');
       setLandmark(business.landmark || '');
       setAddressDetails(business.addressDetails || '');
       setDescription(business.description || '');
@@ -303,6 +307,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
       category,
       operationType,
       zone,
+      customZone: zone === 'Other (Kahawa West Area)' ? customZone.trim() : undefined,
       landmark: landmark.trim(),
       addressDetails: addressDetails.trim(),
       description: description.trim(),
@@ -538,6 +543,21 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
                       </option>
                     ))}
                   </select>
+                  {zone === 'Other (Kahawa West Area)' && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-300">
+                      <label className="block text-[11px] font-bold text-amber-950 uppercase tracking-wider mb-1">
+                        Specify Neighborhood / Area *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={customZone}
+                        onChange={(e) => setCustomZone(e.target.value)}
+                        placeholder="e.g. Near Kiambu border, Kamiti Corner, Stage 44 bypass lane, Court 7"
+                        className="w-full bg-white border border-amber-400 rounded-lg px-2.5 py-1.5 text-xs text-stone-900 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div>

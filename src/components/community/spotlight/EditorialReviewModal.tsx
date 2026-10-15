@@ -1824,7 +1824,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                                     {app.status || 'Pending'}
                                   </span>
                                   <span className="text-[11px] text-stone-400 bg-stone-900 px-2 py-0.5 rounded-md border border-stone-800">
-                                    {app.category} • {app.zone}
+                                    {app.category} • {app.customZone || app.zone}
                                   </span>
                                   <span className="text-[11px] text-stone-500 font-mono">
                                     ID: {app.id}

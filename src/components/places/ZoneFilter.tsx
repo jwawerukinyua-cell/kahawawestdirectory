@@ -24,6 +24,8 @@ export const ZONES: { id: string; name: string }[] = [
   { id: 'Mahiga', name: 'Mahiga' },
   { id: 'Kamiti Road', name: 'Kamiti Road' },
   { id: 'Kiamumbi Border', name: 'Kiamumbi Border' },
+  { id: 'Karura Estate', name: 'Karura Estate' },
+  { id: 'Other (Kahawa West Area)', name: 'Other Areas' },
 ];
 
 const ZoneFilterComponent: React.FC<ZoneFilterProps> = ({

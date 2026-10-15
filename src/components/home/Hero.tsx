@@ -325,7 +325,7 @@ const HeroComponent: React.FC<HeroProps> = ({
             {/* Mobile swipeable & Desktop flex-wrap Quick Zones with Kamae placed next to Jacaranda on the top line */}
             <div className="w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0 -mx-2 px-2 sm:mx-0 sm:px-0">
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
-                {['Jacaranda', 'Kamae', 'Congo', 'Roundabout', 'Jubilee', 'Northern Bypass', 'Kware', 'Bima Road', 'Soweto', 'Mahiga'].map((z) => {
+                {['Jacaranda', 'Kamae', 'Congo', 'Roundabout', 'Jubilee', 'Karura Estate', 'Northern Bypass', 'Kware', 'Bima Road', 'Soweto', 'Mahiga'].map((z) => {
                   const isActive = searchQuery.toLowerCase() === z.toLowerCase();
                   return (
                     <button

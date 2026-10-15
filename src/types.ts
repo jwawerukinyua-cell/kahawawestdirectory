@@ -21,7 +21,9 @@ export type EstateZone =
   | 'Station / Railway'
   | 'Mahiga'
   | 'Kamiti Road'
-  | 'Kiamumbi Border';
+  | 'Kiamumbi Border'
+  | 'Karura Estate'
+  | 'Other (Kahawa West Area)';
 
 export interface SocialLinks {
   facebook?: string;
@@ -65,6 +67,7 @@ export interface Business {
   subCategory?: string;
   operationType?: OperationType;
   zone: EstateZone;
+  customZone?: string;
   landmark: string;
   addressDetails?: string;
   phone: string;
@@ -259,6 +262,7 @@ export interface BusinessApplication {
   subCategory?: string;
   operationType?: OperationType;
   zone: EstateZone;
+  customZone?: string;
   landmark: string;
   phone: string;
   whatsapp: string;

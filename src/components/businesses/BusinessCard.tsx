@@ -181,7 +181,10 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
           {/* Landmark spot */}
           <div className="flex items-center gap-1.5 text-stone-500 text-xs mb-4">
             <MapPin className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
-            <span className="truncate">{business.landmark}</span>
+            <span className="truncate">
+              {business.landmark}
+              {business.customZone ? ` • ${business.customZone}` : ''}
+            </span>
           </div>
         </div>
 

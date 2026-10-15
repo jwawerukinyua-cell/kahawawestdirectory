@@ -71,6 +71,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
   const [customWhatsapp, setCustomWhatsapp] = useState(business.whatsapp);
   const [customEmail, setCustomEmail] = useState(business.email || '');
   const [customZone, setCustomZone] = useState<EstateZone>(business.zone);
+  const [customAreaName, setCustomAreaName] = useState(business.customZone || '');
   const [customLandmark, setCustomLandmark] = useState(business.landmark);
   const [customDescription, setCustomDescription] = useState(business.description);
   const [servicesList, setServicesList] = useState<string[]>(business.services || []);
@@ -195,6 +196,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
         customWhatsapp: customWhatsapp ? customWhatsapp.replace(/[^0-9]/g, '') : '',
         customEmail,
         customZone,
+        customAreaName: customZone === 'Other (Kahawa West Area)' ? customAreaName.trim() : undefined,
         customLandmark,
         customDescription,
         services: servicesList,
@@ -283,6 +285,8 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
     'Mahiga',
     'Kamiti Road',
     'Kiamumbi Border',
+    'Karura Estate',
+    'Other (Kahawa West Area)',
   ];
 
   return (
@@ -362,7 +366,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
               </div>
               {isRemoteSynced ? (
                 <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Synced to Supabase Cloud Desk
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Synced to Firebase Cloud Desk
                 </div>
               ) : (
                 <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-300">
@@ -732,7 +736,25 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                         </option>
                       ))}
                     </select>
-                    {customOperationType !== 'physical_shop' && (
+                    {customZone === 'Other (Kahawa West Area)' && (
+                      <div className="mt-2.5 p-3 rounded-xl bg-emerald-50/90 border border-emerald-300 animate-in fade-in duration-200">
+                        <label className="block text-xs font-bold text-emerald-950 uppercase tracking-wider mb-1">
+                          Specify Your Neighborhood / Area *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={customAreaName}
+                          onChange={(e) => setCustomAreaName(e.target.value)}
+                          placeholder="e.g. Near Kiambu border, Kamiti Corner, Stage 44 bypass lane, Court 7"
+                          className="w-full px-3 py-2 rounded-lg border border-emerald-400 bg-white text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder:text-slate-400 font-medium"
+                        />
+                        <p className="text-[11px] text-emerald-800 font-medium mt-1">
+                          Your listing will feature this custom location so neighborhood customers can locate you easily.
+                        </p>
+                      </div>
+                    )}
+                    {customOperationType !== 'physical_shop' && customZone !== 'Other (Kahawa West Area)' && (
                       <p className="text-[11px] text-emerald-700 font-medium mt-1">
                         💡 Freelancers & home-based providers: select your home/base estate zone.
                       </p>

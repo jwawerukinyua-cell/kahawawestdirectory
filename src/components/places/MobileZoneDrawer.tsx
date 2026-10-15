@@ -24,6 +24,8 @@ const ZONES_LIST: { name: string; description: string }[] = [
   { name: 'Mahiga', description: 'Modern apartment blocks, car wash bays & clinics' },
   { name: 'Kamiti Road', description: 'Main arterial highway, petrol stations & Sacco offices' },
   { name: 'Kiamumbi Border', description: 'Serene outskirts, agrovet supplies & family dining' },
+  { name: 'Karura Estate', description: 'Karura Road, residential courts, apartments & quiet lanes' },
+  { name: 'Other (Kahawa West Area)', description: 'Border areas, interior courts & custom neighborhood locations' },
 ];
 
 export const MobileZoneDrawer: React.FC<MobileZoneDrawerProps> = ({
