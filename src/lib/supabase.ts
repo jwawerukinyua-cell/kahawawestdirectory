@@ -242,6 +242,10 @@ export const PURGED_TEST_BUSINESS_IDS = new Set([
   'kw-biz-7025cfba-a0d6-4add-9a56-ee3c9e99dab6',
   'kw-biz-9945f0cd-a5b7-424c-a655-9014c3d2c429',
   '9945f0cd-a5b7-424c-a655-9014c3d2c429',
+  'kw-biz-f6da2a83-47ed-4e12-a982-a15986ca6531',
+  'f6da2a83-47ed-4e12-a982-a15986ca6531',
+  'kw-biz-9412805e-4313-4c4e-b400-4c03a1e5cd80',
+  '9412805e-4313-4c4e-b400-4c03a1e5cd80',
 ]);
 
 export const PURGED_TEST_BUSINESS_NAMES = new Set([

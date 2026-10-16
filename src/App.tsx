@@ -463,9 +463,17 @@ export default function App() {
             return p;
           });
           const prevMap = new Map(updatedPrev.map((p) => [p.id, p]));
-          const newVerifiedRemote = cleanRemote.filter(
-            (b) => !prevMap.has(b.id) && b.isVerified === true
-          );
+          const prevSlugs = new Set(updatedPrev.map((p) => (p.slug || '').toLowerCase().trim()).filter(Boolean));
+          const prevNames = new Set(updatedPrev.map((p) => (p.name || '').toLowerCase().trim()).filter(Boolean));
+
+          const newVerifiedRemote = cleanRemote.filter((b) => {
+            if (prevMap.has(b.id)) return false;
+            const normSlug = (b.slug || '').toLowerCase().trim();
+            if (normSlug && prevSlugs.has(normSlug)) return false;
+            const normName = (b.name || '').toLowerCase().trim();
+            if (normName && prevNames.has(normName)) return false;
+            return b.isVerified === true;
+          });
           return [...updatedPrev, ...newVerifiedRemote];
         });
       }
