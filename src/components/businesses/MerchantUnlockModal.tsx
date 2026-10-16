@@ -167,7 +167,7 @@ export const MerchantUnlockModal: React.FC<MerchantUnlockModalProps> = ({
               <span>Instant device session saved</span>
             </div>
             <a
-              href={`https://wa.me/254712345678?text=${encodeURIComponent(
+              href={`https://wa.me/254764405842?text=${encodeURIComponent(
                 `Hello KWEST Admin, I need a PIN reset/assistance for my listed business: ${business.name} (ID: ${business.id})`
               )}`}
               target="_blank"

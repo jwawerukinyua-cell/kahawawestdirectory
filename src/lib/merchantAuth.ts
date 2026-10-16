@@ -75,6 +75,47 @@ export function registerMerchantAccount(account: Omit<MerchantAccountRecord, 'cr
   }
 }
 
+// Retrieve current PIN for a business (fallback to 1234)
+export function getMerchantPinForBusiness(businessId: string): string {
+  if (typeof window === 'undefined') return '1234';
+  try {
+    const records = getAllMerchantRecords();
+    return records[businessId]?.pin || '1234';
+  } catch {
+    return '1234';
+  }
+}
+
+// Update PIN directly for a business
+export function updateMerchantPin(businessId: string, newPin: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const records = getAllMerchantRecords();
+    const existing = records[businessId];
+    if (existing) {
+      records[businessId] = {
+        ...existing,
+        pin: newPin.trim(),
+      };
+    } else {
+      records[businessId] = {
+        businessId,
+        businessName: '',
+        phone: '',
+        pin: newPin.trim(),
+        role: 'Owner',
+        createdAt: new Date().toISOString(),
+        unlockedDevices: [getDeviceId()],
+      };
+    }
+    localStorage.setItem(PINS_STORAGE_KEY, JSON.stringify(records));
+    return true;
+  } catch (e) {
+    console.error('Error updating merchant PIN:', e);
+    return false;
+  }
+}
+
 // Grant an active session for a business on current device
 export function grantMerchantSession(businessId: string): void {
   if (typeof window === 'undefined') return;

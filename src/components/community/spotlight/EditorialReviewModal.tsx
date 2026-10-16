@@ -78,6 +78,8 @@ import { Button } from '../../ui/Button';
 import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
 import { copyToClipboard } from '../../../lib/clipboard';
 import { testSupabaseSyncStatus, SupabaseSyncReport, generateBusinessSlug } from '../../../lib/supabase';
+import { getMerchantPinForBusiness, updateMerchantPin } from '../../../lib/merchantAuth';
+import { updateApplicationInFirestore } from '../../../lib/firebase';
 
 interface EditorialReviewModalProps {
   isOpen: boolean;
@@ -1899,6 +1901,58 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                                     <span>{app.status === 'approved' ? 'WhatsApp: Send Live Link' : 'WhatsApp Applicant'}</span>
                                   </a>
                                 )}
+
+                                {/* Reset / Send Merchant PIN */}
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    const ownerMatch = app.notes?.match(/Owner:\s*([^(]+)\s*\(([^)]+)\)/i);
+                                    const ownerName = ownerMatch ? ownerMatch[1].trim() : '';
+                                    const ownerPhone = ownerMatch ? ownerMatch[2].trim() : '';
+                                    const targetPhone = ownerPhone || app.whatsapp || app.applicantPhone || app.phone;
+                                    const targetName = ownerName || app.applicantName || app.name;
+
+                                    const currentPin = getMerchantPinForBusiness(app.id || '') || '1234';
+                                    const newPinInput = prompt(
+                                      `Reset 4-Digit Merchant PIN for "${app.name}":\n\nOwner: ${ownerName || 'Direct'} (${ownerPhone || app.phone})\nApplicant: ${app.applicantName}\n\nEnter 4-digit PIN (default 1234):`,
+                                      currentPin
+                                    );
+                                    if (!newPinInput) return;
+                                    const cleanNewPin = newPinInput.replace(/[^0-9]/g, '').slice(0, 4);
+                                    if (cleanNewPin.length !== 4) {
+                                      alert('PIN must be exactly 4 numeric digits.');
+                                      return;
+                                    }
+
+                                    updateMerchantPin(app.id || '', cleanNewPin);
+                                    if (app.name) {
+                                      const bizSlug = generateBusinessSlug(app.name);
+                                      updateMerchantPin(bizSlug, cleanNewPin);
+                                    }
+
+                                    if (app.id) {
+                                      try {
+                                        await updateApplicationInFirestore(app.id, {
+                                          merchantPin: cleanNewPin,
+                                          notes: app.notes ? `${app.notes} [PIN: ${cleanNewPin}]` : `[PIN: ${cleanNewPin}]`,
+                                        });
+                                      } catch (e) {
+                                        console.warn('Could not update application PIN in firestore:', e);
+                                      }
+                                    }
+
+                                    const waMsg = `Hello ${targetName}, your 4-digit Merchant Dashboard login PIN for "${app.name}" on Kahawa West Directory has been reset to: *${cleanNewPin}*.\n\nYou can log in and manage your photos, stats, and promotions at:\nhttps://www.kahawawestdirectory.co.ke/?biz=${generateBusinessSlug(app.name)}`;
+                                    await copyToClipboard(`Merchant PIN for ${app.name}: ${cleanNewPin}`);
+                                    if (confirm(`PIN updated to ${cleanNewPin}!\n\nOpen WhatsApp to send credentials to ${targetName} (${targetPhone})?`)) {
+                                      window.open(getWhatsAppChatUrl(targetPhone, waMsg), '_blank', 'noopener,noreferrer');
+                                    }
+                                  }}
+                                  className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                                  title="Reset or send 4-digit merchant login PIN"
+                                >
+                                  <Key className="w-3.5 h-3.5" />
+                                  <span>Reset PIN</span>
+                                </button>
 
                                 {app.status !== 'approved' && onApproveApplication && (
                                   <button

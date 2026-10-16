@@ -19,9 +19,11 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   Sparkles,
+  KeyRound,
 } from 'lucide-react';
 import { Business, EstateZone, OperationType } from '../../types';
 import { saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
+import { getMerchantPinForBusiness, updateMerchantPin } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
 import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
 
@@ -162,6 +164,9 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
   const [offerDescription, setOfferDescription] = useState('');
   const [offerBadgeText, setOfferBadgeText] = useState('');
 
+  // 4-Digit Merchant Security PIN
+  const [merchantPin, setMerchantPin] = useState('1234');
+
   // Populate form on open
   useEffect(() => {
     if (business) {
@@ -174,6 +179,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
       setLandmark(business.landmark || '');
       setAddressDetails(business.addressDetails || '');
       setDescription(business.description || '');
+      setMerchantPin(getMerchantPinForBusiness(business.id));
 
       setPhone(business.phone || '');
       setWhatsapp(business.whatsapp || '');
@@ -360,6 +366,9 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
     };
 
     try {
+      if (merchantPin && merchantPin.trim().length === 4) {
+        updateMerchantPin(business.id, merchantPin.trim());
+      }
       await saveCustomizedBusiness(updatedBusiness);
       onBusinessUpdated(updatedBusiness);
       setShowSuccessToast(true);
@@ -740,6 +749,33 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
                       onChange={(e) => setTiktok(e.target.value)}
                       placeholder="@mybusiness"
                       className="w-full bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#630303]"
+                    />
+                  </div>
+                </div>
+
+                {/* 4-Digit Merchant Dashboard Security PIN */}
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="w-4 h-4 text-amber-600" />
+                    <h5 className="text-xs font-bold text-amber-950 uppercase tracking-wider">
+                      Merchant Dashboard Security PIN
+                    </h5>
+                  </div>
+                  <p className="text-[11px] text-amber-900/80 leading-relaxed">
+                    This 4-digit PIN allows the owner or manager to unlock live analytics, edit details, and reply to customer feedback on their phone. If you registered on behalf of the owner, you or the owner can update this PIN at any time.
+                  </p>
+                  <div className="max-w-xs">
+                    <label className="block text-[11px] font-bold text-amber-950 mb-1">
+                      4-Digit Access PIN (Numeric)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={4}
+                      pattern="[0-9]{4}"
+                      value={merchantPin}
+                      onChange={(e) => setMerchantPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+                      placeholder="e.g. 1234"
+                      className="w-full bg-white border border-amber-400 rounded-xl px-3.5 py-2 text-sm font-mono font-bold tracking-widest text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
