@@ -56,13 +56,13 @@ export interface FirestoreErrorInfo {
 // 1. Initialize Firebase App
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// CRITICAL: Initialize Firestore with experimentalForceLongPolling to eliminate 10s streaming timeouts in iframe/proxy environments
+// CRITICAL: Initialize Firestore with autoDetectLongPolling to allow fast WebSockets while automatically adapting to proxy/cellular environments
 let firestoreDb;
 try {
   firestoreDb = initializeFirestore(
     app,
     {
-      experimentalForceLongPolling: true,
+      experimentalAutoDetectLongPolling: true,
     },
     (firebaseConfig as any).firestoreDatabaseId
   );
@@ -96,17 +96,15 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-// 3. Test connection to Firestore on boot
+// 3. Test connection to Firestore on boot (adhering to Firebase skill specifications)
 export async function testFirestoreConnection(): Promise<boolean> {
   try {
-    const checkPromise = getDocFromServer(doc(db, 'test', 'connection'));
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Connection check timeout')), 4000)
-    );
-    await Promise.race([checkPromise, timeoutPromise]);
+    await getDocFromServer(doc(db, 'test', 'connection'));
     return true;
   } catch (error) {
-    // Gracefully handle boot connection check: Firestore SDK continues with offline cache and syncs in background
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.warn('Firestore client operating in offline mode. Local cache active.');
+    }
     return true;
   }
 }
