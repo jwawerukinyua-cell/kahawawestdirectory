@@ -284,3 +284,34 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
 
   return { valid: true };
 }
+
+/**
+ * Markers of recurring generic Unsplash photos that were previously injected as placeholders.
+ */
+export const PERSISTENT_PLACEHOLDER_MARKERS = [
+  'photo-1555396273-367ea4eb4db5', // cafe interior
+  'photo-1504307651254-35680f356dfd', // construction site workers
+  'photo-1517245386807-bb43f82c33c4', // cafe table
+  'photo-1522337360788-8b13dee7a37e', // generic cosmetics
+  'photo-1587854692152-cbe660dbde88', // pharmacy pills
+];
+
+export function isGenericPlaceholderPhoto(url?: string | null): boolean {
+  if (!url || typeof url !== 'string') return true;
+  return PERSISTENT_PLACEHOLDER_MARKERS.some((marker) => url.includes(marker));
+}
+
+/**
+ * Sanitizes business photos to ensure that real photos are kept (up to 3)
+ * and generic Unsplash placeholders are stripped out.
+ */
+export function sanitizeBusinessPhotos(photos: (string | undefined | null)[] = [], maxCount = 3): string[] {
+  if (!Array.isArray(photos)) return [];
+  const valid = photos.filter((p): p is string => typeof p === 'string' && p.trim() !== '');
+  const customPhotos = valid.filter((p) => !isGenericPlaceholderPhoto(p));
+  if (customPhotos.length > 0) {
+    return customPhotos.slice(0, maxCount);
+  }
+  return valid.slice(0, 1);
+}
+

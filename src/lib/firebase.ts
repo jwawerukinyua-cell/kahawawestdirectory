@@ -14,6 +14,7 @@ import {
   query,
   orderBy,
   onSnapshot,
+  where,
   Unsubscribe,
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -243,23 +244,52 @@ export async function fetchClaimsFromFirestore(): Promise<BusinessClaim[]> {
 }
 
 export async function updateClaimInFirestore(
-  claimId: string,
+  claimIdOrBizId: string,
   updates: Partial<BusinessClaim>
 ): Promise<boolean> {
-  const path = `claims/${claimId}`;
+  const path = `claims/${claimIdOrBizId}`;
   try {
-    await updateDoc(doc(db, 'claims', claimId), updates as any);
-    return true;
+    const directDocRef = doc(db, 'claims', claimIdOrBizId);
+    const directSnap = await getDoc(directDocRef);
+    if (directSnap.exists()) {
+      await updateDoc(directDocRef, updates as any);
+      return true;
+    }
+
+    // Fallback: look up by business_id in claims collection
+    const q = query(collection(db, 'claims'), where('business_id', '==', claimIdOrBizId));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const promises = snap.docs.map((d) => updateDoc(d.ref, updates as any));
+      await Promise.all(promises);
+      return true;
+    }
+
+    return false;
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
 }
 
-export async function deleteClaimFromFirestore(claimId: string): Promise<boolean> {
-  const path = `claims/${claimId}`;
+export async function deleteClaimFromFirestore(claimIdOrBizId: string): Promise<boolean> {
+  const path = `claims/${claimIdOrBizId}`;
   try {
-    await deleteDoc(doc(db, 'claims', claimId));
-    return true;
+    const directDocRef = doc(db, 'claims', claimIdOrBizId);
+    const directSnap = await getDoc(directDocRef);
+    if (directSnap.exists()) {
+      await deleteDoc(directDocRef);
+      return true;
+    }
+
+    const q = query(collection(db, 'claims'), where('business_id', '==', claimIdOrBizId));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const promises = snap.docs.map((d) => deleteDoc(d.ref));
+      await Promise.all(promises);
+      return true;
+    }
+
+    return false;
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }

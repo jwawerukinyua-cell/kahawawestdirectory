@@ -21,7 +21,7 @@ import {
   PhoneCall,
   SlidersHorizontal,
 } from 'lucide-react';
-import { Business, BusinessClaim, BusinessApplication, Category, CommunityFeedback, CommunityStory, CommunityUpdate } from './types';
+import { Business, BusinessClaim, BusinessApplication, Category, CommunityFeedback, CommunityStory, CommunityUpdate, EstateZone } from './types';
 import { SEED_50_BUSINESSES } from './data/businesses';
 import { CATEGORIES } from './data/categories';
 import { DEFAULT_OPENING_HOURS } from './data/defaultOpeningHours';
@@ -71,6 +71,7 @@ import {
   PURGED_CLAIM_IDS,
 } from './lib/supabase';
 import { getWhatsAppChatUrl } from './lib/phoneUtils';
+import { updateMerchantPin } from './lib/merchantAuth';
 
 // Layout & Components
 import { Header } from './components/layout/Header';
@@ -950,13 +951,14 @@ export default function App() {
     // The new listing application stays strictly in pending queue until approved in Editorial Desk
   };
 
-  const handleApproveClaim = async (businessId: string) => {
-    await updateClaimStatusInSupabase(businessId, 'verified');
-    const claimRecord = claims.find((c) => c.business_id === businessId || c.id === businessId);
+  const handleApproveClaim = async (claimIdOrBizId: string) => {
+    await updateClaimStatusInSupabase(claimIdOrBizId, 'verified');
+    const claimRecord = claims.find((c) => c.business_id === claimIdOrBizId || c.id === claimIdOrBizId);
+    const targetBizId = claimRecord?.business_id || claimIdOrBizId;
 
     setClaims((prev) =>
       prev.map((c) =>
-        c.business_id === businessId || c.id === businessId
+        c.business_id === targetBizId || c.id === claimIdOrBizId
           ? { ...c, status: 'verified' as const }
           : c
       )
@@ -964,22 +966,52 @@ export default function App() {
 
     setBusinesses((prev) => {
       return prev.map((b) => {
-        if (b.id === businessId || b.slug === businessId) {
+        if (b.id === targetBizId || b.slug === targetBizId) {
           const details = claimRecord?.claimed_details || {};
+          const customName = details.customName || claimRecord?.business_name;
+          const customTagline = details.customTagline;
+          const customZone = details.customZone;
+          const customLandmark = details.customLandmark;
+          const customPhotos = details.photos;
+          const customServices = details.services;
+          const customMpesa = details.mpesa;
+          const customSocialLinks = details.socialLinks;
+          const customDesc = details.customDescription;
+
           const verifiedBiz: Business = {
             ...b,
             ...details,
             id: b.id,
             slug: b.slug,
+            name: customName || b.name,
+            tagline: customTagline || b.tagline,
+            zone: (customZone || b.zone) as EstateZone,
+            customZone: customZone || b.customZone,
+            landmark: customLandmark || b.landmark,
+            addressDetails: customLandmark
+              ? `${customLandmark}, ${customZone || b.customZone || b.zone}, Kahawa West`
+              : b.addressDetails,
+            description: customDesc || b.description,
+            heroImage: customPhotos && customPhotos.length > 0 ? customPhotos[0] : b.heroImage,
+            galleryImages: customPhotos && customPhotos.length > 0 ? customPhotos : b.galleryImages,
+            services: customServices && customServices.length > 0 ? customServices : b.services,
+            mpesa: customMpesa || b.mpesa,
+            socialLinks: customSocialLinks || b.socialLinks,
             isVerified: true,
             isClaimed: true,
             claimedBy: claimRecord
               ? `${claimRecord.full_name} (${claimRecord.business_role || 'Owner'})`
               : b.claimedBy || 'Verified Owner',
-            phone: claimRecord?.phone_number || details.phone || b.phone,
-            whatsapp: claimRecord?.whatsapp_number || details.whatsapp || b.whatsapp,
-            email: claimRecord?.email || details.email || b.email,
+            phone: claimRecord?.phone_number || details.customPhone || b.phone,
+            whatsapp: claimRecord?.whatsapp_number || details.customWhatsapp || b.whatsapp,
+            email: claimRecord?.email || details.customEmail || b.email,
           };
+
+          if (details.merchantPin) {
+            updateMerchantPin(b.slug, details.merchantPin);
+            updateMerchantPin(b.id, details.merchantPin);
+          }
+
           saveCustomizedBusiness(verifiedBiz);
           if (selectedBusinessForDetails?.id === b.id) {
             setSelectedBusinessForDetails(verifiedBiz);
@@ -994,13 +1026,13 @@ export default function App() {
     if (claimRecord) {
       const contact = claimRecord.whatsapp_number || claimRecord.phone_number;
       if (contact) {
-        const liveLink = `https://www.kahawawestdirectory.co.ke/?biz=${businessId}`;
-        const claimApprovalMsg = `Hello ${claimRecord.full_name || 'Merchant'}, congratulations! Your ownership claim for "${claimRecord.business_name || businessId}" has been verified and APPROVED on the Kahawa West Community Directory! 🎉\n\nYour verified merchant badge is now active. View your live listing here:\n${liveLink}\n\nWelcome to the KWEST business network!`;
+        const liveLink = `https://www.kahawawestdirectory.co.ke/?biz=${targetBizId}`;
+        const claimApprovalMsg = `Hello ${claimRecord.full_name || 'Merchant'}, congratulations! Your ownership claim for "${claimRecord.business_name || targetBizId}" has been verified and APPROVED on the Kahawa West Community Directory! 🎉\n\nYour verified merchant badge is now active. View your live listing here:\n${liveLink}\n\nWelcome to the KWEST business network!`;
         const waUrl = getWhatsAppChatUrl(contact, claimApprovalMsg);
 
         setTimeout(() => {
           const notify = confirm(
-            `🎉 Claim for "${claimRecord.business_name || businessId}" verified!\n\nWould you like to open WhatsApp now to send ${claimRecord.full_name} their verified badge notice and live link?`
+            `🎉 Claim for "${claimRecord.business_name || targetBizId}" verified!\n\nWould you like to open WhatsApp now to send ${claimRecord.full_name} their verified badge notice and live link?`
           );
           if (notify) {
             window.open(waUrl, '_blank');

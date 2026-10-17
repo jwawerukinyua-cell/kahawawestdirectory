@@ -3,6 +3,7 @@ import { Camera, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
 import { Business } from '../../types';
 import { ListingImage } from '../ui/ListingImage';
 import { generateBusinessAltText } from '../../lib/seoAltUtils';
+import { sanitizeBusinessPhotos } from '../../lib/imageCompression';
 
 interface BusinessGalleryProps {
   images: string[];
@@ -12,23 +13,16 @@ interface BusinessGalleryProps {
 
 export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, businessName, business }) => {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
-  
-  const fallbackList = [
-    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80',
-  ];
 
-  const validImages = Array.isArray(images)
-    ? images.filter((img) => typeof img === 'string' && img.trim() !== '')
-    : [];
+  const rawList = Array.isArray(images) && images.length > 0
+    ? images
+    : (business?.galleryImages && business.galleryImages.length > 0)
+    ? business.galleryImages
+    : [business?.heroImage].filter((x): x is string => typeof x === 'string' && x.trim() !== '');
 
-  const gallery = validImages.length > 0 ? validImages : (business?.galleryImages || fallbackList);
-
-  const mainPhoto = gallery[0] || fallbackList[0];
-  const additionalPhotos = gallery.slice(1, 5);
+  const gallery = sanitizeBusinessPhotos(rawList, 3);
+  const mainPhoto = gallery[0] || business?.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+  const additionalPhotos = gallery.slice(1, 3);
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,64 +39,119 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
   const bizObj = business || { name: businessName };
 
   return (
-    <div id="business-gallery-section" className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm mb-6">
+    <div id="business-gallery-section" className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Camera className="w-5 h-5 text-emerald-600" />
-          <h3 className="font-bold text-slate-900 text-lg">Verified Photos & Premises ({gallery.length} Photos)</h3>
+          <h3 className="font-bold text-slate-900 text-base sm:text-lg">
+            Verified Photos &amp; Premises ({gallery.length} {gallery.length === 1 ? 'Photo' : 'Photos'})
+          </h3>
         </div>
         <span className="text-xs text-slate-500 font-medium">Click any photo to enlarge</span>
       </div>
 
-      {/* 5-Photo Bento Mosaic */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 h-auto md:h-72">
-        {/* Main Large Photo (Takes 2 cols & 2 rows on desktop) */}
+      {/* Gallery Grid: Adapts cleanly to 1, 2, or 3 photos */}
+      {additionalPhotos.length === 0 ? (
         <div
-          className="md:col-span-2 relative group overflow-hidden rounded-xl cursor-pointer bg-stone-100 min-h-[200px]"
+          className="relative group overflow-hidden rounded-2xl cursor-pointer bg-stone-100 h-64 sm:h-80 md:h-96"
           onClick={() => setSelectedIdx(0)}
         >
           <ListingImage
             src={mainPhoto}
             business={bizObj}
-            imageType="gallery"
-            index={1}
+            imageType="hero"
             className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
           />
           <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-slate-900/30 transition flex items-center justify-center">
             <span className="opacity-0 group-hover:opacity-100 transition inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-semibold backdrop-blur-sm">
-              <Maximize2 className="w-3.5 h-3.5" /> View Main Photo
+              <Maximize2 className="w-3.5 h-3.5" /> View Photo
             </span>
           </div>
           <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-emerald-600/90 text-white text-[11px] font-semibold backdrop-blur-sm">
-            Primary
+            Primary Cover
           </span>
         </div>
-
-        {/* 4 Additional Grid Photos */}
-        <div className="md:col-span-2 grid grid-cols-2 gap-3">
-          {additionalPhotos.map((img, idx) => (
-            <div
-              key={idx}
-              className="relative group overflow-hidden rounded-xl cursor-pointer bg-stone-100 h-32 md:h-[138px]"
-              onClick={() => setSelectedIdx(idx + 1)}
-            >
-              <ListingImage
-                src={img}
-                business={bizObj}
-                imageType="gallery"
-                index={idx + 2}
-                className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-              />
-              <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-slate-900/30 transition flex items-center justify-center">
-                <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition" />
-              </div>
-              <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px] font-medium backdrop-blur-sm">
-                #{idx + 2}
+      ) : additionalPhotos.length === 1 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div
+            className="relative group overflow-hidden rounded-2xl cursor-pointer bg-stone-100 h-60 sm:h-72"
+            onClick={() => setSelectedIdx(0)}
+          >
+            <ListingImage
+              src={mainPhoto}
+              business={bizObj}
+              imageType="hero"
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+            />
+            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-emerald-600/90 text-white text-[11px] font-semibold backdrop-blur-sm">
+              Primary Cover
+            </span>
+          </div>
+          <div
+            className="relative group overflow-hidden rounded-2xl cursor-pointer bg-stone-100 h-60 sm:h-72"
+            onClick={() => setSelectedIdx(1)}
+          >
+            <ListingImage
+              src={additionalPhotos[0]}
+              business={bizObj}
+              imageType="gallery"
+              index={2}
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+            />
+            <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-medium backdrop-blur-sm">
+              #2
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          {/* Main Hero Photo (Takes 3 columns) */}
+          <div
+            className="md:col-span-3 relative group overflow-hidden rounded-2xl cursor-pointer bg-stone-100 h-60 md:h-[288px]"
+            onClick={() => setSelectedIdx(0)}
+          >
+            <ListingImage
+              src={mainPhoto}
+              business={bizObj}
+              imageType="hero"
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+            />
+            <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-slate-900/30 transition flex items-center justify-center">
+              <span className="opacity-0 group-hover:opacity-100 transition inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-semibold backdrop-blur-sm">
+                <Maximize2 className="w-3.5 h-3.5" /> View Main Photo
               </span>
             </div>
-          ))}
+            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-emerald-600/90 text-white text-[11px] font-semibold backdrop-blur-sm">
+              Primary Cover
+            </span>
+          </div>
+
+          {/* 2 Additional Grid Photos (Stacked in 2 columns) */}
+          <div className="md:col-span-2 flex flex-col gap-3">
+            {additionalPhotos.map((img, idx) => (
+              <div
+                key={idx}
+                className="relative group overflow-hidden rounded-xl cursor-pointer bg-stone-100 h-[138px]"
+                onClick={() => setSelectedIdx(idx + 1)}
+              >
+                <ListingImage
+                  src={img}
+                  business={bizObj}
+                  imageType="gallery"
+                  index={idx + 2}
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                />
+                <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-slate-900/30 transition flex items-center justify-center">
+                  <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition" />
+                </div>
+                <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px] font-medium backdrop-blur-sm">
+                  #{idx + 2}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Fullscreen Lightbox Modal */}
       {selectedIdx !== null && (

@@ -79,7 +79,7 @@ import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
 import { copyToClipboard } from '../../../lib/clipboard';
 import { testSupabaseSyncStatus, SupabaseSyncReport, generateBusinessSlug } from '../../../lib/supabase';
 import { getMerchantPinForBusiness, updateMerchantPin } from '../../../lib/merchantAuth';
-import { updateApplicationInFirestore } from '../../../lib/firebase';
+import { updateApplicationInFirestore, updateClaimInFirestore } from '../../../lib/firebase';
 
 interface EditorialReviewModalProps {
   isOpen: boolean;
@@ -152,7 +152,10 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   const [activeMainTab, setActiveMainTab] = useState<'stories' | 'updates' | 'claims' | 'ad_campaigns' | 'ad_sales' | 'supabase_guide'>('stories');
   const [storySubTab, setStorySubTab] = useState<'pending' | 'published'>('pending');
   const [updateSubTab, setUpdateSubTab] = useState<'pending' | 'published'>('pending');
-  const [claimsSubTab, setClaimsSubTab] = useState<'pending_claims' | 'pending_applications' | 'all_listings'>('pending_applications');
+  const [claimsSubTab, setClaimsSubTab] = useState<'pending_claims' | 'pending_applications' | 'all_listings'>(() => {
+    const hasPendingClaims = claims.some((c) => c.status === 'pending');
+    return hasPendingClaims ? 'pending_claims' : 'pending_applications';
+  });
   const [adCampaignsSubTab, setAdCampaignsSubTab] = useState<'pending' | 'active' | 'changes_requested' | 'expired' | 'all'>('pending');
   const [directorySearchQuery, setDirectorySearchQuery] = useState('');
   const [directoryZoneFilter, setDirectoryZoneFilter] = useState('all');
@@ -1593,7 +1596,14 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                           }`}
                         >
                           <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>Claims Queue ({claims.length})</span>
+                          <span>Claims Queue</span>
+                          {claims.filter((c) => c.status === 'pending').length > 0 ? (
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-stone-950">
+                              {claims.filter((c) => c.status === 'pending').length} Pending
+                            </span>
+                          ) : (
+                            <span className="text-stone-500">({claims.length})</span>
+                          )}
                         </button>
                         <button
                           onClick={() => setClaimsSubTab('pending_applications')}
@@ -1604,7 +1614,14 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                           }`}
                         >
                           <PlusCircle className="w-3.5 h-3.5" />
-                          <span>New Listings ({applications.length})</span>
+                          <span>New Listings</span>
+                          {applications.filter((a) => a.status === 'pending').length > 0 ? (
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-stone-950">
+                              {applications.filter((a) => a.status === 'pending').length} Pending
+                            </span>
+                          ) : (
+                            <span className="text-stone-500">({applications.length})</span>
+                          )}
                         </button>
                         <button
                           onClick={() => setClaimsSubTab('all_listings')}
@@ -1648,9 +1665,46 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                     )}
                   </div>
 
+                  {/* Cross-subtab Alert Banner */}
+                  {claims.filter((c) => c.status === 'pending').length > 0 && claimsSubTab !== 'pending_claims' && (
+                    <div className="p-3 bg-amber-950/40 border border-amber-800/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-amber-400 flex-shrink-0 animate-pulse" />
+                        <span className="text-stone-200">
+                          You have <strong className="text-amber-300 font-bold">{claims.filter((c) => c.status === 'pending').length} pending business ownership claim</strong> awaiting verification (including Karura Women's Cleaning Collective).
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setClaimsSubTab('pending_claims')}
+                        className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center justify-center gap-1 transition flex-shrink-0 shadow-sm"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Open Claims Queue</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {applications.filter((a) => a.status === 'pending').length > 0 && claimsSubTab !== 'pending_applications' && (
+                    <div className="p-3 bg-stone-900 border border-stone-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <PlusCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        <span className="text-stone-300">
+                          There are <strong className="text-emerald-400 font-bold">{applications.filter((a) => a.status === 'pending').length} new listing applications</strong> awaiting editorial review.
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setClaimsSubTab('pending_applications')}
+                        className="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold text-xs flex items-center justify-center gap-1 transition flex-shrink-0"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <span>View New Listings</span>
+                      </button>
+                    </div>
+                  )}
+
                   {claimsSubTab === 'pending_claims' ? (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
                         <div>
                           <h4 className="font-display font-bold text-white text-base">
                             Business Claim Verification Queue
@@ -1670,117 +1724,232 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {claims.map((claim, idx) => (
-                            <div
-                              key={claim.id || `${claim.business_id}-${idx}`}
-                              className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                            >
-                              <div className="space-y-1.5 flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h5 className="font-bold text-white text-base">
-                                    {claim.business_name || claim.business_id}
-                                  </h5>
-                                  <span
-                                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                                      claim.status === 'verified'
-                                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
-                                        : claim.status === 'rejected'
-                                        ? 'bg-rose-950 text-rose-300 border border-rose-700'
-                                        : 'bg-amber-950 text-amber-300 border border-amber-700'
-                                    }`}
-                                  >
-                                    {claim.status || 'Pending'}
-                                  </span>
-                                  <span className="text-[11px] text-stone-500 font-mono">
-                                    ID: {claim.business_id}
-                                  </span>
-                                </div>
+                          {claims.map((claim, idx) => {
+                            const details = claim.claimed_details || {};
+                            const originalBiz = businesses.find((b) => b.id === claim.business_id || b.slug === claim.business_id);
+                            const displayName = details.customName || claim.business_name || claim.business_id;
 
-                                <p className="text-xs text-stone-300">
-                                  Claimant: <strong className="text-white">{claim.full_name}</strong>{' '}
-                                  <span className="text-stone-400">({claim.business_role || 'Owner'})</span>
-                                </p>
+                            return (
+                              <div
+                                key={claim.id || `${claim.business_id}-${idx}`}
+                                className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-start justify-between gap-4"
+                              >
+                                <div className="space-y-2 flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h5 className="font-bold text-white text-base">
+                                      {displayName}
+                                    </h5>
+                                    {originalBiz && originalBiz.name !== displayName && (
+                                      <span className="text-xs text-stone-400">
+                                        (Claiming listing: <strong className="text-stone-300">{originalBiz.name}</strong>)
+                                      </span>
+                                    )}
+                                    <span
+                                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                        claim.status === 'verified'
+                                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                                          : claim.status === 'rejected'
+                                          ? 'bg-rose-950 text-rose-300 border border-rose-700'
+                                          : 'bg-amber-950 text-amber-300 border border-amber-700'
+                                      }`}
+                                    >
+                                      {claim.status || 'Pending'}
+                                    </span>
+                                    <span className="text-[11px] text-stone-500 font-mono">
+                                      ID: {claim.business_id}
+                                    </span>
+                                  </div>
 
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-400">
-                                  <span>📞 Phone: <strong className="text-stone-200">{claim.phone_number}</strong></span>
-                                  <span>✉️ Email: <strong className="text-stone-200">{claim.email}</strong></span>
-                                  {claim.created_at && (
-                                    <span>📅 Submitted: {new Date(claim.created_at).toLocaleDateString()}</span>
+                                  {details.customTagline && (
+                                    <p className="text-xs text-rose-300/90 italic">
+                                      &ldquo;{details.customTagline}&rdquo;
+                                    </p>
+                                  )}
+
+                                  <p className="text-xs text-stone-300">
+                                    Claimant: <strong className="text-white">{claim.full_name}</strong>{' '}
+                                    <span className="text-stone-400">({claim.business_role || 'Owner'})</span>
+                                  </p>
+
+                                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-400">
+                                    <span>📞 Phone: <strong className="text-stone-200">{claim.phone_number}</strong></span>
+                                    {(details.customWhatsapp || claim.whatsapp_number) && (
+                                      <span>💬 WhatsApp: <strong className="text-stone-200">{details.customWhatsapp || claim.whatsapp_number}</strong></span>
+                                    )}
+                                    <span>✉️ Email: <strong className="text-stone-200">{claim.email || 'N/A'}</strong></span>
+                                    {(details.customZone || details.customLandmark) && (
+                                      <span>📍 Location: <strong className="text-stone-200">{details.customZone || 'Karura Estate'}{details.customLandmark ? ` (${details.customLandmark})` : ''}</strong></span>
+                                    )}
+                                    {claim.created_at && (
+                                      <span>📅 Submitted: {new Date(claim.created_at).toLocaleDateString()}</span>
+                                    )}
+                                  </div>
+
+                                  {details.customDescription && (
+                                    <p className="text-xs text-stone-300 bg-stone-900/70 p-2.5 rounded-xl border border-stone-800 line-clamp-3">
+                                      {details.customDescription}
+                                    </p>
+                                  )}
+
+                                  {/* Claimed Services */}
+                                  {details.services && details.services.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 pt-1">
+                                      {details.services.map((svc: string, sIdx: number) => (
+                                        <span key={sIdx} className="text-[10px] bg-stone-800 text-stone-300 px-2 py-0.5 rounded-md">
+                                          {svc}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* M-Pesa & Merchant PIN info */}
+                                  <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+                                    {details.mpesa && (
+                                      <span className="px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 font-medium">
+                                        💳 M-Pesa {details.mpesa.type}: <strong>{details.mpesa.number}</strong> ({details.mpesa.accountName})
+                                      </span>
+                                    )}
+                                    {details.merchantPin && (
+                                      <span className="px-2.5 py-1 rounded-lg bg-amber-950/60 text-amber-300 border border-amber-800/60 font-mono">
+                                        🔑 Login PIN: <strong>{details.merchantPin}</strong>
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Uploaded Photos Thumbnails */}
+                                  {details.photos && details.photos.length > 0 && (
+                                    <div className="flex items-center gap-2 pt-1 overflow-x-auto">
+                                      <span className="text-[11px] text-stone-400">Photos ({details.photos.length}):</span>
+                                      {details.photos.map((img: string, pIdx: number) => (
+                                        <img
+                                          key={pIdx}
+                                          src={img}
+                                          alt={`Claim photo ${pIdx + 1}`}
+                                          className="w-10 h-10 object-cover rounded-lg border border-stone-700 flex-shrink-0"
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {claim.notes && (
+                                    <div className="mt-2 p-2.5 rounded-xl bg-stone-900/80 border border-stone-800 text-xs text-stone-300">
+                                      <span className="font-semibold text-stone-400">Verification Notes: </span>
+                                      {claim.notes}
+                                    </div>
                                   )}
                                 </div>
 
-                                {claim.notes && (
-                                  <div className="mt-2 p-2.5 rounded-xl bg-stone-900/80 border border-stone-800 text-xs text-stone-300">
-                                    <span className="font-semibold text-stone-400">Verification Notes: </span>
-                                    {claim.notes}
-                                  </div>
-                                )}
+                                {/* Moderation Actions */}
+                                <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-start flex-wrap justify-end pt-1">
+                                  {(claim.whatsapp_number || details.customWhatsapp || claim.phone_number) && (
+                                    <a
+                                      href={getWhatsAppChatUrl(
+                                        claim.whatsapp_number || details.customWhatsapp || claim.phone_number,
+                                        claim.status === 'verified'
+                                          ? `Hello ${claim.full_name || 'Merchant'}, congratulations! Your ownership claim for "${displayName}" has been verified and APPROVED on the Kahawa West Community Directory! 🎉\n\nYour verified merchant badge is now active. View your listing here: https://www.kahawawestdirectory.co.ke/?biz=${claim.business_id}\n\nWelcome to the KWEST business network!`
+                                          : `Hello ${claim.full_name || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your ownership claim for "${displayName}". We are reviewing your submission to activate your verified merchant badge. Could you kindly confirm your business location or permit? Thank you!`
+                                      )}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={`px-3 py-2 rounded-xl font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm ${
+                                        claim.status === 'verified'
+                                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                          : 'bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80'
+                                      }`}
+                                      title={claim.status === 'verified' ? 'Send verified live link on WhatsApp' : 'Open WhatsApp chat with claimant'}
+                                    >
+                                      <MessageCircle className="w-3.5 h-3.5" />
+                                      <span>{claim.status === 'verified' ? 'WhatsApp: Verified Link' : 'WhatsApp Claimant'}</span>
+                                    </a>
+                                  )}
+
+                                  {details.merchantPin && (
+                                    <button
+                                      onClick={async () => {
+                                        const currentPin = details.merchantPin || '0000';
+                                        const newPin = prompt(`Enter 4-digit PIN for ${displayName}:`, currentPin);
+                                        if (!newPin) return;
+                                        const cleanNewPin = newPin.trim();
+                                        if (cleanNewPin.length !== 4 || !/^\d{4}$/.test(cleanNewPin)) {
+                                          alert('PIN must be exactly 4 digits (numbers only).');
+                                          return;
+                                        }
+
+                                        const targetPhone = claim.whatsapp_number || details.customWhatsapp || claim.phone_number;
+                                        const targetName = claim.full_name || 'Merchant';
+                                        const bizSlug = originalBiz?.slug || claim.business_id;
+
+                                        updateMerchantPin(bizSlug, cleanNewPin);
+                                        updateMerchantPin(claim.business_id, cleanNewPin);
+
+                                        if (claim.id) {
+                                          try {
+                                            await updateClaimInFirestore(claim.id, {
+                                              claimed_details: {
+                                                ...details,
+                                                merchantPin: cleanNewPin,
+                                              },
+                                            });
+                                          } catch (e) {
+                                            console.warn('Could not update claim PIN in firestore:', e);
+                                          }
+                                        }
+
+                                        const waMsg = `Hello ${targetName}, your 4-digit Merchant Dashboard login PIN for "${displayName}" on Kahawa West Directory has been set to: *${cleanNewPin}*.\n\nYou can log in and manage your photos, stats, and promotions at:\nhttps://www.kahawawestdirectory.co.ke/?biz=${bizSlug}`;
+                                        await copyToClipboard(`Merchant PIN for ${displayName}: ${cleanNewPin}`);
+                                        if (confirm(`PIN set to ${cleanNewPin}!\n\nOpen WhatsApp to send credentials to ${targetName} (${targetPhone})?`)) {
+                                          window.open(getWhatsAppChatUrl(targetPhone, waMsg), '_blank', 'noopener,noreferrer');
+                                        }
+                                      }}
+                                      className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                                      title="Reset or send 4-digit merchant login PIN"
+                                    >
+                                      <Key className="w-3.5 h-3.5" />
+                                      <span>PIN: {details.merchantPin}</span>
+                                    </button>
+                                  )}
+
+                                  {claim.status !== 'verified' && onApproveClaim && (
+                                    <button
+                                      onClick={() => onApproveClaim(claim.id || claim.business_id)}
+                                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                                      title="Approve & mark business as verified"
+                                    >
+                                      <CheckCircle className="w-4 h-4" />
+                                      <span>Verify Claim</span>
+                                    </button>
+                                  )}
+
+                                  {claim.status !== 'rejected' && onRejectClaim && (
+                                    <button
+                                      onClick={() => {
+                                        const reason = prompt('Enter rejection reason (optional):') || 'Unverified ownership proof';
+                                        onRejectClaim(claim.id || claim.business_id, reason);
+                                      }}
+                                      className="px-3 py-2 rounded-xl bg-stone-800 hover:bg-rose-900/60 text-stone-300 hover:text-rose-200 border border-stone-700 font-medium text-xs flex items-center gap-1.5 transition"
+                                    >
+                                      <XCircle className="w-3.5 h-3.5" />
+                                      <span>Reject</span>
+                                    </button>
+                                  )}
+
+                                  {onDeleteClaim && (
+                                    <button
+                                      onClick={() => {
+                                        if (confirm(`Remove claim record for "${displayName}"?`)) {
+                                          onDeleteClaim(claim.id || claim.business_id);
+                                        }
+                                      }}
+                                      className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition"
+                                      title="Delete claim record"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
-
-                              {/* Moderation Actions */}
-                              <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-center flex-wrap justify-end">
-                                {(claim.whatsapp_number || claim.phone_number) && (
-                                  <a
-                                    href={getWhatsAppChatUrl(
-                                      claim.whatsapp_number || claim.phone_number,
-                                      claim.status === 'verified'
-                                        ? `Hello ${claim.full_name || 'Merchant'}, congratulations! Your ownership claim for "${claim.business_name || claim.business_id}" has been verified and APPROVED on the Kahawa West Community Directory! 🎉\n\nYour verified merchant badge is now active. View your listing here: https://www.kahawawestdirectory.co.ke/?biz=${claim.business_id}\n\nWelcome to the KWEST business network!`
-                                        : `Hello ${claim.full_name || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your ownership claim for "${claim.business_name || claim.business_id}". We are verifying your details to activate your verified merchant badge. Could you kindly confirm your business location or permit? Thank you!`
-                                    )}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`px-3 py-2 rounded-xl font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm ${
-                                      claim.status === 'verified'
-                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                                        : 'bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80'
-                                    }`}
-                                    title={claim.status === 'verified' ? 'Send verified live link on WhatsApp' : 'Open WhatsApp chat with claimant'}
-                                  >
-                                    <MessageCircle className="w-3.5 h-3.5" />
-                                    <span>{claim.status === 'verified' ? 'WhatsApp: Send Verified Link' : 'WhatsApp Claimant'}</span>
-                                  </a>
-                                )}
-
-                                {claim.status !== 'verified' && onApproveClaim && (
-                                  <button
-                                    onClick={() => onApproveClaim(claim.business_id)}
-                                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-sm"
-                                    title="Approve & mark business as verified"
-                                  >
-                                    <CheckCircle className="w-4 h-4" />
-                                    <span>Verify Claim</span>
-                                  </button>
-                                )}
-
-                                {claim.status !== 'rejected' && onRejectClaim && (
-                                  <button
-                                    onClick={() => {
-                                      const reason = prompt('Enter rejection reason (optional):') || 'Unverified ownership proof';
-                                      onRejectClaim(claim.business_id, reason);
-                                    }}
-                                    className="px-3 py-2 rounded-xl bg-stone-800 hover:bg-rose-900/60 text-stone-300 hover:text-rose-200 border border-stone-700 font-medium text-xs flex items-center gap-1.5 transition"
-                                  >
-                                    <XCircle className="w-3.5 h-3.5" />
-                                    <span>Reject</span>
-                                  </button>
-                                )}
-
-                                {onDeleteClaim && (
-                                  <button
-                                    onClick={() => {
-                                      if (confirm(`Remove claim record for "${claim.business_name || claim.business_id}"?`)) {
-                                        onDeleteClaim(claim.business_id);
-                                      }
-                                    }}
-                                    className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition"
-                                    title="Delete claim record"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
