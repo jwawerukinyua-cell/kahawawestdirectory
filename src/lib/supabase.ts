@@ -31,6 +31,8 @@ import {
   subscribeToClaims,
   FirebaseSyncReport,
 } from './firebase';
+import { sanitizeClaimedBy } from './merchantAuth';
+import { sanitizeBusinessPhotos } from './imageCompression';
 
 export {
   subscribeToApplications,
@@ -246,6 +248,12 @@ export const PURGED_TEST_BUSINESS_IDS = new Set([
   'f6da2a83-47ed-4e12-a982-a15986ca6531',
   'kw-biz-9412805e-4313-4c4e-b400-4c03a1e5cd80',
   '9412805e-4313-4c4e-b400-4c03a1e5cd80',
+  // Duplicate IDs created by legacy auto-promotions (retaining the exact original listings)
+  'kw-biz-kw-custom-1792068339635',
+  'kw-biz-kw-custom-1792132785586',
+  'kw-biz-kw-custom-1792134255134',
+  'kw-biz-kw-custom-1792175269985',
+  'kw-biz-kw-custom-1792254777617',
 ]);
 
 export const PURGED_TEST_BUSINESS_NAMES = new Set([
@@ -465,20 +473,21 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
             email: row.email,
             isVerified: Boolean(row.isVerified ?? row.is_verified),
             isClaimed: Boolean(row.isClaimed ?? row.is_claimed),
-            claimedBy: row.claimedBy || row.claimed_by,
+            claimedBy: sanitizeClaimedBy(row.claimedBy || row.claimed_by),
             rating: typeof row.rating === 'number' ? row.rating : 5.0,
             reviewCount: typeof row.reviewCount === 'number' ? row.reviewCount : 1,
             priceLevel: row.priceLevel || row.price_level || 'Moderate',
             heroImage:
               row.heroImage ||
               row.hero_image ||
-              'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-            galleryImages:
+              '/hero.webp',
+            galleryImages: sanitizeBusinessPhotos(
               Array.isArray(row.galleryImages) && row.galleryImages.length > 0
                 ? row.galleryImages
                 : Array.isArray(row.gallery_images) && row.gallery_images.length > 0
                 ? row.gallery_images
-                : [row.heroImage || row.hero_image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
+                : [row.heroImage || row.hero_image || '/hero.webp']
+            ),
             description: row.description || `${row.name} in Kahawa West`,
             services: Array.isArray(row.services) ? row.services : [],
             features: Array.isArray(row.features) ? row.features : [],
@@ -491,12 +500,24 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
             updatedAt: row.updatedAt || row.updated_at,
           }));
 
+        // Deduplicate businesses strictly by normalized name and ID to retain the exact authentic listing
+        const seenNames = new Set<string>();
+        const seenIds = new Set<string>();
+        const deduplicatedMapped: Business[] = [];
+        for (const b of mapped) {
+          const normName = (b.name || '').toLowerCase().trim();
+          if (seenNames.has(normName) || seenIds.has(b.id)) continue;
+          seenNames.add(normName);
+          seenIds.add(b.id);
+          deduplicatedMapped.push(b);
+        }
+
         try {
-          localStorage.setItem(CACHE_KEYS.BUSINESSES_DATA, JSON.stringify(mapped));
+          localStorage.setItem(CACHE_KEYS.BUSINESSES_DATA, JSON.stringify(deduplicatedMapped));
           localStorage.setItem(CACHE_KEYS.BUSINESSES_TIME, String(Date.now()));
         } catch {}
 
-        return mapped;
+        return deduplicatedMapped;
       } catch (fbErr) {
         console.warn('Firebase fetch businesses fallback:', fbErr);
         const cachedData = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
@@ -576,7 +597,13 @@ export const getStoredBusinesses = (seedBusinesses: Business[]): Business[] => {
       return false;
     };
 
-    return [...newCustomListings, ...mergedSeeds].filter((b) => !isPurged(b));
+    return [...newCustomListings, ...mergedSeeds]
+      .filter((b) => !isPurged(b))
+      .map((b) => ({
+        ...b,
+        claimedBy: sanitizeClaimedBy(b.claimedBy),
+        galleryImages: sanitizeBusinessPhotos(b.galleryImages || [b.heroImage].filter(Boolean) as string[]),
+      }));
   } catch {
     return seedBusinesses;
   }

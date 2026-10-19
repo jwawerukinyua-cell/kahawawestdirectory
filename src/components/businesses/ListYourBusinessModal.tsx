@@ -18,13 +18,14 @@ import {
   KeyRound,
   Clock,
   MessageCircle,
+  ShieldCheck,
 } from 'lucide-react';
 import { Business, EstateZone, BusinessApplication, OperationType } from '../../types';
 import { saveBusinessApplication, saveCustomizedBusiness, generateBusinessSlug, checkActionRateLimit } from '../../lib/supabase';
 import { DEFAULT_OPENING_HOURS } from '../../data/defaultOpeningHours';
 import { registerMerchantAccount } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
-import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
+import { compressImageFile, validateImageFile, isGenericPlaceholderPhoto } from '../../lib/imageCompression';
 import { getWhatsAppChatUrl } from '../../lib/phoneUtils';
 
 interface ListYourBusinessModalProps {
@@ -72,12 +73,8 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
   const [mpesaNumber, setMpesaNumber] = useState('');
   const [mpesaAccountName, setMpesaAccountName] = useState('');
 
-  // 3 Photos: 1 Main Card Hero + 2 Additional Photos (Capped to 3 for standard listings to optimize data egress)
-  const [photos, setPhotos] = useState<string[]>([
-    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
-  ]);
+  // 3 Photo slots: 1 Main Card Hero + 2 Additional Photos (Clean uploads without generic placeholders)
+  const [photos, setPhotos] = useState<string[]>(['', '', '']);
 
   if (!isOpen) return null;
 
@@ -153,6 +150,10 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
       const effectiveRole = isListingOnBehalf ? 'Listing on Behalf of Owner' : applicantRole;
       const displayZone = zone === 'Other (Kahawa West Area)' && customZone.trim() ? customZone.trim() : zone;
 
+      const validPhotos = photos.filter((p) => p && p.trim() !== '' && !isGenericPlaceholderPhoto(p));
+      const heroPhoto = validPhotos[0] || '';
+      const galleryPhotos = validPhotos;
+
       const newBusinessRecord: Business = {
         id: newId,
         slug: slug,
@@ -171,14 +172,14 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         isVerified: false,
         isClaimed: false,
         claimedBy: isListingOnBehalf
-          ? `${applicantName || 'Agent'} (On Behalf of ${ownerFullName || 'Owner'})`
+          ? `${applicantName || 'Manager'} (Manager)`
           : `${applicantName || 'Proprietor'} (${applicantRole})`,
         claimedAt: new Date().toISOString().split('T')[0],
         rating: 5.0,
         reviewCount: 0,
         priceLevel: 'Moderate',
-        heroImage: photos[0],
-        galleryImages: photos,
+        heroImage: heroPhoto,
+        galleryImages: galleryPhotos,
         socialLinks: (website.trim() || facebook.trim() || instagram.trim() || tiktok.trim()) ? {
           website: website.trim() ? (website.startsWith('http') ? website.trim() : `https://${website.trim()}`) : undefined,
           facebook: facebook.trim() ? (facebook.startsWith('http') ? facebook.trim() : `https://${facebook.trim()}`) : undefined,
@@ -261,15 +262,17 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
         services: ['Local Service in Kahawa West', 'Direct Resident Support'],
         mpesaType,
         mpesaNumber,
-        heroImage: photos[0],
-        galleryImages: photos,
+        heroImage: heroPhoto,
+        galleryImages: galleryPhotos,
         applicantName,
         applicantPhone: phone,
         applicantRole: effectiveRole,
+        ownerName: isListingOnBehalf ? ownerFullName.trim() : undefined,
+        ownerPhone: isListingOnBehalf ? ownerPhoneNumber.trim() : undefined,
         merchantPin: merchantPin || '1234',
         status: 'pending',
         notes: isListingOnBehalf
-          ? `[Listed on Behalf of Owner: ${ownerFullName} (${ownerPhoneNumber})]`
+          ? `[CONFIDENTIAL - Editorial Desk Only: Listed on Behalf of Owner: ${ownerFullName.trim()} (${ownerPhoneNumber.trim()})]`
           : undefined,
         created_at: new Date().toISOString(),
       };
@@ -469,32 +472,44 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
               </label>
 
               {isListingOnBehalf && (
-                <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fadeIn">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Owner's Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      required={isListingOnBehalf}
-                      value={ownerFullName}
-                      onChange={(e) => setOwnerFullName(e.target.value)}
-                      placeholder="e.g. Mama Mary Wanjiku"
-                      className="w-full p-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    />
+                <div className="mt-3 pt-3 border-t border-slate-200 space-y-3 animate-fadeIn">
+                  <div className="p-3 rounded-xl bg-emerald-50/90 border border-emerald-300/80 text-xs text-emerald-950 flex items-start gap-2.5 shadow-2xs">
+                    <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block font-bold text-emerald-900 mb-0.5">100% Confidentiality Guarantee for Business Owners:</strong>
+                      <p className="text-[11px] text-emerald-800 leading-relaxed">
+                        The business owner's name and contact information are strictly confidential and will <strong>ONLY</strong> be visible internally to the KWEST Editorial desk for verification. They will <strong>NEVER</strong> be displayed on the public directory or on the merchant dashboard. Visitors and customers will only see your details as manager and the business contacts you provide.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Owner's Phone / WhatsApp *
-                    </label>
-                    <input
-                      type="tel"
-                      required={isListingOnBehalf}
-                      value={ownerPhoneNumber}
-                      onChange={(e) => setOwnerPhoneNumber(e.target.value)}
-                      placeholder="0712 345 678"
-                      className="w-full p-2 rounded-lg border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Owner's Full Name (Private - Editorial Desk Only) *
+                      </label>
+                      <input
+                        type="text"
+                        required={isListingOnBehalf}
+                        value={ownerFullName}
+                        onChange={(e) => setOwnerFullName(e.target.value)}
+                        placeholder="e.g. Mama Mary Wanjiku"
+                        className="w-full p-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Owner's Phone / WhatsApp (Private - Editorial Desk Only) *
+                      </label>
+                      <input
+                        type="tel"
+                        required={isListingOnBehalf}
+                        value={ownerPhoneNumber}
+                        onChange={(e) => setOwnerPhoneNumber(e.target.value)}
+                        placeholder="0712 345 678"
+                        className="w-full p-2 rounded-lg border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -878,28 +893,43 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
 
               {/* 3 Responsive Photo Slots Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {photos.slice(0, 3).map((p, idx) => {
-                  const photoSrc =
-                    p && p.trim() !== ''
-                      ? p
-                      : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
-                  return (
+                {photos.slice(0, 3).map((p, idx) => (
                   <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-2 flex flex-col justify-between">
-                    <div className="relative h-28 sm:h-32 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
-                      <img 
-                        src={photoSrc} 
-                        alt={`Business photo preview slot ${idx + 1}`} 
-                        title={`Photo upload slot ${idx + 1}`}
-                        className="w-full h-full object-cover" 
-                        referrerPolicy="no-referrer" 
-                      />
-                      <span className={`absolute top-1 left-1 px-2 py-0.5 rounded text-[10px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
-                        {idx === 0 ? '★ 1. Main Hero' : idx === 1 ? '2. Additional Photo' : '3. Additional Photo'}
-                      </span>
+                    {p && p.trim() !== '' ? (
+                      <div className="relative h-28 sm:h-32 rounded-lg overflow-hidden border border-slate-300 bg-slate-100 group">
+                        <img 
+                          src={p} 
+                          alt={`Business photo preview slot ${idx + 1}`} 
+                          title={`Photo upload slot ${idx + 1}`}
+                          className="w-full h-full object-cover" 
+                          referrerPolicy="no-referrer" 
+                        />
+                        <span className={`absolute top-1 left-1 px-2 py-0.5 rounded text-[10px] font-bold ${idx === 0 ? 'bg-emerald-600 text-white' : 'bg-black/70 text-white'}`}>
+                          {idx === 0 ? '★ 1. Main Hero' : idx === 1 ? '2. Additional Photo' : '3. Additional Photo'}
+                        </span>
 
-                      <label className="absolute inset-0 bg-black/60 text-white flex flex-col items-center justify-center gap-1 cursor-pointer opacity-0 hover:opacity-100 sm:group-hover:opacity-100 transition-opacity">
-                        <Upload className="w-4 h-4" />
-                        <span className="text-[10px] font-bold">Replace</span>
+                        <label className="absolute inset-0 bg-black/60 text-white flex flex-col items-center justify-center gap-1 cursor-pointer opacity-0 hover:opacity-100 sm:group-hover:opacity-100 transition-opacity">
+                          <Upload className="w-4 h-4" />
+                          <span className="text-[10px] font-bold">Replace Photo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleSingleSlotUpload(idx, e)}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <label className="relative h-28 sm:h-32 rounded-lg border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/50 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition p-2 text-center group">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 group-hover:bg-emerald-100 flex items-center justify-center text-slate-500 group-hover:text-emerald-700 transition">
+                          <Camera className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-700 group-hover:text-emerald-900 leading-tight">
+                          {idx === 0 ? '★ Upload Hero Photo' : `+ Add Photo #${idx + 1}`}
+                        </span>
+                        <span className="text-[9px] text-slate-400">
+                          {idx === 0 ? 'Card cover image' : 'Optional storefront/work'}
+                        </span>
                         <input
                           type="file"
                           accept="image/*"
@@ -907,20 +937,31 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                           className="hidden"
                         />
                       </label>
-                    </div>
+                    )}
 
-                    <label className="block w-full text-center py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold text-[11px] cursor-pointer transition border border-slate-300">
-                      <span>Change</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleSingleSlotUpload(idx, e)}
-                        className="hidden"
-                      />
-                    </label>
+                    {p && p.trim() !== '' && (
+                      <div className="flex items-center gap-1.5">
+                        <label className="flex-1 text-center py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold text-[11px] cursor-pointer transition border border-slate-300">
+                          <span>Change</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleSingleSlotUpload(idx, e)}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handlePhotoChange(idx, '')}
+                          className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-semibold transition"
+                          title="Remove photo"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </div>
-                );
-              })}
+                ))}
               </div>
             </div>
 

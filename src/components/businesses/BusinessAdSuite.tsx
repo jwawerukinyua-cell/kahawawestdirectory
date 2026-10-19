@@ -143,7 +143,7 @@ export const BusinessAdSuite: React.FC<BusinessAdSuiteProps> = ({
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#240101] via-[#3B0202] to-[#1a0101] p-4 sm:p-5 text-white border-2 border-amber-400/70 shadow-2xl">
               <div className="absolute top-0 right-0 w-48 h-full opacity-25 pointer-events-none">
                 <ListingImage
-                  src={business.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'}
+                  src={business.heroImage || '/hero.webp'}
                   business={business}
                   imageType="ad"
                   className="w-full h-full object-cover filter blur-xs"

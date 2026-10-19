@@ -140,7 +140,7 @@ export const PromoteShopModal: React.FC<PromoteShopModalProps> = ({
   const [selectedPackage, setSelectedPackage] = useState<'7_days' | '15_days' | '30_days'>('15_days');
   const [requestCustomDesign, setRequestCustomDesign] = useState(false);
   const [adImage, setAdImage] = useState<string>(() => {
-    return business.heroImage || (business.galleryImages && business.galleryImages[0]) || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80';
+    return business.heroImage || (business.galleryImages && business.galleryImages[0]) || '/hero.webp';
   });
   const [mpesaReceiptCode, setMpesaReceiptCode] = useState('');
   const [copiedField, setCopiedField] = useState<string | null>(null);

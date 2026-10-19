@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Share2, ArrowLeft, Check, MessageSquare, Lock, Sparkles, Edit3, Megaphone, ShieldCheck, LogOut } from 'lucide-react';
 import { Business } from '../../types';
 import { trackBusinessInteraction } from '../../lib/tracking';
-import { isMerchantSessionActive, revokeMerchantSession } from '../../lib/merchantAuth';
+import { isMerchantSessionActive, revokeMerchantSession, sanitizeClaimedBy } from '../../lib/merchantAuth';
 import { BusinessHero } from './BusinessHero';
 import { BusinessGallery } from './BusinessGallery';
 import { BusinessAbout } from './BusinessAbout';
@@ -183,7 +183,7 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
                     Merchant Mode Active
                   </span>
                   <span className="text-stone-700 ml-1.5 hidden sm:inline">
-                    • Viewing as verified owner/manager of <strong className="text-stone-900">{business.name}</strong>
+                    • Logged in as <strong className="text-stone-900">{sanitizeClaimedBy(business.claimedBy) || 'Authorized Manager'}</strong>
                   </span>
                 </div>
               </div>

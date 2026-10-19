@@ -281,6 +281,8 @@ export interface BusinessApplication {
   applicantName: string;
   applicantPhone: string;
   applicantRole: string;
+  ownerName?: string;
+  ownerPhone?: string;
   merchantPin?: string;
   notes?: string;
   status?: 'pending' | 'approved' | 'rejected';

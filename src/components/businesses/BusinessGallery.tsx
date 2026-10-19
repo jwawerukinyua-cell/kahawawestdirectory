@@ -21,7 +21,7 @@ export const BusinessGallery: React.FC<BusinessGalleryProps> = ({ images, busine
     : [business?.heroImage].filter((x): x is string => typeof x === 'string' && x.trim() !== '');
 
   const gallery = sanitizeBusinessPhotos(rawList, 3);
-  const mainPhoto = gallery[0] || business?.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+  const mainPhoto = gallery[0] || business?.heroImage || '/hero.webp';
   const additionalPhotos = gallery.slice(1, 3);
 
   const handlePrev = (e: React.MouseEvent) => {

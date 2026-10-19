@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { ListingImage } from '../ui/ListingImage';
 import { formatKenyanPhoneForTel, getWhatsAppChatUrl, formatPhoneForDisplay } from '../../lib/phoneUtils';
 import { isBusinessContactGated, HOUSING_CONTACT_UNLOCK_FEE, maskPhoneNumber } from '../../lib/contactGating';
+import { sanitizeClaimedBy } from '../../lib/merchantAuth';
 
 interface BusinessHeroProps {
   business: Business;
@@ -44,7 +45,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
   const heroImageUrl =
     business.heroImage && business.heroImage.trim() !== ''
       ? business.heroImage
-      : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+      : '/hero.webp';
 
   return (
     <div id="business-hero-section" className="relative bg-[#3B0202] text-white rounded-2xl overflow-hidden shadow-xl mb-6 border border-[#630303] font-sans">
@@ -171,7 +172,7 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
             <>
               <span className="text-stone-600">•</span>
               <span className="text-rose-300 font-medium text-xs">
-                Managed by {business.claimedBy}
+                Managed by {sanitizeClaimedBy(business.claimedBy)}
               </span>
             </>
           )}

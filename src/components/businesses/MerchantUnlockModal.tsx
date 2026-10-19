@@ -89,11 +89,11 @@ export const MerchantUnlockModal: React.FC<MerchantUnlockModalProps> = ({
             </div>
             <div>
               <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Merchant Mode</span>
-              <h3 className="text-base font-bold text-white leading-snug">Owner & Manager Verification</h3>
+              <h3 className="text-base font-bold text-white leading-snug">Merchant Verification</h3>
             </div>
           </div>
           <p className="text-xs text-stone-400">
-            Enter the 4-Digit Security PIN you created when listing or claiming{' '}
+            Enter the 4-Digit Security PIN you created when listing or managing{' '}
             <span className="text-stone-200 font-semibold">{business.name}</span> to unlock your live stats, update information, and manage ad campaigns.
           </p>
         </div>

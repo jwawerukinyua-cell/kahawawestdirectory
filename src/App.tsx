@@ -71,7 +71,8 @@ import {
   PURGED_CLAIM_IDS,
 } from './lib/supabase';
 import { getWhatsAppChatUrl } from './lib/phoneUtils';
-import { updateMerchantPin } from './lib/merchantAuth';
+import { updateMerchantPin, sanitizeClaimedBy } from './lib/merchantAuth';
+import { sanitizeBusinessPhotos } from './lib/imageCompression';
 
 // Layout & Components
 import { Header } from './components/layout/Header';
@@ -379,68 +380,6 @@ export default function App() {
       }
       if (remoteApps !== null) {
         setApplications(remoteApps);
-
-        // Auto-promote any application marked approved in Supabase to live directory businesses (excluding purged)
-        remoteApps.forEach((app) => {
-          const isAppApproved = app.status === 'approved' || (app.status as string) === 'approve';
-          const normName = (app.name || '').toLowerCase().trim();
-          if (isAppApproved && app.name && !PURGED_TEST_BUSINESS_NAMES.has(normName) && !PURGED_TEST_BUSINESS_IDS.has(app.id || '')) {
-            const alreadyInBiz = (remoteBiz || []).some(
-              (b) =>
-                b.name.toLowerCase().trim() === app.name.toLowerCase().trim() ||
-                (b.slug && app.name && generateBusinessSlug(app.name) === b.slug)
-            );
-            if (!alreadyInBiz) {
-              const newBizId = `kw-biz-${app.id || Date.now()}`;
-              const newSlug = generateBusinessSlug(app.name);
-              const approvedBusiness: Business = {
-                id: newBizId,
-                slug: newSlug,
-                name: app.name,
-                tagline: `${app.category} in ${app.customZone || app.zone}, Kahawa West`,
-                category: app.category,
-                subCategory: app.subCategory,
-                zone: app.zone,
-                customZone: app.customZone,
-                landmark: app.landmark,
-                addressDetails: `${app.landmark}, ${app.customZone || app.zone}, Kahawa West`,
-                phone: app.phone,
-                whatsapp: app.whatsapp || app.phone,
-                email: app.email,
-                isVerified: true,
-                isClaimed: true,
-                claimedBy: `${app.applicantName} (${app.applicantRole || 'Owner'})`,
-                rating: 5.0,
-                reviewCount: 1,
-                priceLevel: 'Moderate',
-                heroImage: app.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-                galleryImages: app.galleryImages && app.galleryImages.length > 0 ? app.galleryImages : [app.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
-                description: app.description,
-                services: app.services && app.services.length > 0 ? app.services : ['Local Service in Kahawa West', 'Direct Resident Support'],
-                features: ['Lipa na M-Pesa Available', 'Local Kahawa West Resident Owned', 'Verified Contact'],
-                socialLinks: app.socialLinks || (app.website || app.facebook || app.instagram || app.tiktok ? {
-                  website: app.website,
-                  facebook: app.facebook,
-                  instagram: app.instagram,
-                  tiktok: app.tiktok,
-                  whatsapp: app.whatsapp || app.phone,
-                } : undefined),
-                mpesa: app.mpesaNumber
-                  ? {
-                      type: (app.mpesaType as 'Till' | 'Pochi la Biashara' | 'Paybill' | 'Send Money') || 'Till',
-                      number: app.mpesaNumber,
-                      accountName: app.name.toUpperCase(),
-                    }
-                  : undefined,
-                openingHours: DEFAULT_OPENING_HOURS,
-                coordinates: { lat: -1.1850, lng: 36.8850 },
-                createdAt: new Date().toISOString(),
-              };
-              saveCustomizedBusiness(approvedBusiness).catch(console.warn);
-              setBusinesses((prev) => [approvedBusiness, ...prev]);
-            }
-          }
-        });
       }
       if (remoteBiz && remoteBiz.length > 0) {
         const isPurged = (b: Business) => {
@@ -450,7 +389,13 @@ export default function App() {
           return false;
         };
 
-        const cleanRemote = remoteBiz.filter((b) => !isPurged(b));
+        const cleanRemote = remoteBiz
+          .filter((b) => !isPurged(b))
+          .map((b) => ({
+            ...b,
+            claimedBy: sanitizeClaimedBy(b.claimedBy),
+            galleryImages: sanitizeBusinessPhotos(b.galleryImages || [b.heroImage].filter(Boolean) as string[]),
+          }));
 
         setBusinesses((prev) => {
           const remoteMap = new Map(cleanRemote.map((b) => [b.id, b]));
@@ -475,7 +420,19 @@ export default function App() {
             if (normName && prevNames.has(normName)) return false;
             return b.isVerified === true;
           });
-          return [...updatedPrev, ...newVerifiedRemote];
+
+          const merged = [...updatedPrev, ...newVerifiedRemote];
+          const finalSeenNames = new Set<string>();
+          const finalSeenIds = new Set<string>();
+          const deduplicated: Business[] = [];
+          for (const item of merged) {
+            const n = (item.name || '').toLowerCase().trim();
+            if (finalSeenNames.has(n) || finalSeenIds.has(item.id)) continue;
+            finalSeenNames.add(n);
+            finalSeenIds.add(item.id);
+            deduplicated.push(item);
+          }
+          return deduplicated;
         });
       }
       if (remoteStories && remoteStories.length > 0) {
@@ -1083,12 +1040,14 @@ export default function App() {
       email: app.email,
       isVerified: true,
       isClaimed: true,
-      claimedBy: `${app.applicantName} (${app.applicantRole || 'Owner'})`,
+      claimedBy: (app.applicantRole === 'Listing on Behalf of Owner' || (app.notes && app.notes.includes('Behalf')))
+        ? `${app.applicantName || 'Manager'} (Manager)`
+        : `${app.applicantName} (${app.applicantRole || 'Owner'})`,
       rating: 5.0,
       reviewCount: 1,
       priceLevel: 'Moderate',
-      heroImage: app.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-      galleryImages: app.galleryImages && app.galleryImages.length > 0 ? app.galleryImages : [app.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'],
+      heroImage: app.heroImage || '/hero.webp',
+      galleryImages: sanitizeBusinessPhotos(app.galleryImages && app.galleryImages.length > 0 ? app.galleryImages : [app.heroImage].filter(Boolean) as string[]),
       description: app.description,
       services: app.services || [],
       features: ['Lipa na M-Pesa Available', 'Local Kahawa West Resident Owned', 'Verified Contact'],

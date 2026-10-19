@@ -25,7 +25,7 @@ import { Business, EstateZone, OperationType } from '../../types';
 import { saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
 import { getMerchantPinForBusiness, updateMerchantPin } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
-import { compressImageFile, validateImageFile } from '../../lib/imageCompression';
+import { compressImageFile, validateImageFile, isGenericPlaceholderPhoto, sanitizeBusinessPhotos } from '../../lib/imageCompression';
 
 interface EditBusinessModalProps {
   business: Business | null;
@@ -208,20 +208,13 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
       const isApproved = Boolean(business.isVerified);
       const targetCount = isApproved ? 5 : 3;
 
-      const fallbackPhotos = [
-        business.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80',
-      ];
-
-      const existingPhotos = (business.galleryImages && business.galleryImages.length > 0)
-        ? business.galleryImages.slice(0, targetCount)
-        : fallbackPhotos.slice(0, targetCount);
+      const rawExisting = (business.galleryImages && business.galleryImages.length > 0)
+        ? business.galleryImages
+        : [business.heroImage].filter((x): x is string => typeof x === 'string' && x.trim() !== '');
+      const existingPhotos = sanitizeBusinessPhotos(rawExisting, targetCount);
       
       while (existingPhotos.length < targetCount) {
-        existingPhotos.push('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80');
+        existingPhotos.push('');
       }
       setPhotos(existingPhotos.slice(0, targetCount));
 
@@ -300,9 +293,12 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
 
     setIsSubmitting(true);
 
-    const validPhotos = photos
+    const filteredPhotos = photos
       .slice(0, maxPhotos)
-      .map((p) => (p && p.trim() !== '' ? p : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'));
+      .filter((p): p is string => typeof p === 'string' && p.trim() !== '' && !isGenericPlaceholderPhoto(p));
+    const validPhotos = filteredPhotos.length > 0 
+      ? filteredPhotos 
+      : [business.heroImage || '/hero.webp'];
     const newSlug = generateBusinessSlug(name.trim()) || business.slug;
 
     const updatedBusiness: Business = {
@@ -762,7 +758,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
                     </h5>
                   </div>
                   <p className="text-[11px] text-amber-900/80 leading-relaxed">
-                    This 4-digit PIN allows the owner or manager to unlock live analytics, edit details, and reply to customer feedback on their phone. If you registered on behalf of the owner, you or the owner can update this PIN at any time.
+                    This 4-digit PIN allows the business manager to unlock live analytics, edit details, and reply to customer feedback on their phone. You can update this PIN at any time.
                   </p>
                   <div className="max-w-xs">
                     <label className="block text-[11px] font-bold text-amber-950 mb-1">
@@ -897,7 +893,7 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
 
               <div className={`grid grid-cols-1 ${isApproved ? 'sm:grid-cols-5' : 'sm:grid-cols-3'} gap-3`}>
                 {photos.slice(0, maxPhotos).map((p, idx) => {
-                  const displayImg = p && p.trim() !== '' ? p : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+                  const displayImg = p && p.trim() !== '' ? p : '/hero.webp';
                   return (
                     <div key={idx} className="bg-white p-2.5 rounded-2xl border border-stone-300 shadow-2xs space-y-2 flex flex-col justify-between">
                       <div className={`relative ${isApproved ? 'h-24' : 'h-28 sm:h-32'} rounded-xl overflow-hidden bg-stone-100 border border-stone-200`}>

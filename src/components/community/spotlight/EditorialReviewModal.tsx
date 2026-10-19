@@ -2039,7 +2039,37 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                                   </div>
                                 )}
 
-                                {app.notes && (
+                                {/* Confidential Owner Details (Editorial Desk Only) */}
+                                {(app.ownerName || app.ownerPhone || (app.notes && app.notes.includes('Behalf of Owner'))) && (
+                                  <div className="mt-2 p-3 rounded-xl bg-purple-950/40 border border-purple-800/60 text-xs text-purple-200 space-y-1.5 shadow-sm">
+                                    <div className="flex items-center gap-1.5 font-bold text-purple-300">
+                                      <ShieldCheck className="w-4 h-4 text-purple-400" />
+                                      <span>Business Owner Details (Private — Editorial Desk Only)</span>
+                                      <span className="text-[10px] bg-purple-900/80 text-purple-200 px-2 py-0.5 rounded-full border border-purple-700 ml-auto">
+                                        Hidden from Visitors & Merchant Dashboard
+                                      </span>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-stone-300 pt-0.5">
+                                      <div>
+                                        <span className="text-stone-400">Owner Name: </span>
+                                        <strong className="text-white">
+                                          {app.ownerName || app.notes?.match(/Owner:\s*([^(\]]+)/)?.[1]?.trim() || 'Confidential Owner'}
+                                        </strong>
+                                      </div>
+                                      <div>
+                                        <span className="text-stone-400">Owner Phone/WhatsApp: </span>
+                                        <strong className="text-white">
+                                          {app.ownerPhone || app.notes?.match(/Owner:[^()]+\(([^)]+)\)/)?.[1]?.trim() || 'Confidential Contact'}
+                                        </strong>
+                                      </div>
+                                    </div>
+                                    <p className="text-[11px] text-purple-300/80 mt-1">
+                                      ✓ Protected: The owner's name and contacts are strictly private to this Editorial Desk. Only the listing applicant (<strong className="text-white">{app.applicantName}</strong>) and public contacts ({app.phone}) appear to visitors.
+                                    </p>
+                                  </div>
+                                )}
+
+                                {app.notes && !app.notes.includes('Behalf of Owner') && (
                                   <div className="mt-1 p-2 rounded-xl bg-amber-950/30 border border-amber-800/40 text-xs text-amber-300">
                                     <span className="font-semibold">Notes: </span>
                                     {app.notes}

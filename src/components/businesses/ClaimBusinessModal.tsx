@@ -82,9 +82,9 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
     business.galleryImages && business.galleryImages.length >= 3
       ? business.galleryImages.slice(0, 3)
       : [
-          business.heroImage || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-          business.galleryImages?.[1] || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
-          business.galleryImages?.[2] || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
+          business.heroImage || '/hero.webp',
+          business.galleryImages?.[1] || '/hero.webp',
+          business.galleryImages?.[2] || '/hero.webp',
         ]
   );
 
@@ -629,7 +629,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                       const displayPhoto =
                         photoUrl && photoUrl.trim() !== ''
                           ? photoUrl
-                          : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+                          : '/hero.webp';
                       return (
                         <div
                           key={idx}

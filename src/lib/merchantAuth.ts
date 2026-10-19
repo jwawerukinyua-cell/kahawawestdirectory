@@ -228,3 +228,25 @@ export function verifyMerchantPin(
 
   return { success: false, message: 'Invalid PIN. If you forgot your PIN, tap "Contact Editorial Desk" below for instant PIN reset.' };
 }
+
+/**
+ * Ensures that the public and merchant displays strictly show ONLY the person who
+ * listed/manages the business and protects the business owner's personal identity, phone, or PIN.
+ * Leaked strings like "(Listing on Behalf of Owner: Samson Okello 0711270977) [PIN: 1234]"
+ * are safely sanitized to "Lilian Owino (Manager)" or "Lilian Owino".
+ */
+export function sanitizeClaimedBy(claimedBy?: string | null): string {
+  if (!claimedBy || typeof claimedBy !== 'string') return '';
+  let cleaned = claimedBy.replace(/\[PIN:\s*[^\]]+\]/gi, '').trim();
+  cleaned = cleaned.replace(/\[CONFIDENTIAL[^\]]*\]/gi, '').trim();
+
+  // If listed on behalf of owner, only the person who listed the business (manager/lister) is visible
+  if (/on behalf of/i.test(cleaned) || /listing on behalf/i.test(cleaned)) {
+    const applicantName = cleaned.split(/\s*\(|\s+on behalf|\s+listing on behalf/i)[0].trim();
+    return applicantName ? `${applicantName} (Manager)` : 'Manager';
+  }
+
+  // Strip any accidental owner phone or annotations
+  cleaned = cleaned.replace(/Owner:\s*[^()]+(\([^)]+\))?/gi, '').trim();
+  return cleaned;
+}

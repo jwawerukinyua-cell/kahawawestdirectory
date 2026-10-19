@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Business, CommunityFeedback } from '../../types';
 import { getStoredFeedback, saveFeedbackBusinessReply } from '../../lib/supabase';
-import { verifyMerchantPin } from '../../lib/merchantAuth';
+import { verifyMerchantPin, sanitizeClaimedBy } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
 
 interface BusinessCommunityFeedbackProps {
@@ -68,7 +68,7 @@ export const BusinessCommunityFeedback: React.FC<BusinessCommunityFeedbackProps>
     setReplyError(null);
     setReplyMessage('');
     setOwnerPin('');
-    setOwnerName(business.name ? `${business.name} Owner` : 'Management');
+    setOwnerName(business.claimedBy ? sanitizeClaimedBy(business.claimedBy) : (business.name ? `${business.name} Management` : 'Management'));
   };
 
   const handleCancelReply = () => {

@@ -157,7 +157,7 @@ export async function saveBusinessToFirestore(business: Business): Promise<boole
     if (error?.message && error.message.includes('exceeds the maximum allowed size')) {
       try {
         console.warn(`Emergency size recovery for business ${business.id}`);
-        const fallback = 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+        const fallback = '/hero.webp';
         const minimalPayload = {
           id: business.id,
           slug: business.slug,

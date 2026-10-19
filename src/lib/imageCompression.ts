@@ -252,7 +252,7 @@ export async function ensureSafeFirestorePayload<T extends Record<string, any>>(
   // If somehow still > 950KB, strip base64 and use ultra-reliable CDN fallback
   if (byteSize > 950000) {
     console.warn(`Firestore document payload (${byteSize} bytes) approached 1MB limit; replacing oversized local base64 with verified CDN fallback`);
-    const fallback = 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+    const fallback = '/hero.webp';
     if (clone.heroImage && clone.heroImage.startsWith('data:image/')) clone.heroImage = fallback;
     if (clone.imageUrl && clone.imageUrl.startsWith('data:image/')) clone.imageUrl = fallback;
     if (Array.isArray(clone.galleryImages)) clone.galleryImages = [clone.heroImage || fallback];
@@ -294,6 +294,7 @@ export const PERSISTENT_PLACEHOLDER_MARKERS = [
   'photo-1517245386807-bb43f82c33c4', // cafe table
   'photo-1522337360788-8b13dee7a37e', // generic cosmetics
   'photo-1587854692152-cbe660dbde88', // pharmacy pills
+  'photo-1544025162-d76694265947', // generic grilled platter / food fallback
 ];
 
 export function isGenericPlaceholderPhoto(url?: string | null): boolean {
