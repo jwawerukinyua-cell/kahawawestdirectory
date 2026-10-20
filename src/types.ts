@@ -58,6 +58,17 @@ export type OperationType =
   | 'mobile_service'
   | 'freelancer';
 
+export interface CollectiveMember {
+  id: string;
+  name: string;
+  role?: string;
+  phone: string;
+  whatsapp?: string;
+  photoUrl?: string; // photo or placeholder
+  specialty?: string;
+  isRepresentative?: boolean; // e.g. Purity Mugambi who coordinated listing
+}
+
 export interface Business {
   id: string;
   slug: string;
@@ -103,6 +114,8 @@ export interface Business {
   isContactGated?: boolean;
   isContactUnlocked?: boolean;
   contactUnlockFee?: number;
+  isCollective?: boolean;
+  collectiveMembers?: CollectiveMember[];
   createdAt?: string;
   updatedAt?: string;
 }

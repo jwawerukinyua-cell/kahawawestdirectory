@@ -3,6 +3,66 @@ import { deleteStoryFromSupabase } from '../lib/supabase';
 
 export const INITIAL_COMMUNITY_STORIES: CommunityStory[] = [
   {
+    id: 'story-pp2-graduation-make-sense',
+    slug: 'does-a-pp2-graduation-make-sense-a-question-from-kahawa-west-parents',
+    title: 'Does a PP2 Graduation Make Sense? A Question from a Kahawa West Parents?',
+    subtitle: '🎓 Gowns, certificates, photo packages & end-of-year levies: Are early childhood ceremonies becoming an unnecessary burden for local families?',
+    category: 'Schools & Education',
+    zone: 'Jacaranda Estate',
+    excerpt: 'As the year ends, many parents in Kahawa West are receiving the same message from their children’s schools: PP2 graduation is coming, and payment is expected. ...',
+    content: `As the year ends, many parents in Kahawa West are receiving the same message from their children’s schools: **PP2 graduation is coming, and payment is expected.**
+
+Between gowns, certificates, framed studio portraits, cake cutting, school hire for sound systems, and special attire, the bill for a child finishing pre-primary school (PP2) can quickly climb between **KES 2,500 and KES 6,000 per family**—before considering outfits for parents and family lunch celebrations.
+
+For a family with another child joining Junior Secondary or Grade 1 in January, that is not loose pocket change. It is a genuine financial decision.
+
+---
+
+### 🎓 Where Did the PP2 Graduation Culture Come From?
+
+A generation ago, graduating was an honour reserved for university scholars or at least secondary school leavers. Today in Kahawa West—across Jacaranda Estate, Bima Road, Kamiti Road, and Congo—even daycare playgroups and pre-primary levels host ceremonies with miniature mortarboards, gowns, and convocation processions.
+
+Schools defend the practice as:
+1. **Milestone Celebration:** Marking a child's successful completion of the Early Years Education (EYE) cycle under the CBC framework before stepping into primary schooling.
+2. **Confidence Building:** Giving young learners their moment on stage to recite memory verses, perform poems, and overcome stage fright before parents.
+3. **Memorable Keepsake:** Creating lifelong photographic memories for the family archive.
+
+---
+
+### 💸 The Financial Reality for Parents
+
+Yet behind the colourful balloons and smiles, many local parents are feeling the squeeze.
+
+> *"My son is finishing PP2 this November. The graduation levy is KES 3,800. In January, he joins Grade 1 at the same school, and the book list plus new uniform quotation is already over KES 14,000. Why am I spending four thousand shillings on a one-hour event and a hired gown?"*  
+> — *Parent from Jacaranda Estate*
+
+The debate isn't about whether our children deserve celebration. Every parent wants to applaud their child's growth. The real question is **scale and compulsion**:
+- Should PP2 graduation ceremonies be mandatory or optional?
+- Are schools using graduation levies as an end-of-year revenue stream?
+- Would modest in-class certificate handovers without expensive hired robes be more considerate of strained household budgets?
+
+---
+
+### 🗳️ What Is Your View?
+
+Does your child have a PP2 graduation ceremony this term? What is your school charging, and do you feel it is money well spent or an unnecessary expense before Grade 1?
+
+Share your comments and join the conversation below.`,
+    imageUrl: '/pp2-graduation-photo.jpg',
+    imageCaption: 'PP2 pupils celebrating graduation in Jacaranda Estate — Photo courtesy of Kahawa West parents',
+    isRealPhotoConfirmed: true,
+    authorName: 'Mfalme Ukweli',
+    authorEmail: 'support@kahawawestdirectory.co.ke',
+    authorPhone: '+254764405842',
+    authorRole: 'Admin-Kahawa West Directory',
+    date: '2026-10-18',
+    readTimeMinutes: 3,
+    featured: true,
+    status: 'published',
+    likes: 1,
+    dislikes: 0,
+  },
+  {
     id: 'story-1788508956440',
     slug: 'kahawa-pride-fc-grassroots-success',
     title: 'Kahawa Pride FC Is More Than A Football Club. It Is A Grassroots Success Story',
@@ -61,7 +121,7 @@ Follow the journey. Support the teams. Show up for Kahawa. 🦁⚽
     authorRole: 'Podcast Host-ArtTheworkshop',
     date: '2026-09-04',
     readTimeMinutes: 3,
-    featured: true,
+    featured: false,
     status: 'published',
     likes: 1,
     dislikes: 0,
@@ -207,7 +267,7 @@ Have questions or need help listing?
     authorRole: 'Admin - Kahawa West Directory',
     date: '2026-10-03',
     readTimeMinutes: 3,
-    featured: true,
+    featured: false,
     status: 'published',
     likes: 1,
     dislikes: 0,
@@ -332,7 +392,7 @@ Because that is the conversation Kahawa West needs: not a competition between sc
     authorRole: 'Admin - Kahawa West Directory',
     date: '2026-10-03',
     readTimeMinutes: 4,
-    featured: true,
+    featured: false,
     status: 'published',
     likes: 1,
     dislikes: 0,
@@ -397,7 +457,7 @@ export function getStoredCommunityStories(): CommunityStory[] {
       return INITIAL_COMMUNITY_STORIES.filter((s) => !deletedIds.has(s.id) && s.id !== 'story-02');
     }
 
-    // Merge updated initial stories (like Kahawa Pride FC) with any locally added stories
+    // Merge updated initial stories with any locally added stories
     const initialMap = new Map(INITIAL_COMMUNITY_STORIES.map((s) => [s.id, s]));
     const result: CommunityStory[] = [];
     const seenIds = new Set<string>();
@@ -412,15 +472,6 @@ export function getStoredCommunityStories(): CommunityStory[] {
         continue;
       }
       if (p.id === 'story-02' || p.id === 'story-1788342289836' || p.id === 'story-1788450086647') {
-        if (deletedIds.has('story-1788508956440') || deletedIds.has('story-02')) continue;
-        const realSeed = initialMap.get('story-1788508956440')!;
-        if (realSeed) {
-          result.push(realSeed);
-          seenIds.add('story-1788508956440');
-        }
-        seenIds.add('story-1788450086647');
-        seenIds.add('story-1788342289836');
-        seenIds.add('story-02');
         continue;
       }
 
@@ -436,7 +487,7 @@ export function getStoredCommunityStories(): CommunityStory[] {
           zone: p.zone || seed.zone,
           content: p.content || seed.content,
           excerpt: p.excerpt || seed.excerpt,
-          featured: p.featured !== undefined ? p.featured : seed.featured,
+          featured: seed.featured, // Seed decides featured flag so PP2 graduation stays featured
           authorName: p.authorName || seed.authorName,
           authorEmail: p.authorEmail || seed.authorEmail,
           authorRole: p.authorRole || seed.authorRole,
@@ -462,10 +513,24 @@ export function getStoredCommunityStories(): CommunityStory[] {
       }
     }
 
-    // Make sure story-1788508956440 is present and featured if not deleted
-    if (!deletedIds.has('story-1788508956440') && !result.some((s) => s.id === 'story-1788508956440')) {
-      const realStory = INITIAL_COMMUNITY_STORIES.find((s) => s.id === 'story-1788508956440');
-      if (realStory) result.unshift(realStory);
+    // Always ensure PP2 graduation story is active featured at index 0
+    const pp2Story = INITIAL_COMMUNITY_STORIES.find((s) => s.id === 'story-pp2-graduation-make-sense');
+    if (pp2Story && !deletedIds.has(pp2Story.id)) {
+      const idx = result.findIndex((s) => s.id === pp2Story.id);
+      if (idx > 0) {
+        result.splice(idx, 1);
+        result.unshift(pp2Story);
+      } else if (idx === -1) {
+        result.unshift(pp2Story);
+      }
+      // Ensure only PP2 is featured
+      result.forEach((s) => {
+        if (s.id === pp2Story.id) {
+          s.featured = true;
+        } else {
+          s.featured = false;
+        }
+      });
     }
 
     return result;

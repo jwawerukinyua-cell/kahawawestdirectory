@@ -9,6 +9,7 @@ import { BusinessAbout } from './BusinessAbout';
 import { BusinessOffer } from './BusinessOffer';
 import { BusinessOpeningHours } from './BusinessOpeningHours';
 import { BusinessContact } from './BusinessContact';
+import { CollectiveMembersSection } from './CollectiveMembersSection';
 import { BusinessCommunityFeedback } from './BusinessCommunityFeedback';
 import { BusinessEngagementStats } from './BusinessEngagementStats';
 import { BusinessAdSuite } from './BusinessAdSuite';
@@ -266,6 +267,15 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
               business={business}
               onAdEnquiryClick={() => onAdEnquiryClick?.(business)}
               onPromoteShopClick={handleOpenPromote}
+            />
+          )}
+
+          {/* 3d. 5-Member Equal Women's Collective Showcase (when business is a collective) */}
+          {business.collectiveMembers && business.collectiveMembers.length > 0 && (
+            <CollectiveMembersSection
+              business={business}
+              isMerchantUnlocked={isMerchantUnlocked}
+              onEditClick={onEditClick ? () => onEditClick(business) : undefined}
             />
           )}
 

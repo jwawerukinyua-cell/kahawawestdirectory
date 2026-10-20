@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Star, Phone, MessageSquare, ShieldCheck, Share2, Tag, Edit3, Megaphone, Lock } from 'lucide-react';
+import { MapPin, Star, Phone, MessageSquare, ShieldCheck, Share2, Tag, Edit3, Megaphone, Lock, Users } from 'lucide-react';
 import { Business } from '../../types';
 import { VerifiedBadge } from '../ui/VerifiedBadge';
 import { Button } from '../ui/Button';
@@ -168,14 +168,25 @@ export const BusinessHero: React.FC<BusinessHeroProps> = ({
             <MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <span>{business.landmark}</span>
           </div>
-          {business.isClaimed && business.claimedBy && (
+          {business.collectiveMembers && business.collectiveMembers.length > 0 ? (
+            <>
+              <span className="text-stone-600">•</span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-bold text-xs">
+                <Users className="w-3.5 h-3.5" />
+                <span>Equal Collective of {business.collectiveMembers.length} Members</span>
+              </span>
+              <span className="text-stone-400 text-xs hidden sm:inline">
+                (Listed by Purity Mugambi on behalf of the 5)
+              </span>
+            </>
+          ) : business.isClaimed && business.claimedBy ? (
             <>
               <span className="text-stone-600">•</span>
               <span className="text-rose-300 font-medium text-xs">
                 Managed by {sanitizeClaimedBy(business.claimedBy)}
               </span>
             </>
-          )}
+          ) : null}
         </div>
 
         {/* Direct Action Buttons */}

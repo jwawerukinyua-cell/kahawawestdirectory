@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, MessageSquare, MapPin, Mail, Globe, Copy, Check, ExternalLink, Lock, Building2, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
+import { Phone, MessageSquare, MapPin, Mail, Globe, Copy, Check, ExternalLink, Lock, Building2, ShieldCheck, ArrowRight, Sparkles, Users } from 'lucide-react';
 import { Business } from '../../types';
 import { trackBusinessInteraction } from '../../lib/tracking';
 import { formatKenyanPhoneForTel, getWhatsAppChatUrl, formatPhoneForDisplay } from '../../lib/phoneUtils';
@@ -204,6 +204,18 @@ export const BusinessContact: React.FC<BusinessContactProps> = ({ business, onUn
       ) : (
         /* Unlocked Direct Phone & WhatsApp */
         <div className="flex flex-col gap-3 mb-4">
+          {business.collectiveMembers && business.collectiveMembers.length > 0 && (
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-start gap-2.5">
+              <Users className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+              <div>
+                <strong className="block font-bold">5-Member Equal Collective:</strong>
+                <span>
+                  Each lady has her own direct phone line. Call or WhatsApp any of the {business.collectiveMembers.length} members directly from their individual cards above!
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Phone Call Card */}
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3 min-w-0">
             <div className="flex items-center gap-3 min-w-0 flex-1">

@@ -20,8 +20,11 @@ import {
   Image as ImageIcon,
   Sparkles,
   KeyRound,
+  Users,
+  Camera,
+  ShieldCheck,
 } from 'lucide-react';
-import { Business, EstateZone, OperationType } from '../../types';
+import { Business, EstateZone, OperationType, CollectiveMember } from '../../types';
 import { saveCustomizedBusiness, generateBusinessSlug } from '../../lib/supabase';
 import { getMerchantPinForBusiness, updateMerchantPin } from '../../lib/merchantAuth';
 import { Button } from '../ui/Button';
@@ -112,9 +115,10 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
   onBusinessUpdated,
   isAdmin = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<'details' | 'contacts' | 'hours' | 'photos' | 'mpesa'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'contacts' | 'hours' | 'photos' | 'mpesa' | 'collective'>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [collectiveMembers, setCollectiveMembers] = useState<CollectiveMember[]>([]);
 
   // Form State
   const [name, setName] = useState('');
@@ -241,8 +245,40 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
         setOfferDescription('');
         setOfferBadgeText('');
       }
+
+      if (business.collectiveMembers && business.collectiveMembers.length > 0) {
+        setCollectiveMembers(JSON.parse(JSON.stringify(business.collectiveMembers)));
+      } else {
+        setCollectiveMembers([]);
+      }
     }
   }, [business, isOpen]);
+
+  const handleUpdateMember = (index: number, field: keyof CollectiveMember, value: any) => {
+    const updated = [...collectiveMembers];
+    if (updated[index]) {
+      updated[index] = { ...updated[index], [field]: value };
+      setCollectiveMembers(updated);
+    }
+  };
+
+  const handleMemberPhotoUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        alert(validation.error || 'Invalid photo format');
+        return;
+      }
+      try {
+        const dataUrl = await compressImageFile(file, { maxWidth: 500, maxHeight: 500, quality: 0.8 });
+        handleUpdateMember(index, 'photoUrl', dataUrl);
+      } catch (err) {
+        console.error('Failed to compress member photo:', err);
+        alert('Could not process selected image.');
+      }
+    }
+  };
 
   if (!isOpen || !business) return null;
 
@@ -358,6 +394,8 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
             badgeText: offerBadgeText.trim() || 'SPECIAL OFFER',
           }
         : undefined,
+      isCollective: business.isCollective,
+      collectiveMembers: collectiveMembers.length > 0 ? collectiveMembers : business.collectiveMembers,
       updatedAt: new Date().toISOString(),
     };
 
@@ -480,6 +518,21 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
             <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
             <span>M-Pesa & Deals</span>
           </button>
+
+          {(business.collectiveMembers && business.collectiveMembers.length > 0) && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('collective')}
+              className={`px-3.5 py-2 rounded-xl transition whitespace-nowrap flex items-center gap-1.5 ${
+                activeTab === 'collective'
+                  ? 'bg-emerald-800 text-white shadow-xs'
+                  : 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5 text-emerald-600" />
+              <span>5 Collective Ladies</span>
+            </button>
+          )}
         </div>
 
         {/* Modal Form */}
@@ -1060,6 +1113,145 @@ export const EditBusinessModal: React.FC<EditBusinessModalProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: 5 COLLECTIVE LADIES */}
+          {activeTab === 'collective' && (
+            <div className="space-y-5 animate-in fade-in duration-150">
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-emerald-950 text-sm sm:text-base">
+                      The 5-Member Equal Women's Collective
+                    </h4>
+                    <p className="text-xs text-emerald-800 leading-relaxed mt-0.5">
+                      Maintain names, phone contacts, specialties, and mugshots for each lady who gathers under the Fig Tree at Karura Road & Church Avenue. Each lady has her own direct contact line so clients can hire and pay her directly.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {collectiveMembers.map((member, index) => (
+                  <div
+                    key={member.id || `member-edit-${index}`}
+                    className="p-4 rounded-2xl bg-white border border-stone-300 shadow-xs space-y-3"
+                  >
+                    <div className="flex items-center justify-between pb-2 border-b border-stone-200">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-bold flex items-center justify-center">
+                          {index + 1}
+                        </span>
+                        <h5 className="font-bold text-stone-900 text-sm">
+                          Lady #{index + 1}: {member.name || 'Collective Member'}
+                        </h5>
+                      </div>
+                      <label className="flex items-center gap-1.5 text-xs text-stone-600 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(member.isRepresentative)}
+                          onChange={(e) => handleUpdateMember(index, 'isRepresentative', e.target.checked)}
+                          className="rounded text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="font-medium text-[11px]">Listing Coordinator</span>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 mb-1">Full Name</label>
+                        <input
+                          type="text"
+                          value={member.name}
+                          onChange={(e) => handleUpdateMember(index, 'name', e.target.value)}
+                          placeholder="e.g. Purity Mugambi"
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 font-medium focus:bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 mb-1">Direct Phone</label>
+                        <input
+                          type="tel"
+                          value={member.phone}
+                          onChange={(e) => handleUpdateMember(index, 'phone', e.target.value)}
+                          placeholder="e.g. +254703272467"
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 font-mono focus:bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 mb-1">WhatsApp Number</label>
+                        <input
+                          type="tel"
+                          value={member.whatsapp || member.phone}
+                          onChange={(e) => handleUpdateMember(index, 'whatsapp', e.target.value)}
+                          placeholder="e.g. +254703272467"
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 font-mono focus:bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 mb-1">Specialty & Skills</label>
+                      <input
+                        type="text"
+                        value={member.specialty || ''}
+                        onChange={(e) => handleUpdateMember(index, 'specialty', e.target.value)}
+                        placeholder="e.g. Mama Fua Hand Laundry, Deep Floor Scrubbing, Move-in Cleaning"
+                        className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:bg-white"
+                      />
+                    </div>
+
+                    {/* Mugshot Photo */}
+                    <div className="pt-2 border-t border-stone-100 flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="shrink-0 flex items-center gap-2">
+                        {member.photoUrl && member.photoUrl.trim() !== '' ? (
+                          <img
+                            src={member.photoUrl}
+                            alt={member.name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500 shadow-xs"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-stone-200 border border-stone-300 flex items-center justify-center text-stone-400 font-bold text-xs">
+                            <Camera className="w-5 h-5 text-stone-400" />
+                          </div>
+                        )}
+                        <span className="text-[11px] text-stone-500">
+                          {member.photoUrl ? 'Custom Mugshot Set' : 'Placeholder active'}
+                        </span>
+                      </div>
+
+                      <div className="flex-1 flex items-center gap-2">
+                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold border border-stone-300 transition cursor-pointer active:scale-95">
+                          <Camera className="w-3.5 h-3.5 text-stone-600" />
+                          <span>Upload Mugshot Photo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleMemberPhotoUpload(index, e)}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {member.photoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateMember(index, 'photoUrl', '')}
+                            className="text-[11px] text-rose-600 hover:text-rose-700 font-medium px-2 py-1"
+                          >
+                            Reset to Placeholder
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

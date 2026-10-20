@@ -401,9 +401,12 @@ export default function App() {
           const remoteMap = new Map(cleanRemote.map((b) => [b.id, b]));
           const updatedPrev = prev.filter((p) => !isPurged(p)).map((p) => {
             if (remoteMap.has(p.id)) {
+              const r = remoteMap.get(p.id)!;
               return {
                 ...p,
-                ...remoteMap.get(p.id)!,
+                ...r,
+                isCollective: r.isCollective !== undefined ? r.isCollective : p.isCollective,
+                collectiveMembers: (r.collectiveMembers && r.collectiveMembers.length > 0) ? r.collectiveMembers : p.collectiveMembers,
               };
             }
             return p;
@@ -452,7 +455,7 @@ export default function App() {
         );
         setStories((prev) => {
           const remoteMap = new Map(activeRemote.map((s) => [s.id, s]));
-          return activeRemote.concat(
+          const combined = activeRemote.concat(
             prev.filter(
               (p) =>
                 !remoteMap.has(p.id) &&
@@ -468,6 +471,16 @@ export default function App() {
                 (p.id === 'story-1788508956440' || p.id.startsWith('story-user-') || p.id.startsWith('story-'))
             )
           );
+          // Always ensure PP2 graduation story is active featured at index 0
+          const pp2Idx = combined.findIndex((s) => s.id === 'story-pp2-graduation-make-sense');
+          if (pp2Idx > 0) {
+            const [pp2] = combined.splice(pp2Idx, 1);
+            combined.unshift(pp2);
+          }
+          return combined.map((s, idx) => ({
+            ...s,
+            featured: idx === 0 && s.id === 'story-pp2-graduation-make-sense',
+          }));
         });
       }
       if (remoteUpdates && remoteUpdates.length > 0) {
