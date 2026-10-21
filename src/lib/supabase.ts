@@ -239,21 +239,6 @@ export const PURGED_TEST_BUSINESS_IDS = new Set([
   'kw-test-approved-123',
   'kw-biz-muriithi-hardware',
   'kw-biz-kj-fresh-foods',
-  'kw-biz-21d5f6e4-e129-4f9a-a389-a93a4a1153e7',
-  'kw-biz-42144f4f-a522-411c-9a4a-dac54c91d558',
-  'kw-biz-7025cfba-a0d6-4add-9a56-ee3c9e99dab6',
-  'kw-biz-9945f0cd-a5b7-424c-a655-9014c3d2c429',
-  '9945f0cd-a5b7-424c-a655-9014c3d2c429',
-  'kw-biz-f6da2a83-47ed-4e12-a982-a15986ca6531',
-  'f6da2a83-47ed-4e12-a982-a15986ca6531',
-  'kw-biz-9412805e-4313-4c4e-b400-4c03a1e5cd80',
-  '9412805e-4313-4c4e-b400-4c03a1e5cd80',
-  // Duplicate IDs created by legacy auto-promotions (retaining the exact original listings)
-  'kw-biz-kw-custom-1792068339635',
-  'kw-biz-kw-custom-1792132785586',
-  'kw-biz-kw-custom-1792134255134',
-  'kw-biz-kw-custom-1792175269985',
-  'kw-biz-kw-custom-1792254777617',
 ]);
 
 export const PURGED_TEST_BUSINESS_NAMES = new Set([
@@ -498,6 +483,8 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
             coordinates: row.coordinates || { lat: -1.185, lng: 36.885 },
             createdAt: row.createdAt || row.created_at,
             updatedAt: row.updatedAt || row.updated_at,
+            isCollective: row.isCollective !== undefined ? row.isCollective : undefined,
+            collectiveMembers: Array.isArray(row.collectiveMembers) ? row.collectiveMembers : undefined,
           }));
 
         // Deduplicate businesses strictly by normalized name and ID to retain the exact authentic listing

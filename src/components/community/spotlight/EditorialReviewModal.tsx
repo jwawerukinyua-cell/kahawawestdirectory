@@ -157,6 +157,8 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
     return hasPendingClaims ? 'pending_claims' : 'pending_applications';
   });
   const [adCampaignsSubTab, setAdCampaignsSubTab] = useState<'pending' | 'active' | 'changes_requested' | 'expired' | 'all'>('pending');
+  const [claimStatusFilter, setClaimStatusFilter] = useState<'pending' | 'verified' | 'all'>('all');
+  const [appStatusFilter, setAppStatusFilter] = useState<'pending' | 'approved' | 'all'>('all');
   const [directorySearchQuery, setDirectorySearchQuery] = useState('');
   const [directoryZoneFilter, setDirectoryZoneFilter] = useState('all');
 
@@ -1671,7 +1673,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-amber-400 flex-shrink-0 animate-pulse" />
                         <span className="text-stone-200">
-                          You have <strong className="text-amber-300 font-bold">{claims.filter((c) => c.status === 'pending').length} pending business ownership claim</strong> awaiting verification (including Karura Women's Cleaning Collective).
+                          You have <strong className="text-amber-300 font-bold">{claims.filter((c) => c.status === 'pending').length} pending business ownership claim</strong> awaiting verification.
                         </span>
                       </div>
                       <button
@@ -1704,36 +1706,102 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
 
                   {claimsSubTab === 'pending_claims' ? (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div>
-                          <h4 className="font-display font-bold text-white text-base">
-                            Business Claim Verification Queue
-                          </h4>
-                          <p className="text-xs text-stone-400">
-                            Incoming claims submitted to the Firestore <code>claims</code> collection by local merchants and authorized agents.
-                          </p>
-                        </div>
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#260101] text-rose-300 border border-rose-800">
-                          Total: {claims.length} {claims.length === 1 ? 'Record' : 'Records'}
-                        </span>
-                      </div>
+                      {(() => {
+                        const pendingClaims = claims.filter((c) => c.status === 'pending');
+                        const verifiedClaims = claims.filter((c) => c.status === 'verified');
+                        const claimsToDisplay = claims.filter((c) => {
+                          if (claimStatusFilter === 'pending') return c.status === 'pending';
+                          if (claimStatusFilter === 'verified') return c.status === 'verified';
+                          return true;
+                        });
 
-                      {claims.length === 0 ? (
-                        <div className="py-12 text-center text-stone-400 text-sm bg-[#181B20] rounded-2xl border border-stone-800">
-                          No business claims recorded yet. When a business owner or agent claims a listing, it will show up here.
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {claims.map((claim, idx) => {
-                            const details = claim.claimed_details || {};
-                            const originalBiz = businesses.find((b) => b.id === claim.business_id || b.slug === claim.business_id);
-                            const displayName = details.customName || claim.business_name || claim.business_id;
+                        return (
+                          <>
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                              <div>
+                                <h4 className="font-display font-bold text-white text-base">
+                                  Business Ownership Claims &amp; Verification
+                                </h4>
+                                <p className="text-xs text-stone-400">
+                                  Verified claims grant merchants direct listing control and badge activation.
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setClaimStatusFilter('pending')}
+                                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                                    claimStatusFilter === 'pending'
+                                      ? 'bg-amber-500 text-stone-950 font-bold'
+                                      : 'bg-stone-900 text-stone-400 hover:text-white border border-stone-800'
+                                  }`}
+                                >
+                                  Pending ({pendingClaims.length})
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setClaimStatusFilter('verified')}
+                                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                                    claimStatusFilter === 'verified'
+                                      ? 'bg-emerald-600 text-white font-bold'
+                                      : 'bg-stone-900 text-stone-400 hover:text-white border border-stone-800'
+                                  }`}
+                                >
+                                  Verified &amp; Approved ({verifiedClaims.length})
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setClaimStatusFilter('all')}
+                                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                                    claimStatusFilter === 'all'
+                                      ? 'bg-stone-700 text-white font-bold'
+                                      : 'bg-stone-900 text-stone-400 hover:text-white border border-stone-800'
+                                  }`}
+                                >
+                                  All Records ({claims.length})
+                                </button>
+                              </div>
+                            </div>
 
-                            return (
-                              <div
-                                key={claim.id || `${claim.business_id}-${idx}`}
-                                className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-start justify-between gap-4"
-                              >
+                            {claimStatusFilter === 'pending' && pendingClaims.length === 0 ? (
+                              <div className="p-6 rounded-2xl bg-[#181B20] border border-stone-800 text-center space-y-3">
+                                <div className="w-12 h-12 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800 flex items-center justify-center mx-auto">
+                                  <CheckCircle className="w-6 h-6" />
+                                </div>
+                                <div>
+                                  <h5 className="font-bold text-white text-base">No Pending Claims in Queue!</h5>
+                                  <p className="text-xs text-stone-400 mt-1 max-w-md mx-auto">
+                                    All submitted business ownership claims have already been verified and approved.
+                                    Karura Women's Cleaning Collective is verified and active on the directory.
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setClaimStatusFilter('verified')}
+                                  className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs inline-flex items-center gap-1.5 transition cursor-pointer"
+                                >
+                                  <ShieldCheck className="w-3.5 h-3.5" />
+                                  <span>View Verified &amp; Approved Claims Archive ({verifiedClaims.length})</span>
+                                </button>
+                              </div>
+                            ) : claimsToDisplay.length === 0 ? (
+                              <div className="py-12 text-center text-stone-400 text-sm bg-[#181B20] rounded-2xl border border-stone-800">
+                                No claims match the selected filter.
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                {claimsToDisplay.map((claim, idx) => {
+                                  const details = claim.claimed_details || {};
+                                  const originalBiz = businesses.find((b) => b.id === claim.business_id || b.slug === claim.business_id);
+                                  const displayName = details.customName || claim.business_name || claim.business_id;
+
+                                  return (
+                                    <div
+                                      key={claim.id || `${claim.business_id}-${idx}`}
+                                      className={`bg-[#181B20] border rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-start justify-between gap-4 ${
+                                        claim.status === 'verified' ? 'border-emerald-800/60' : 'border-stone-800'
+                                      }`}
+                                    >
                                 <div className="space-y-2 flex-1 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <h5 className="font-bold text-white text-base">
@@ -1952,30 +2020,97 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                           })}
                         </div>
                       )}
-                    </div>
-                  ) : claimsSubTab === 'pending_applications' ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
+                    </>
+                  );
+                })()}
+              </div>
+            ) : claimsSubTab === 'pending_applications' ? (
+              <div className="space-y-4">
+                {(() => {
+                  const pendingApps = applications.filter((a) => a.status === 'pending');
+                  const approvedApps = applications.filter((a) => a.status === 'approved');
+                  const appsToDisplay = applications.filter((a) => {
+                    if (appStatusFilter === 'pending') return a.status === 'pending';
+                    if (appStatusFilter === 'approved') return a.status === 'approved';
+                    return true;
+                  });
+
+                  return (
+                    <>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
                         <div>
                           <h4 className="font-display font-bold text-white text-base">
                             New Business Listing Applications
                           </h4>
                           <p className="text-xs text-stone-400">
-                            Merchant listings submitted via &quot;List Your Business&quot;. Gated in the Firestore <code>applications</code> collection until verified by the Editorial Desk.
+                            Merchant listings submitted via &quot;List Your Business&quot;. Approved listings are live in the directory.
                           </p>
                         </div>
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#260101] text-rose-300 border border-rose-800">
-                          Total: {applications.length} {applications.length === 1 ? 'Application' : 'Applications'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setAppStatusFilter('pending')}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                              appStatusFilter === 'pending'
+                                ? 'bg-amber-500 text-stone-950 font-bold'
+                                : 'bg-stone-900 text-stone-400 hover:text-white border border-stone-800'
+                            }`}
+                          >
+                            Pending Review ({pendingApps.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAppStatusFilter('approved')}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                              appStatusFilter === 'approved'
+                                ? 'bg-emerald-600 text-white font-bold'
+                                : 'bg-stone-900 text-stone-400 hover:text-white border border-stone-800'
+                            }`}
+                          >
+                            Approved Listings ({approvedApps.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAppStatusFilter('all')}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                              appStatusFilter === 'all'
+                                ? 'bg-stone-700 text-white font-bold'
+                                : 'bg-stone-900 text-stone-400 hover:text-white border border-stone-800'
+                            }`}
+                          >
+                            All ({applications.length})
+                          </button>
+                        </div>
                       </div>
 
-                      {applications.length === 0 ? (
+                      {appStatusFilter === 'pending' && pendingApps.length === 0 ? (
+                        <div className="p-6 rounded-2xl bg-[#181B20] border border-stone-800 text-center space-y-3">
+                          <div className="w-12 h-12 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800 flex items-center justify-center mx-auto">
+                            <CheckCircle className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h5 className="font-bold text-white text-base">No Applications Pending Review!</h5>
+                            <p className="text-xs text-stone-400 mt-1 max-w-md mx-auto">
+                              All submitted applications have been reviewed and approved.
+                              Kanyager Fish Shop, SAMONJE VAZI, Karay&apos;s Books, Crystal Drops, Manifest Cereals, AZURI Parloir, and MWAWA batt are all live in the directory.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setAppStatusFilter('approved')}
+                            className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs inline-flex items-center gap-1.5 transition cursor-pointer"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>View Approved Listings Archive ({approvedApps.length})</span>
+                          </button>
+                        </div>
+                      ) : appsToDisplay.length === 0 ? (
                         <div className="py-12 text-center text-stone-400 text-sm bg-[#181B20] rounded-2xl border border-stone-800">
-                          No pending business applications in queue. When a merchant submits a new listing, it will appear here for verification.
+                          No applications match the selected filter.
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {applications.map((app, idx) => (
+                          {appsToDisplay.map((app, idx) => (
                             <div
                               key={app.id || idx}
                               className="bg-[#181B20] border border-stone-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
@@ -2195,8 +2330,11 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                           ))}
                         </div>
                       )}
-                    </div>
-                  ) : (
+                    </>
+                  );
+                })()}
+              </div>
+            ) : (
                     /* Directory Listings Manager with Direct Edit Button */
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">

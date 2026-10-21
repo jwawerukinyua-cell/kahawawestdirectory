@@ -23,13 +23,10 @@ export const CollectiveMembersSection: React.FC<CollectiveMembersSectionProps> =
   return (
     <div
       id="collective-members-section"
-      className="bg-white rounded-2xl p-5 sm:p-6 md:p-7 border border-emerald-500/30 shadow-md mb-6 relative overflow-hidden"
+      className="bg-white rounded-2xl p-5 sm:p-6 md:p-7 border border-emerald-200 shadow-sm mb-6 relative transform-gpu"
     >
-      {/* Decorative background accent */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
-
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-stone-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-stone-100">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
@@ -62,7 +59,7 @@ export const CollectiveMembersSection: React.FC<CollectiveMembersSectionProps> =
       </div>
 
       {/* Equal Collective Context Banner */}
-      <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50/80 via-emerald-50/40 to-stone-50 border border-emerald-200/80 mb-6 text-xs sm:text-sm text-stone-700 leading-relaxed">
+      <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 mb-6 text-xs sm:text-sm text-stone-700 leading-relaxed">
         <div className="flex items-start gap-3">
           <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
           <div>
@@ -70,7 +67,7 @@ export const CollectiveMembersSection: React.FC<CollectiveMembersSectionProps> =
               Community Equal Collective — No Middlemen or Agency Cuts
             </p>
             <p className="text-stone-600 text-xs sm:text-sm">
-              The 5 hardworking women assemble together daily under the <strong>Fig Tree at the junction of Church Avenue & Karura Road</strong> (opposite Green Cottage School). Rather than an employer-employee hierarchy, every lady is an equal, independent member. <strong>Purity Mugambi</strong> coordinated the directory listing on behalf of all five, and residents are warmly invited to call or WhatsApp any member directly according to your specific chore or schedule.
+              The 5 hardworking women assemble together daily under the <strong>Fig Tree at the junction of Church Avenue &amp; Karura Road</strong> (opposite Green Cottage School). Rather than an employer-employee hierarchy, every lady is an equal, independent member. <strong>Purity Mugambi</strong> coordinated the directory listing on behalf of all five, and residents are warmly invited to call or WhatsApp any member directly according to your specific chore or schedule.
             </p>
           </div>
         </div>
