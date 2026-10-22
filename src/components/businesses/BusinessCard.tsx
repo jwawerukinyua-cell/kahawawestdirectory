@@ -12,6 +12,7 @@ interface BusinessCardProps {
   onViewDetails: (business: Business) => void;
   onClaim: (business: Business) => void;
   onUnlockContact?: (business: Business) => void;
+  isCompact?: boolean;
 }
 
 const BusinessCardComponent: React.FC<BusinessCardProps> = ({
@@ -19,6 +20,7 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
   onViewDetails,
   onClaim,
   onUnlockContact,
+  isCompact = false,
 }) => {
   const [isGated, setIsGated] = useState(() => isBusinessContactGated(business));
 
@@ -44,6 +46,7 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
   const phoneTelUri = formatKenyanPhoneForTel(business.phone);
 
   const handleWhatsApp = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isGated) {
       e.preventDefault();
       trackBusinessInteraction(business.id, 'view');
@@ -58,6 +61,7 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
   };
 
   const handlePhone = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isGated) {
       e.preventDefault();
       trackBusinessInteraction(business.id, 'view');
@@ -80,6 +84,159 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
     business.heroImage && business.heroImage.trim() !== ''
       ? business.heroImage
       : '/hero.webp';
+
+  // Compact layout (used when 2-column mobile grid is selected, showing ~4 businesses at once)
+  if (isCompact) {
+    return (
+      <div
+        id={`business-card-${business.id}`}
+        onClick={handleDetails}
+        className="group bg-white rounded-2xl border border-stone-200 hover:border-[#630303]/50 shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden font-sans cursor-pointer h-full"
+      >
+        {/* Compact Hero Image */}
+        <div className="relative h-28 sm:h-36 w-full bg-stone-100 overflow-hidden">
+          <ListingImage
+            src={heroImageUrl}
+            business={business}
+            imageType="cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+            decoding="async"
+            width="320"
+            height="144"
+          />
+
+          {/* Top Badges Overlay */}
+          <div className="absolute top-2 right-2 flex items-center justify-end pointer-events-none gap-1">
+            {isGated && (
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500 text-stone-950 shadow-xs border border-amber-300">
+                <Lock className="w-2.5 h-2.5" />
+                Gated
+              </span>
+            )}
+            <VerifiedBadge
+              type={business.isClaimed ? 'claimed' : business.isVerified ? 'verified' : 'unclaimed'}
+              size="xs"
+            />
+          </div>
+
+          {/* Rating overlay bottom-left */}
+          <div className="absolute bottom-1.5 left-2 pointer-events-none">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-stone-950/75 text-white backdrop-blur-xs shadow-2xs">
+              <Star className={`w-2.5 h-2.5 ${(business.rating ?? 0) > 0 ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`} />
+              <span>{(business.rating ?? 0) > 0 ? business.rating.toFixed(1) : 'New'}</span>
+            </span>
+          </div>
+
+          {/* Till / Housing badge bottom-right */}
+          {business.mpesa && !isGated && (
+            <div className="absolute bottom-1.5 right-2 pointer-events-none">
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-700/90 text-white backdrop-blur-xs shadow-2xs">
+                <CreditCard className="w-2.5 h-2.5" />
+                Till
+              </span>
+            </div>
+          )}
+          {isGated && (
+            <div className="absolute bottom-1.5 right-2 pointer-events-none">
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#044E2E]/95 text-emerald-200 backdrop-blur-xs border border-emerald-500/30 shadow-2xs">
+                <Building2 className="w-2.5 h-2.5 text-emerald-400" />
+                KES {HOUSING_CONTACT_UNLOCK_FEE}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Compact Card Content */}
+        <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
+          <div>
+            {/* Category */}
+            <div className="text-[10px] font-semibold text-emerald-800 uppercase tracking-wider truncate mb-0.5 flex items-center gap-1">
+              <Tag className="w-2.5 h-2.5 flex-shrink-0" />
+              <span className="truncate">{business.subCategory || business.category}</span>
+            </div>
+
+            {/* Business Name */}
+            <h3
+              title={business.name}
+              className="font-display font-bold text-[#24140E] text-xs sm:text-sm group-hover:text-[#630303] transition line-clamp-1 mb-1 leading-snug"
+            >
+              {business.name}
+            </h3>
+
+            {/* Landmark / Zone */}
+            <div className="flex items-center gap-1 text-stone-500 text-[10px] mb-2">
+              <MapPin className="w-3 h-3 text-stone-400 flex-shrink-0" />
+              <span className="truncate">
+                {business.landmark}
+                {business.customZone ? ` • ${business.customZone}` : ''}
+              </span>
+            </div>
+          </div>
+
+          {/* Compact Quick Actions */}
+          <div
+            className="pt-2 border-t border-stone-100 flex items-center gap-1.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isGated ? (
+              <button
+                type="button"
+                onClick={handlePhone}
+                className="flex-1 py-1.5 px-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 text-[11px] font-bold border border-amber-300 transition flex items-center justify-center gap-1 min-h-[36px] active:scale-95 cursor-pointer shadow-2xs"
+                title="Direct contact gated. Tap to reveal phone line (KES 500)"
+              >
+                <Lock className="w-3 h-3 text-amber-700 flex-shrink-0" />
+                <span className="truncate">Unlock</span>
+              </button>
+            ) : (
+              <>
+                {business.whatsapp || business.phone ? (
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleWhatsApp}
+                    aria-label={`Chat with ${business.name} on WhatsApp`}
+                    title={`Chat with ${business.name} on WhatsApp`}
+                    className="flex-1 py-1.5 px-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-[11px] font-bold border border-emerald-300 transition flex items-center justify-center gap-1 min-h-[36px] active:scale-95"
+                  >
+                    <MessageSquare className="w-3 h-3 text-emerald-700 flex-shrink-0" />
+                    <span className="truncate">WA</span>
+                  </a>
+                ) : null}
+
+                {business.phone ? (
+                  <a
+                    href={`tel:${phoneTelUri}`}
+                    onClick={handlePhone}
+                    aria-label={`Call ${business.name}`}
+                    title={`Call ${business.name}`}
+                    className="flex-1 py-1.5 px-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-950 text-[11px] font-bold border border-sky-300 transition flex items-center justify-center gap-1 min-h-[36px] active:scale-95"
+                  >
+                    <Phone className="w-3 h-3 text-sky-800 flex-shrink-0" />
+                    <span className="truncate">Call</span>
+                  </a>
+                ) : null}
+              </>
+            )}
+
+            {/* Quick Details Button */}
+            <button
+              type="button"
+              onClick={handleDetails}
+              aria-label={`View full details for ${business.name}`}
+              title="View full details"
+              className="py-1.5 px-2.5 rounded-xl bg-[#00000f] hover:bg-[#630303] text-white text-[11px] font-bold transition flex items-center justify-center gap-0.5 min-h-[36px] cursor-pointer shadow-2xs active:scale-95 shrink-0"
+            >
+              <span>View</span>
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

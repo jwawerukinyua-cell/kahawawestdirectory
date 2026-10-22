@@ -20,6 +20,8 @@ import {
   Megaphone,
   PhoneCall,
   SlidersHorizontal,
+  LayoutGrid,
+  Rows3,
 } from 'lucide-react';
 import { Business, BusinessClaim, BusinessApplication, Category, CommunityFeedback, CommunityStory, CommunityUpdate, EstateZone } from './types';
 import { SEED_50_BUSINESSES } from './data/businesses';
@@ -180,6 +182,28 @@ export default function App() {
   const [mpesaOnly, setMpesaOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'name' | 'verified'>('rating');
   const [visibleBizCount, setVisibleBizCount] = useState(16);
+
+  // Mobile View Mode: 'grid' (2 columns, displaying ~4 businesses without scrolling) vs 'comfort' (1 large card)
+  const [mobileViewMode, setMobileViewMode] = useState<'grid' | 'comfort'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('kwest_mobile_view_mode');
+        if (saved === 'comfort' || saved === 'grid') return saved;
+      } catch {
+        // Ignore localStorage access restrictions
+      }
+    }
+    return 'grid'; // Default to grid on mobile as requested!
+  });
+
+  const handleSetViewMode = useCallback((mode: 'grid' | 'comfort') => {
+    setMobileViewMode(mode);
+    try {
+      localStorage.setItem('kwest_mobile_view_mode', mode);
+    } catch {
+      // Ignore localStorage write errors
+    }
+  }, []);
 
   useEffect(() => {
     setVisibleBizCount(16);
@@ -1529,13 +1553,72 @@ export default function App() {
           />
         ) : (
           <div className="mb-16">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            {/* View Mode & Listings Summary Sub-Bar */}
+            <div className="flex items-center justify-between gap-3 mb-4 pt-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-stone-800">
+                  {filteredBusinesses.length} {filteredBusinesses.length === 1 ? 'Business' : 'Businesses'}
+                </span>
+                <span className="text-stone-300 hidden xs:inline">•</span>
+                <span className="text-[11px] text-stone-500 hidden xs:inline">
+                  {mobileViewMode === 'grid' ? 'Grid (4 in view on mobile)' : 'Cards (1 in view)'}
+                </span>
+              </div>
+
+              {/* View Toggle (Grid ⊞ vs Cards ☰) */}
+              <div
+                role="group"
+                aria-label="Listing view options"
+                className="inline-flex items-center p-1 bg-stone-100 rounded-xl border border-stone-200 shadow-2xs"
+              >
+                <button
+                  id="view-mode-grid-btn"
+                  type="button"
+                  onClick={() => handleSetViewMode('grid')}
+                  aria-pressed={mobileViewMode === 'grid'}
+                  title="Grid View: 2 columns on mobile, displays ~4 businesses without scrolling"
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer select-none ${
+                    mobileViewMode === 'grid'
+                      ? 'bg-white text-[#630303] shadow-xs border border-stone-200/80'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Grid (4x)</span>
+                </button>
+
+                <button
+                  id="view-mode-comfort-btn"
+                  type="button"
+                  onClick={() => handleSetViewMode('comfort')}
+                  aria-pressed={mobileViewMode === 'comfort'}
+                  title="Large Cards View: 1 business per screen with full description"
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer select-none ${
+                    mobileViewMode === 'comfort'
+                      ? 'bg-white text-[#630303] shadow-xs border border-stone-200/80'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <Rows3 className="w-3.5 h-3.5" />
+                  <span>Cards (1x)</span>
+                </button>
+              </div>
+            </div>
+
+            <div
+              className={`grid gap-3 sm:gap-6 ${
+                mobileViewMode === 'grid'
+                  ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }`}
+            >
               {filteredBusinesses.slice(0, visibleBizCount).map((b) => (
                 <BusinessCard
                   key={b.id}
                   business={b}
                   onViewDetails={handleViewDetails}
                   onClaim={handleClaim}
+                  isCompact={mobileViewMode === 'grid'}
                 />
               ))}
             </div>
