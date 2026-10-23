@@ -1364,6 +1364,30 @@ export default function App() {
     }
   };
 
+  const handleShareKwest = async () => {
+    const shareTitle = 'KWEST | Kahawa West Business Directory';
+    const shareText =
+      'Discover verified local businesses, fundis, emergency contacts & shops in Kahawa West on KWEST (kahawawestdirectory.co.ke)';
+    const url = typeof window !== 'undefined' ? window.location.origin : 'https://www.kahawawestdirectory.co.ke';
+    const fullUrl = url.endsWith('/') ? url : `${url}/`;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: fullUrl,
+        });
+        return;
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
+      }
+    }
+
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText}\n${fullUrl}`)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const pendingCount =
     stories.filter((s) => s.status === 'pending_review').length +
     updates.filter((u) => u.status === 'pending_review').length;
@@ -1679,6 +1703,7 @@ export default function App() {
         onZonesClick={() => setIsMobileZoneOpen(true)}
         onListBusinessClick={() => setIsListBusinessOpen(true)}
         onNoticeboardClick={scrollToNoticeboard}
+        onShareClick={handleShareKwest}
         onEmergencyClick={() => setIsEmergencyOpen(true)}
       />
 

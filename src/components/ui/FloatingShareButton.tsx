@@ -93,10 +93,10 @@ export const FloatingShareButton: React.FC = () => {
 
   return (
     <>
-      {/* Side-Docked Container attached to the left edge (or responsive) */}
+      {/* Side-Docked Container attached to the left edge (Desktop only, mobile uses bottom nav item) */}
       <div
         ref={containerRef}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex items-center font-sans select-none"
+        className="hidden md:flex fixed left-0 top-1/2 -translate-y-1/2 z-40 items-center font-sans select-none"
       >
         {/* Share Options Popup Menu */}
         {isOpen && (

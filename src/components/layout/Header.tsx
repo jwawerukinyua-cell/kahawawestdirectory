@@ -69,7 +69,19 @@ export const Header: React.FC<HeaderProps> = ({
         </nav>
 
         {/* Header Action / Notification Area */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Mobile Quick Emergency Hotline Button */}
+          <button
+            id="header-mobile-emergency-btn"
+            type="button"
+            onClick={onEmergencyClick}
+            aria-label="Emergency Hotlines & Police (Kahawa West)"
+            title="Emergency Hotlines"
+            className="md:hidden p-2.5 rounded-xl bg-[#4D0202]/60 hover:bg-[#3D0101] text-rose-300 hover:text-white border border-[#630303]/60 transition active:scale-95 cursor-pointer flex items-center justify-center min-w-[42px] min-h-[42px]"
+          >
+            <PhoneCall className="w-4 h-4 text-rose-400" />
+          </button>
+
           {/* Notification Bell */}
           {onOpenNotifications && (
             <button
