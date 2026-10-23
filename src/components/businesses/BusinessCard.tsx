@@ -182,18 +182,18 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
 
           {/* Compact Quick Actions */}
           <div
-            className="pt-2 border-t border-stone-100 flex items-center gap-1.5"
+            className="pt-2 border-t border-stone-100 grid grid-cols-3 gap-1 w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {isGated ? (
               <button
                 type="button"
                 onClick={handlePhone}
-                className="flex-1 py-1.5 px-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 text-[11px] font-bold border border-amber-300 transition flex items-center justify-center gap-1 min-h-[36px] active:scale-95 cursor-pointer shadow-2xs"
+                className="col-span-3 w-full py-1.5 px-2 rounded-lg bg-transparent hover:bg-stone-50 text-amber-900 text-[10.5px] font-bold border border-amber-300 transition flex items-center justify-center gap-1 min-h-[34px] active:scale-95 cursor-pointer"
                 title="Direct contact gated. Tap to reveal phone line (KES 500)"
               >
                 <Lock className="w-3 h-3 text-amber-700 flex-shrink-0" />
-                <span className="truncate">Unlock</span>
+                <span className="whitespace-nowrap">Unlock Line</span>
               </button>
             ) : (
               <>
@@ -205,10 +205,10 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
                     onClick={handleWhatsApp}
                     aria-label={`Chat with ${business.name} on WhatsApp`}
                     title={`Chat with ${business.name} on WhatsApp`}
-                    className="flex-1 py-1 px-1 rounded-lg bg-transparent hover:bg-emerald-50/50 text-emerald-800 text-[11px] font-bold border border-stone-200/90 hover:border-emerald-300 transition flex items-center justify-center gap-1 min-h-[36px] active:scale-95"
+                    className="w-full py-1 px-0.5 rounded-lg bg-transparent hover:bg-emerald-50/50 text-emerald-800 text-[10px] sm:text-[10.5px] font-bold border border-stone-200/90 hover:border-emerald-300 transition flex items-center justify-center gap-1 min-h-[34px] active:scale-95"
                   >
-                    <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366] flex-shrink-0" />
-                    <span className="truncate">WA</span>
+                    <WhatsAppIcon className="w-3 h-3 text-[#25D366] flex-shrink-0" />
+                    <span className="whitespace-nowrap">WA</span>
                   </a>
                 ) : null}
 
@@ -218,10 +218,10 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
                     onClick={handlePhone}
                     aria-label={`Call ${business.name}`}
                     title={`Call ${business.name}`}
-                    className="flex-1 py-1 px-1 rounded-lg bg-transparent hover:bg-stone-50 text-stone-700 hover:text-stone-900 text-[11px] font-bold border border-stone-200/90 hover:border-stone-400 transition flex items-center justify-center gap-1 min-h-[36px] active:scale-95"
+                    className="w-full py-1 px-0.5 rounded-lg bg-transparent hover:bg-stone-50 text-stone-700 hover:text-stone-900 text-[10px] sm:text-[10.5px] font-bold border border-stone-200/90 hover:border-stone-400 transition flex items-center justify-center gap-1 min-h-[34px] active:scale-95"
                   >
-                    <Phone className="w-3.5 h-3.5 text-stone-600 flex-shrink-0" />
-                    <span className="truncate">Call</span>
+                    <Phone className="w-3 h-3 text-stone-600 flex-shrink-0" />
+                    <span className="whitespace-nowrap">Call</span>
                   </a>
                 ) : null}
               </>
@@ -233,10 +233,10 @@ const BusinessCardComponent: React.FC<BusinessCardProps> = ({
               onClick={handleDetails}
               aria-label={`View full details for ${business.name}`}
               title="View full details"
-              className="flex-1 py-1 px-1 rounded-lg bg-transparent hover:bg-rose-50/40 text-[#630303] hover:text-[#7D0404] text-[11px] font-bold border border-stone-200/90 hover:border-[#630303]/40 transition flex items-center justify-center gap-1 min-h-[36px] cursor-pointer active:scale-95"
+              className="w-full py-1 px-0.5 rounded-lg bg-transparent hover:bg-rose-50/40 text-[#630303] hover:text-[#7D0404] text-[10px] sm:text-[10.5px] font-bold border border-stone-200/90 hover:border-[#630303]/40 transition flex items-center justify-center gap-1 min-h-[34px] cursor-pointer active:scale-95"
             >
-              <Eye className="w-3.5 h-3.5 text-[#630303] flex-shrink-0" />
-              <span className="truncate">View</span>
+              <Eye className="w-3 h-3 text-[#630303] flex-shrink-0" />
+              <span className="whitespace-nowrap">View</span>
             </button>
           </div>
         </div>
