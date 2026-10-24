@@ -146,6 +146,8 @@ export async function saveBusinessToFirestore(business: Business): Promise<boole
       mpesa: business.mpesa || null,
       socialLinks: business.socialLinks || null,
       specialOffer: business.specialOffer || null,
+      isCollective: business.isCollective !== undefined ? business.isCollective : null,
+      collectiveMembers: business.collectiveMembers || [],
       status: 'published',
       createdAt: business.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -168,6 +170,8 @@ export async function saveBusinessToFirestore(business: Business): Promise<boole
           phone: business.phone,
           heroImage: fallback,
           galleryImages: [fallback],
+          isCollective: business.isCollective !== undefined ? business.isCollective : null,
+          collectiveMembers: business.collectiveMembers || [],
           status: 'published',
           updatedAt: new Date().toISOString(),
         };

@@ -423,7 +423,19 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
         if (cachedTime && cachedData && Date.now() - Number(cachedTime) < SUPABASE_CACHE_TTL_MS) {
           const parsed = JSON.parse(cachedData);
           if (Array.isArray(parsed)) {
-            return parsed;
+            const hasStaleKarura = parsed.some(
+              (b: any) =>
+                b.id === 'kw-biz-09' &&
+                Array.isArray(b.collectiveMembers) &&
+                b.collectiveMembers.some((m: any) =>
+                  ['mary wanjiku', 'jane muthoni', 'grace achieng', 'beatrice nyambura'].includes(
+                    (m.name || '').toLowerCase().trim()
+                  )
+                )
+            );
+            if (!hasStaleKarura) {
+              return parsed;
+            }
           }
         }
       } catch {}
@@ -532,6 +544,19 @@ export const getCustomizedBusinesses = (): Record<string, Business> => {
         changed = true;
       }
     });
+    if (raw['kw-biz-09']) {
+      const hasStaleMembers =
+        Array.isArray(raw['kw-biz-09'].collectiveMembers) &&
+        raw['kw-biz-09'].collectiveMembers.some((m: any) =>
+          ['mary wanjiku', 'jane muthoni', 'grace achieng', 'beatrice nyambura'].includes(
+            (m.name || '').toLowerCase().trim()
+          )
+        );
+      if (hasStaleMembers) {
+        delete raw['kw-biz-09'];
+        changed = true;
+      }
+    }
     if (changed) {
       try {
         localStorage.setItem(BUSINESSES_STORAGE_KEY, JSON.stringify(raw));

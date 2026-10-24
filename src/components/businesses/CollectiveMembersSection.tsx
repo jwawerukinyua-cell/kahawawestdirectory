@@ -83,8 +83,10 @@ export const CollectiveMembersSection: React.FC<CollectiveMembersSectionProps> =
           );
 
           // Generate initials for avatar fallback
-          const initials = member.name
-            .split(' ')
+          const cleanNameForInitials = member.name.replace(/[()]/g, ' ').trim();
+          const initials = cleanNameForInitials
+            .split(/\s+/)
+            .filter(Boolean)
             .map((n) => n[0])
             .join('')
             .toUpperCase()

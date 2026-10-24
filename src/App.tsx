@@ -426,11 +426,22 @@ export default function App() {
           const updatedPrev = prev.filter((p) => !isPurged(p)).map((p) => {
             if (remoteMap.has(p.id)) {
               const r = remoteMap.get(p.id)!;
+              const hasStaleKarura =
+                p.id === 'kw-biz-09' &&
+                Array.isArray(r.collectiveMembers) &&
+                r.collectiveMembers.some((m: any) =>
+                  ['mary wanjiku', 'jane muthoni', 'grace achieng', 'beatrice nyambura'].includes(
+                    (m.name || '').toLowerCase().trim()
+                  )
+                );
               return {
                 ...p,
                 ...r,
                 isCollective: r.isCollective !== undefined ? r.isCollective : p.isCollective,
-                collectiveMembers: (r.collectiveMembers && r.collectiveMembers.length > 0) ? r.collectiveMembers : p.collectiveMembers,
+                collectiveMembers:
+                  r.collectiveMembers && r.collectiveMembers.length > 0 && !hasStaleKarura
+                    ? r.collectiveMembers
+                    : p.collectiveMembers,
               };
             }
             return p;
