@@ -666,6 +666,18 @@ export default function App() {
         else if (viewParam === 'terms') setLegalTab('terms');
       }
 
+      // Ad Campaign & Billboard Deep Linking (?ad=, ?billboard=, #homepage-main-promo-banner)
+      const adParam = searchParams.get('ad') || searchParams.get('billboard') || searchParams.get('promo');
+      const hashClean = window.location.hash.replace(/^#\/?/, '').trim();
+      if (adParam || hashClean === 'homepage-main-promo-banner' || hashClean === 'ad' || hashClean === 'billboard' || hashClean.includes('karura-collective')) {
+        setTimeout(() => {
+          const promoEl = document.getElementById('homepage-main-promo-banner');
+          if (promoEl) {
+            promoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 400);
+      }
+
       // 1. Story matching from query param (?story=...) or pathname (/story/...)
       const allStories = stories.length > 0 ? stories : INITIAL_COMMUNITY_STORIES;
       const targetStoryFromQueryOrPath = storyParam || storyFromPath;

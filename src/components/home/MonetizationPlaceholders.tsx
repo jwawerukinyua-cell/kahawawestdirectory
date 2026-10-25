@@ -28,6 +28,9 @@ import {
   Timer,
   Users,
   Eye,
+  Share2,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { Business, BusinessAdCampaign, CollectiveMember } from '../../types';
 import { getLiveActiveAdsFromStorage, getAdTimeRemaining } from '../../lib/adExpiryUtils';
@@ -144,6 +147,84 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
   const campaignId = activeBillboard?.id || 'ad-karura-collective-001';
   const [adStats, setAdStats] = useState<AdCampaignAnalytics>(() => getAdCampaignAnalytics(campaignId));
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [copiedType, setCopiedType] = useState<string | null>(null);
+  const [activeShareTab, setActiveShareTab] = useState<'full' | 'short' | 'facebook'>('full');
+
+  const getAdShareLink = () => {
+  return 'https://www.kahawawestdirectory.co.ke';
+};
+
+  const getFullPostText = () => {
+    const link = getAdShareLink();
+    return `✨ *SUPPORT OUR LOCAL MAMA FUA HEROES OF KAHAWA WEST* ✨
+
+When you walk along Karura Road, just by the junction of Church Avenue under the big Fig Tree, you will find 5 hardworking, vetted women who have been the quiet backbone of our homes across Jacaranda, Congo, Soweto, Mahiga, Kamae, and Bima.
+
+Rather than giving cuts to exploitative agencies or middlemen, they have formed the *Karura Women's Cleaning Collective* — 100% of whatever you pay goes directly into their hands to feed and educate their families. 💙
+
+Whether you need a trusted Mama Fua for thorough hand laundry, duvets, blankets, or move-in/move-out floor scrubbing — here are their direct lines. Call or WhatsApp any of them directly:
+
+1️⃣ *Purity Mugambi* (Coordinator): 0703 272 467
+• Deep Home Cleaning, Kitchen & Window Scrubbing
+
+2️⃣ *Susan (Wa Shantel) Nafula*: 0143 469 509
+• Mama Fua Hand Laundry, Duvets & Curtain Washing
+
+3️⃣ *Rachel Makena*: 0714 318 077
+• Home Scrubbing, Move-in & Move-out House Prep
+
+4️⃣ *Agnes Kamau*: 0719 819 632
+• Tile Scrubbing, Floor Buffing & Balcony Washing
+
+5️⃣ *Ann Muthama*: 0790 385 663
+• Compound Weeding, Yard Sweeping & Garment Care
+
+📍 *Location:* Under the Fig Tree, Church Ave & Karura Rd (Opp. Green Cottage School)
+⭐ *Zero agency commissions • Verified Kahawa West Residents*
+
+🔗 *View their collective profile & photos on Kahawa West Directory:*
+${link}
+
+_Please forward to your estate and church groups to support these women!_ 🙏`;
+  };
+
+  const getShortPostText = () => {
+    const link = getAdShareLink();
+    return `🧺 *Need a trusted Mama Fua in Kahawa West?*
+5 vetted local women under the Karura Rd Fig Tree are available for hand laundry, duvets & deep house cleaning. Zero agency cuts!
+
+📞 *Direct Lines:*
+• Purity (Coord): 0703 272 467
+• Susan Nafula: 0143 469 509
+• Rachel Makena: 0714 318 077
+• Agnes Kamau: 0719 819 632
+• Ann Muthama: 0790 385 663
+
+🔗 See full details on Kahawa West Directory:
+${link}`;
+  };
+
+  const getFacebookPostText = () => {
+    const link = getAdShareLink();
+    return `👋 Kahawa West Neighbours,
+
+If you are in Jacaranda, Congo, Soweto, Mahiga, Bima or Kamae and looking for reliable, honest domestic support, please support the Karura Women's Cleaning Collective!
+
+Under the Fig Tree at the junction of Church Avenue and Karura Road (opposite Green Cottage School), 5 vetted local women have assembled as an equal collective. They do thorough Mama Fua hand laundry, duvets, curtain washing, and deep house move-in cleaning.
+
+Because there is NO middleman agency, 100% of what you pay supports their households and children directly.
+
+Direct contacts:
+• Purity Mugambi: 0703 272 467
+• Susan (Wa Shantel) Nafula: 0143 469 509
+• Rachel Makena: 0714 318 077
+• Agnes Kamau: 0719 819 632
+• Ann Muthama: 0790 385 663
+
+View full details & photos on the directory:
+${link}`;
+  };
 
   // Track impressions, dwell time (seconds stay on ad), and listen for stats updates
   useEffect(() => {
@@ -286,6 +367,16 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
 
             {/* Quick Action Buttons on Desktop / Top Area */}
             <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 w-full lg:w-auto shrink-0 self-stretch lg:self-center">
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-950/40 cursor-pointer"
+                title="Share Karura Women's Collective details"
+              >
+                <Share2 className="w-4 h-4 text-emerald-200" />
+                <span>Share</span>
+              </button>
+
               {matchedBusiness && (
                 <button
                   type="button"
@@ -296,10 +387,10 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                     if (isModal) setIsMobileBillboardModalOpen(false);
                     onViewBusiness(matchedBusiness);
                   }}
-                  className="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-amber-950/40 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-amber-950/40 cursor-pointer"
                 >
                   <ArrowRight className="w-4 h-4" />
-                  <span>View Full Profile &amp; Collective</span>
+                  <span>View Full Profile</span>
                 </button>
               )}
               <button
@@ -308,7 +399,7 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                   if (isModal) setIsMobileBillboardModalOpen(false);
                   onOpenAdEnquiry();
                 }}
-                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/25 flex items-center justify-center gap-1.5 transition backdrop-blur-sm cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/25 flex items-center justify-center gap-1.5 transition backdrop-blur-sm cursor-pointer"
               >
                 <Megaphone className="w-4 h-4 text-amber-300" />
                 <span>Reserve Billboard Space</span>
@@ -334,10 +425,21 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                   </div>
                 </div>
 
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold self-start sm:self-auto">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>5 Vetted Karura Residents</span>
-                </span>
+                <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>5 Vetted Karura Residents</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsShareModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/50 text-emerald-300 text-[11px] font-bold transition active:scale-95 cursor-pointer"
+                    title="Share details"
+                  >
+                    <Share2 className="w-3 h-3 text-emerald-400" />
+                    <span>Share</span>
+                  </button>
+                </div>
               </div>
 
               {/* Grid of the 5 Ladies */}
@@ -850,6 +952,237 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
     );
   };
 
+  const renderShareModal = () => {
+    const link = getAdShareLink();
+    let currentText = getFullPostText();
+    if (activeShareTab === 'short') currentText = getShortPostText();
+    if (activeShareTab === 'facebook') currentText = getFacebookPostText();
+
+    const handleCopy = async (text: string, type: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopiedType(type);
+        setTimeout(() => setCopiedType(null), 2500);
+      } catch {}
+    };
+
+    const handleWhatsAppShare = () => {
+      if (activeBillboard) {
+        recordAdClick(activeBillboard.id, 'profile');
+      }
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(currentText)}`;
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    };
+
+    const handleNativeShare = async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "Karura Women's Cleaning Collective - Mama Fua Direct Numbers",
+            text: currentText,
+            url: link,
+          });
+          if (activeBillboard) {
+            recordAdClick(activeBillboard.id, 'profile');
+          }
+        } catch {}
+      } else {
+        handleCopy(currentText, 'post');
+      }
+    };
+
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200"
+        onClick={() => setIsShareModalOpen(false)}
+      >
+        <div
+          className="bg-stone-950 text-white w-full max-w-2xl rounded-3xl border-2 border-emerald-500/80 shadow-2xl p-5 sm:p-6 space-y-5 my-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4 border-b border-stone-800 pb-4">
+            <div className="flex items-center gap-3">
+              <span className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <Share2 className="w-6 h-6 text-emerald-400" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base sm:text-lg font-black text-white">
+                    Share with Estate Groups &amp; Friends
+                  </h3>
+                  <span className="text-[10px] bg-emerald-500 text-stone-950 px-2 py-0.5 rounded-full font-black uppercase">
+                    Ready to Send
+                  </span>
+                </div>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  Pre-formatted message with verified direct mobile numbers for all 5 Mama Fua ladies
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsShareModalOpen(false)}
+              className="p-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition cursor-pointer"
+              title="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Quick Share Action Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={handleWhatsAppShare}
+              className="w-full py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg cursor-pointer"
+            >
+              <MessageSquare className="w-4 h-4 fill-stone-950" />
+              <span>Share to WhatsApp</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCopy(currentText, 'post')}
+              className="w-full py-3 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md cursor-pointer"
+            >
+              {copiedType === 'post' ? (
+                <>
+                  <Check className="w-4 h-4 text-stone-950" />
+                  <span>Message Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  <span>Copy Message</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Deep Link Quick Row */}
+          <div className="p-3 bg-stone-900 rounded-2xl border border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+            <div className="min-w-0 w-full sm:w-auto flex-1">
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                Website Link:
+              </span>
+              <p className="text-xs font-mono text-emerald-400 truncate select-all">
+                {link}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              <button
+                type="button"
+                onClick={() => handleCopy(link, 'link')}
+                className="flex-1 sm:flex-none py-1.5 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {copiedType === 'link' ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-stone-400" />
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+              {typeof navigator !== 'undefined' && 'share' in navigator && (
+                <button
+                  type="button"
+                  onClick={handleNativeShare}
+                  className="py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  title="Share using device menu"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">More</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Post Variation Tabs */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 border-b border-stone-800 pb-2 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setActiveShareTab('full')}
+                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                  activeShareTab === 'full'
+                    ? 'bg-emerald-500 text-stone-950 font-black'
+                    : 'bg-stone-900 text-stone-300 hover:text-white'
+                }`}
+              >
+                Estate WhatsApp Groups
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveShareTab('short')}
+                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                  activeShareTab === 'short'
+                    ? 'bg-emerald-500 text-stone-950 font-black'
+                    : 'bg-stone-900 text-stone-300 hover:text-white'
+                }`}
+              >
+                Quick Status
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveShareTab('facebook')}
+                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                  activeShareTab === 'facebook'
+                    ? 'bg-emerald-500 text-stone-950 font-black'
+                    : 'bg-stone-900 text-stone-300 hover:text-white'
+                }`}
+              >
+                Facebook &amp; Forum
+              </button>
+            </div>
+
+            {/* Post Preview Card */}
+            <div className="relative">
+              <textarea
+                readOnly
+                value={currentText}
+                rows={9}
+                className="w-full p-3.5 rounded-2xl bg-stone-900 border border-stone-800 text-stone-200 text-xs font-sans leading-relaxed focus:outline-none focus:border-emerald-500 select-all resize-none shadow-inner"
+              />
+              <button
+                type="button"
+                onClick={() => handleCopy(currentText, 'post')}
+                className="absolute top-3 right-3 py-1 px-2.5 rounded-lg bg-stone-800/90 hover:bg-stone-700 text-stone-200 text-[11px] font-bold flex items-center gap-1 border border-stone-700 backdrop-blur-xs cursor-pointer"
+              >
+                {copiedType === 'post' ? (
+                  <>
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3 text-stone-400" />
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Footer guidance */}
+          <div className="flex items-center justify-between text-[11px] text-stone-400 pt-2 border-t border-stone-800">
+            <span>✨ Includes all 5 verified Mama Fua mobile numbers</span>
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(false)}
+              className="text-stone-300 hover:text-white font-bold cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="my-4 sm:my-8 space-y-4">
       {/* Prime #1 Homepage Billboard displayed directly on Mobile, Tablet & Desktop */}
@@ -859,6 +1192,9 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
 
       {/* Real-time Ad Performance & Visitor Stay Tracker Modal */}
       {isStatsModalOpen && renderStatsModal()}
+
+      {/* Share Ad to Groups Modal */}
+      {isShareModalOpen && renderShareModal()}
     </div>
   );
 };
