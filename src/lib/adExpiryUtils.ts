@@ -148,16 +148,77 @@ export function syncAndCleanExpiredCampaigns(campaigns: BusinessAdCampaign[]): {
   return { updatedList, hasChanges };
 }
 
+export const KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN: BusinessAdCampaign = {
+  id: 'kwest-ad-karura-collective-billboard-1',
+  businessId: 'kw-biz-09',
+  businessName: "Karura Women's Cleaning Collective",
+  format: 'homepage-billboard',
+  headline: 'Honest Hands, Spotless Homes: Meet Your Trusted Kahawa West "Mama Fua" & Cleaning Collective',
+  description: 'No agency cuts or hidden middlemen. Five hardworking mothers assemble every morning under the Fig Tree on Karura Road, providing thorough "Mama Fua" hand laundry, duvets, balconies, and deep home scrubbing with genuine motherly care. Call or WhatsApp any of the five ladies directly — 100% of your payment goes straight to her family.',
+  ctaText: 'Call Any of the 5 Ladies',
+  badgeText: 'ESTATE SPOTLIGHT • 5 VETTED LADIES',
+  targetZone: 'Karura Estate',
+  imageUrl: '/karura-women-under-tree.jpg',
+  requestCustomDesign: true,
+  packageDuration: '7_days',
+  placementPriceKsh: 2500,
+  creativeFeeKsh: 500,
+  totalPriceKsh: 3000,
+  status: 'active',
+  createdAt: '2026-10-25T05:05:00.000Z',
+  approvedAt: '2026-10-25T05:05:00.000Z',
+  expiresAt: calculateAdExpiresAt('2026-10-25T05:05:00.000Z', '7_days'),
+  editorNotes: '7-Day Live Test Ad for Karura Women Collective. Direct calls to all 5 ladies enabled.',
+};
+
 /**
  * Loads all campaigns from localStorage, synchronizes expiry states, and returns only live active ads
  */
 export function getLiveActiveAdsFromStorage(): BusinessAdCampaign[] {
   try {
     const raw = localStorage.getItem('kwest_business_ads');
-    if (!raw) return [];
+    let parsed: BusinessAdCampaign[] = [];
+    if (raw) {
+      try {
+        const val = JSON.parse(raw);
+        if (Array.isArray(val)) parsed = val;
+      } catch {}
+    }
 
-    const parsed: BusinessAdCampaign[] = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
+    const karuraIndex = parsed.findIndex(
+      (c) => c.businessId === 'kw-biz-09' || c.id === 'kwest-ad-karura-collective-billboard-1'
+    );
+    const nowIso = new Date().toISOString();
+
+    if (karuraIndex < 0) {
+      const activeAd = {
+        ...KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN,
+        createdAt: nowIso,
+        approvedAt: nowIso,
+        expiresAt: calculateAdExpiresAt(nowIso, '7_days'),
+      };
+      parsed.unshift(activeAd);
+      localStorage.setItem('kwest_business_ads', JSON.stringify(parsed));
+    } else {
+      const current = parsed[karuraIndex];
+      // Keep it active and up to date with the latest emotional copy mentioning "Mama Fua"
+      if (!current.headline.includes('Mama Fua') || current.status !== 'active') {
+        parsed[karuraIndex] = {
+          ...current,
+          format: 'homepage-billboard',
+          headline: KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN.headline,
+          description: KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN.description,
+          ctaText: KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN.ctaText,
+          badgeText: KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN.badgeText,
+          imageUrl: '/karura-women-under-tree.jpg',
+          status: 'active',
+          packageDuration: '7_days',
+          approvedAt: nowIso,
+          expiresAt: calculateAdExpiresAt(nowIso, '7_days'),
+        };
+        localStorage.setItem('kwest_business_ads', JSON.stringify(parsed));
+      }
+    }
 
     const { updatedList, hasChanges } = syncAndCleanExpiredCampaigns(parsed);
     if (hasChanges) {
@@ -167,6 +228,6 @@ export function getLiveActiveAdsFromStorage(): BusinessAdCampaign[] {
     return updatedList.filter(isCampaignLiveAndActive);
   } catch (err) {
     console.error('Error loading live ads from storage:', err);
-    return [];
+    return [KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN];
   }
 }

@@ -641,3 +641,51 @@ export async function testFirebaseSyncStatus(): Promise<FirebaseSyncReport> {
       : errors.join(' | '),
   };
 }
+
+// ----------------------------------------------------
+// AD CAMPAIGNS (Sponsored Billboards & Spotlights)
+// ----------------------------------------------------
+export async function saveAdCampaignToFirestore(campaign: any): Promise<boolean> {
+  const path = `ad_campaigns/${campaign.id}`;
+  try {
+    const payload = {
+      id: campaign.id,
+      businessId: campaign.businessId,
+      businessName: campaign.businessName,
+      format: campaign.format,
+      headline: campaign.headline,
+      description: campaign.description,
+      ctaText: campaign.ctaText || 'Connect on WhatsApp',
+      badgeText: campaign.badgeText || 'FEATURED',
+      targetZone: campaign.targetZone || 'Karura Estate',
+      imageUrl: campaign.imageUrl || null,
+      packageDuration: campaign.packageDuration || '7_days',
+      status: campaign.status || 'active',
+      createdAt: campaign.createdAt || new Date().toISOString(),
+      approvedAt: campaign.approvedAt || new Date().toISOString(),
+      expiresAt: campaign.expiresAt || null,
+    };
+    const safePayload = await ensureSafeFirestorePayload(payload);
+    await setDoc(doc(db, 'ad_campaigns', campaign.id), safePayload, { merge: true });
+    return true;
+  } catch (error) {
+    console.warn(`[Firebase] Save ad campaign fallback to local storage:`, error);
+    return false;
+  }
+}
+
+export async function fetchAdCampaignsFromFirestore(): Promise<any[]> {
+  try {
+    const colRef = collection(db, 'ad_campaigns');
+    const snapshot = await getDocs(colRef);
+    const list: any[] = [];
+    snapshot.forEach((d) => {
+      list.push(d.data());
+    });
+    return list;
+  } catch (error) {
+    console.warn('[Firebase] Fetch ad campaigns fallback:', error);
+    return [];
+  }
+}
+

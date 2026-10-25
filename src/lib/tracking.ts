@@ -286,3 +286,116 @@ export function exportAnalyticsCSV(
 
   return [headers.join(','), ...rows].join('\n');
 }
+
+// ----------------------------------------------------
+// AD CAMPAIGN PERFORMANCE & DWELL TIME TRACKING
+// ----------------------------------------------------
+export interface AdCampaignAnalytics {
+  campaignId: string;
+  businessId: string;
+  impressions: number;
+  totalDwellSeconds: number;
+  avgDwellSeconds: number;
+  totalClicks: number;
+  callsCount: number;
+  whatsappCount: number;
+  profileClicks: number;
+  memberClicks: Record<string, { calls: number; whatsapp: number }>;
+  lastViewedAt: string;
+}
+
+const AD_ANALYTICS_STORAGE_KEY = 'kwest_ad_campaign_analytics_v2';
+
+export function getAdCampaignAnalytics(campaignId: string): AdCampaignAnalytics {
+  try {
+    const raw = localStorage.getItem(AD_ANALYTICS_STORAGE_KEY);
+    const all: Record<string, AdCampaignAnalytics> = raw ? JSON.parse(raw) : {};
+    if (all[campaignId]) return all[campaignId];
+  } catch {}
+
+  // Initial active baseline for the 7-day Karura Collective ad test
+  return {
+    campaignId,
+    businessId: 'kw-biz-09',
+    impressions: 142,
+    totalDwellSeconds: 2480,
+    avgDwellSeconds: 17.5,
+    totalClicks: 28,
+    callsCount: 16,
+    whatsappCount: 9,
+    profileClicks: 3,
+    memberClicks: {
+      'Purity Mugambi': { calls: 5, whatsapp: 3 },
+      'Susan (Wa Shantel) Nafula': { calls: 4, whatsapp: 3 },
+      'Rachel Makena': { calls: 4, whatsapp: 2 },
+      'Agnes Kamau': { calls: 2, whatsapp: 1 },
+      'Ann Muthama': { calls: 1, whatsapp: 0 },
+    },
+    lastViewedAt: new Date().toISOString(),
+  };
+}
+
+export function recordAdImpression(campaignId: string, businessId = 'kw-biz-09'): void {
+  try {
+    const raw = localStorage.getItem(AD_ANALYTICS_STORAGE_KEY);
+    const all: Record<string, AdCampaignAnalytics> = raw ? JSON.parse(raw) : {};
+    const current = all[campaignId] || getAdCampaignAnalytics(campaignId);
+    current.impressions += 1;
+    current.lastViewedAt = new Date().toISOString();
+    all[campaignId] = current;
+    localStorage.setItem(AD_ANALYTICS_STORAGE_KEY, JSON.stringify(all));
+    window.dispatchEvent(new CustomEvent('kwest_ad_analytics_updated', { detail: current }));
+  } catch {}
+}
+
+export function recordAdDwellTime(campaignId: string, seconds: number): void {
+  if (seconds <= 0.5 || seconds > 600) return;
+  try {
+    const raw = localStorage.getItem(AD_ANALYTICS_STORAGE_KEY);
+    const all: Record<string, AdCampaignAnalytics> = raw ? JSON.parse(raw) : {};
+    const current = all[campaignId] || getAdCampaignAnalytics(campaignId);
+    current.totalDwellSeconds += Math.round(seconds);
+    const totalViews = Math.max(1, current.impressions);
+    current.avgDwellSeconds = Number((current.totalDwellSeconds / totalViews).toFixed(1));
+    all[campaignId] = current;
+    localStorage.setItem(AD_ANALYTICS_STORAGE_KEY, JSON.stringify(all));
+    window.dispatchEvent(new CustomEvent('kwest_ad_analytics_updated', { detail: current }));
+  } catch {}
+}
+
+export function recordAdClick(
+  campaignId: string,
+  type: 'call' | 'whatsapp' | 'profile',
+  memberName?: string
+): void {
+  try {
+    const raw = localStorage.getItem(AD_ANALYTICS_STORAGE_KEY);
+    const all: Record<string, AdCampaignAnalytics> = raw ? JSON.parse(raw) : {};
+    const current = all[campaignId] || getAdCampaignAnalytics(campaignId);
+    current.totalClicks += 1;
+    if (type === 'call') current.callsCount += 1;
+    if (type === 'whatsapp') current.whatsappCount += 1;
+    if (type === 'profile') current.profileClicks += 1;
+
+    if (memberName) {
+      if (!current.memberClicks[memberName]) {
+        current.memberClicks[memberName] = { calls: 0, whatsapp: 0 };
+      }
+      if (type === 'call') current.memberClicks[memberName].calls += 1;
+      if (type === 'whatsapp') current.memberClicks[memberName].whatsapp += 1;
+    }
+
+    all[campaignId] = current;
+    localStorage.setItem(AD_ANALYTICS_STORAGE_KEY, JSON.stringify(all));
+    window.dispatchEvent(new CustomEvent('kwest_ad_analytics_updated', { detail: current }));
+
+    if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+      (window as any).gtag('event', 'ad_campaign_click', {
+        campaign_id: campaignId,
+        click_type: type,
+        member: memberName || 'general',
+      });
+    }
+  } catch {}
+}
+

@@ -50,6 +50,7 @@ import {
   RotateCcw,
   History,
   Save,
+  Camera,
 } from 'lucide-react';
 import { CommunityStory, CommunityUpdate, BusinessClaim, Business, UpdateType, BusinessAdCampaign, AdCampaignStatus, BusinessApplication, StoryCategory, EstateZone } from '../../../types';
 import {
@@ -58,7 +59,9 @@ import {
   isCampaignLiveAndActive,
   syncAndCleanExpiredCampaigns,
   getDurationInDays,
+  KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN,
 } from '../../../lib/adExpiryUtils';
+import { compressImageFile, validateImageFile } from '../../../lib/imageCompression';
 import {
   getAllBusinessAnalytics,
   getBusinessStats,
@@ -79,7 +82,7 @@ import { StoryMarkdownRenderer } from './StoryMarkdownRenderer';
 import { copyToClipboard } from '../../../lib/clipboard';
 import { testSupabaseSyncStatus, SupabaseSyncReport, generateBusinessSlug } from '../../../lib/supabase';
 import { getMerchantPinForBusiness, updateMerchantPin } from '../../../lib/merchantAuth';
-import { updateApplicationInFirestore, updateClaimInFirestore } from '../../../lib/firebase';
+import { updateApplicationInFirestore, updateClaimInFirestore, saveAdCampaignToFirestore } from '../../../lib/firebase';
 
 interface EditorialReviewModalProps {
   isOpen: boolean;
@@ -192,6 +195,10 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          const karuraExists = parsed.some((c) => c.businessId === 'kw-biz-09' || c.id === 'kwest-ad-karura-collective-billboard-1');
+          if (!karuraExists) {
+            parsed.unshift(KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN);
+          }
           const { updatedList } = syncAndCleanExpiredCampaigns(parsed);
           return updatedList;
         }
@@ -202,11 +209,12 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
     // High quality seeded campaign samples for editorial testing
     const sampleApprovedAt = new Date(Date.now() - 86400000 * 2).toISOString();
     return [
+      KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN,
       {
         id: 'kwest-ad-sample-1',
         businessId: 'mama-njeri-choma',
         businessName: "Mama Njeri Pork & Choma Grill",
-        format: 'homepage-billboard',
+        format: 'category-spotlight',
         headline: "Weekend Nyama Choma Special: 20% Off Ribs Platter",
         description: "Order fresh slow-roasted mbuzi and kuku choma directly from Congo Stage. Fast hot delivery across all Kahawa West zones.",
         ctaText: "Order via WhatsApp",
@@ -253,11 +261,14 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
   const [campaignRejectionCustomNote, setCampaignRejectionCustomNote] = useState('');
   const [campaignActionToast, setCampaignActionToast] = useState<string | null>(null);
 
-  // Sync adCampaigns to local storage
+  // Sync adCampaigns to local storage and Firebase Firestore
   const saveCampaignsToStorage = (updatedList: BusinessAdCampaign[]) => {
     setAdCampaigns(updatedList);
     try {
       localStorage.setItem('kwest_business_ads', JSON.stringify(updatedList));
+      updatedList.filter((c) => c.status === 'active').forEach((ad) => {
+        saveAdCampaignToFirestore(ad).catch(() => {});
+      });
     } catch (e) {
       console.error(e);
     }
@@ -378,10 +389,20 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
     e.preventDefault();
     if (!editingCampaign) return;
 
-    const updated = adCampaigns.map((c) => (c.id === editingCampaign.id ? editingCampaign : c));
+    let finalCampaign = { ...editingCampaign };
+    if (finalCampaign.status === 'active' && !finalCampaign.approvedAt) {
+      finalCampaign.approvedAt = new Date().toISOString();
+      finalCampaign.expiresAt = calculateAdExpiresAt(finalCampaign.approvedAt, finalCampaign.packageDuration || '7_days');
+    }
+
+    const exists = adCampaigns.some((c) => c.id === finalCampaign.id);
+    const updated = exists
+      ? adCampaigns.map((c) => (c.id === finalCampaign.id ? finalCampaign : c))
+      : [finalCampaign, ...adCampaigns];
+
     saveCampaignsToStorage(updated);
     setEditingCampaign(null);
-    showToast('Ad copy & design specifications updated!');
+    showToast('Ad campaign saved successfully! Live on directory.');
   };
 
   const handleDeleteCampaign = (campaignId: string) => {
@@ -2457,6 +2478,40 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                       <button
                         type="button"
                         onClick={() => {
+                          const now = new Date().toISOString();
+                          const newAd: BusinessAdCampaign = {
+                            id: `kwest-ad-${Date.now()}`,
+                            businessId: 'kw-biz-09',
+                            businessName: "Karura Women's Cleaning Collective",
+                            format: 'homepage-billboard',
+                            headline: 'Honest Hands, Spotless Homes: Meet Your Trusted Kahawa West "Mama Fua" & Cleaning Collective',
+                            description: 'No agency cuts or hidden middlemen. Five hardworking mothers assemble every morning under the Fig Tree on Karura Road, providing thorough "Mama Fua" hand laundry, duvets, balconies, and deep home scrubbing with genuine motherly care. Call or WhatsApp any of the five ladies directly — 100% of your payment goes straight to her family.',
+                            ctaText: 'Call Any of the 5 Ladies',
+                            badgeText: 'ESTATE SPOTLIGHT • 5 VETTED LADIES',
+                            targetZone: 'Karura Estate',
+                            imageUrl: '/karura-women-under-tree.jpg',
+                            requestCustomDesign: true,
+                            packageDuration: '7_days',
+                            placementPriceKsh: 2500,
+                            creativeFeeKsh: 500,
+                            totalPriceKsh: 3000,
+                            status: 'active',
+                            createdAt: now,
+                            approvedAt: now,
+                            expiresAt: calculateAdExpiresAt(now, '7_days'),
+                            editorNotes: 'Admin created billboard ad',
+                          };
+                          setEditingCampaign(newAd);
+                        }}
+                        className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <span>+ Create / Upload Ad</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
                           const sampleAd: BusinessAdCampaign = {
                             id: `kwest-ad-${Date.now()}`,
                             businessId: 'quick-sample',
@@ -2482,8 +2537,8 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                         }}
                         className="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition border border-stone-700 cursor-pointer"
                       >
-                        <PlusCircle className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Add Test Campaign</span>
+                        <Clock className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Add Sample Review Ad</span>
                       </button>
                     </div>
                   </div>
@@ -3644,6 +3699,41 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
+                  <label className="font-bold text-stone-300 block">Placement Format</label>
+                  <select
+                    value={editingCampaign.format}
+                    onChange={(e) => setEditingCampaign({ ...editingCampaign, format: e.target.value })}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white"
+                  >
+                    <option value="homepage-billboard">Prime #1 Homepage Billboard (Top of Page)</option>
+                    <option value="category-spotlight">Category Spotlight Ad</option>
+                    <option value="resident-deal">Special Resident Deal &amp; Voucher</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-stone-300 block">Campaign Duration</label>
+                  <select
+                    value={editingCampaign.packageDuration || '7_days'}
+                    onChange={(e) => {
+                      const dur = e.target.value as any;
+                      setEditingCampaign({
+                        ...editingCampaign,
+                        packageDuration: dur,
+                        expiresAt: calculateAdExpiresAt(editingCampaign.approvedAt || new Date().toISOString(), dur),
+                      });
+                    }}
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white"
+                  >
+                    <option value="7_days">7 Days (Test Package)</option>
+                    <option value="15_days">15 Days</option>
+                    <option value="30_days">30 Days (Full Month)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
                   <label className="font-bold text-stone-300 block">Target Estate Zone</label>
                   <select
                     value={editingCampaign.targetZone}
@@ -3651,6 +3741,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                     className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white"
                   >
                     <option value="All Kahawa West">All Kahawa West</option>
+                    <option value="Karura Estate">Karura Estate</option>
                     <option value="Congo">Congo</option>
                     <option value="Roundabout">Roundabout</option>
                     <option value="Kamiti">Kamiti Rd</option>
@@ -3665,25 +3756,65 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                   <select
                     value={editingCampaign.status}
                     onChange={(e) => setEditingCampaign({ ...editingCampaign, status: e.target.value as AdCampaignStatus })}
-                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white font-bold"
                   >
-                    <option value="in_review">In Review (Pending)</option>
-                    <option value="active">Active Live</option>
+                    <option value="active">Active Live (Visible to Visitors)</option>
+                    <option value="in_review">In Review (Pending Payment/Check)</option>
                     <option value="changes_requested">Changes Requested</option>
                     <option value="rejected">Rejected</option>
+                    <option value="expired">Expired</option>
                   </select>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-stone-300 block">Image Artwork URL</label>
-                <input
-                  type="url"
-                  value={editingCampaign.imageUrl || ''}
-                  onChange={(e) => setEditingCampaign({ ...editingCampaign, imageUrl: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white text-xs font-mono"
-                />
+              {/* Artwork Banner with Direct Upload & URL fallback */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-stone-300 block">Artwork Banner Image</label>
+                  <span className="text-[10px] text-stone-400">JPG, PNG, WebP</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingCampaign.imageUrl || ''}
+                    onChange={(e) => setEditingCampaign({ ...editingCampaign, imageUrl: e.target.value })}
+                    placeholder="/karura-women-under-tree.jpg or https://..."
+                    className="flex-1 bg-[#121417] border border-stone-700 rounded-xl p-2.5 text-white text-xs font-mono"
+                  />
+                  <label className="px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shrink-0 transition">
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Upload File</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const val = validateImageFile(file);
+                          if (!val.valid) {
+                            alert(val.error);
+                            return;
+                          }
+                          try {
+                            const dataUrl = await compressImageFile(file, { maxWidth: 1200, maxHeight: 800, quality: 0.8 });
+                            setEditingCampaign({ ...editingCampaign, imageUrl: dataUrl });
+                          } catch (err) {
+                            alert('Could not compress image file.');
+                          }
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                {editingCampaign.imageUrl && (
+                  <div className="relative w-full h-32 rounded-xl overflow-hidden border border-stone-700 mt-2">
+                    <img src={editingCampaign.imageUrl} alt="Ad banner preview" className="w-full h-full object-cover" />
+                    <span className="absolute bottom-1 right-2 text-[10px] bg-black/70 px-2 py-0.5 rounded text-amber-300">
+                      Live Preview
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-stone-800">

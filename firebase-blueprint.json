@@ -153,6 +153,29 @@
         "created_at": { "type": "string", "maxLength": 100 }
       },
       "required": ["businessId", "authorName", "rating", "comment"]
+    },
+    "adCampaign": {
+      "title": "Business Ad Campaign",
+      "description": "Sponsored Billboard and Spotlight Ad Campaigns",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "businessId": { "type": "string", "maxLength": 128 },
+        "businessName": { "type": "string", "maxLength": 200 },
+        "format": { "type": "string", "maxLength": 100 },
+        "headline": { "type": "string", "maxLength": 250 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "ctaText": { "type": "string", "maxLength": 100 },
+        "badgeText": { "type": "string", "maxLength": 100 },
+        "targetZone": { "type": "string", "maxLength": 100 },
+        "imageUrl": { "type": "string", "maxLength": 2048 },
+        "packageDuration": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "maxLength": 100 },
+        "approvedAt": { "type": "string", "maxLength": 100 },
+        "expiresAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["id", "businessName", "headline", "description", "format", "status"]
     }
   },
   "firestore": {
@@ -179,6 +202,10 @@
     "/feedback/{feedbackId}": {
       "schema": "communityFeedback",
       "description": "Resident reviews and ratings"
+    },
+    "/ad_campaigns/{campaignId}": {
+      "schema": "adCampaign",
+      "description": "Homepage billboard and category spotlight advertisements"
     }
   }
 }

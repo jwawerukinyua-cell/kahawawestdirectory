@@ -1451,6 +1451,7 @@ export default function App() {
         {/* Monetization Slot & Special Resident Offers Coming Soon Placeholders */}
         <MonetizationPlaceholders
           businessesWithOffers={businessesWithOffers}
+          allBusinesses={businesses}
           onViewBusiness={handleViewDetails}
           onClaimListing={() => setIsListBusinessOpen(true)}
           onOpenAdEnquiry={() => setIsAdEnquiryOpen(true)}
