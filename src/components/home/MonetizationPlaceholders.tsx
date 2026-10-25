@@ -407,10 +407,23 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
 
                         {/* Specialty Snippet */}
                         {member.specialty && (
-                          <div className="text-[11px] text-stone-300 leading-snug mb-3 bg-stone-950/60 p-2 rounded-xl border border-stone-800 line-clamp-2">
+                          <div className="text-[11px] text-stone-300 leading-snug mb-2 bg-stone-950/60 p-2 rounded-xl border border-stone-800 line-clamp-2">
                             {member.specialty}
                           </div>
                         )}
+
+                        {/* Complete Mobile & Direct Contact Information */}
+                        <div className="mb-2.5 px-2 py-1 rounded-xl bg-amber-400/10 border border-amber-400/25 flex items-center justify-between gap-1 text-[11px]">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Phone className="w-3 h-3 text-amber-400 shrink-0" />
+                            <span className="font-mono font-bold text-amber-300 tracking-wide select-all text-xs">
+                              {formatPhoneForDisplay(member.phone)}
+                            </span>
+                          </div>
+                          <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-emerald-950/90 text-emerald-400 border border-emerald-500/40 shrink-0">
+                            Direct Line
+                          </span>
+                        </div>
                       </div>
 
                       {/* Direct Call & WhatsApp Action Buttons */}
@@ -423,10 +436,10 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                             }
                           }}
                           className="flex-1 py-1.5 px-2 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-stone-950 text-[11px] font-black flex items-center justify-center gap-1 transition shadow-xs"
-                          title={`Direct call to ${member.name}`}
+                          title={`Direct call to ${member.name}: ${formatPhoneForDisplay(member.phone)}`}
                         >
-                          <Phone className="w-3 h-3 fill-stone-950" />
-                          <span>Call {formatPhoneForDisplay(member.phone).split(' ').slice(0, 2).join(' ')}</span>
+                          <Phone className="w-3 h-3 fill-stone-950 shrink-0" />
+                          <span className="font-mono font-black">Call {formatPhoneForDisplay(member.phone)}</span>
                         </a>
 
                         {member.whatsapp && (
@@ -440,7 +453,7 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                               }
                             }}
                             className="p-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white transition flex items-center justify-center shadow-xs"
-                            title={`WhatsApp chat with ${member.name}`}
+                            title={`WhatsApp chat with ${member.name}: ${formatPhoneForDisplay(member.phone)}`}
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </a>
@@ -789,7 +802,9 @@ export const MonetizationPlaceholders: React.FC<MonetizationPlaceholdersProps> =
                       </div>
                       <div className="min-w-0">
                         <div className="font-bold text-xs text-white truncate">{member.name}</div>
-                        <div className="text-[10px] text-stone-400 truncate">{member.specialty}</div>
+                        <div className="text-[10px] text-stone-400 truncate">
+                          <span className="font-mono text-amber-300 font-semibold">{formatPhoneForDisplay(member.phone)}</span> • {member.specialty}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">

@@ -108,12 +108,18 @@ export function formatPhoneForDisplay(phone: string | undefined | null): string 
     return `${local.slice(0, 4)} ${local.slice(4, 7)} ${local.slice(7)}`;
   }
 
-  // If 0712345678 -> 0712 345 678
+  // If 0712345678 or 0143469509 (10 digits) -> 0712 345 678
   if (digits.startsWith('0') && digits.length === 10) {
     return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
   }
 
-  return phone;
+  // If 9 digits without leading 0 (e.g. 714318077 or 143469509)
+  if ((digits.startsWith('7') || digits.startsWith('1')) && digits.length === 9) {
+    const local = '0' + digits;
+    return `${local.slice(0, 4)} ${local.slice(4, 7)} ${local.slice(7)}`;
+  }
+
+  return phone.trim();
 }
 
 export function getModeratorEmergencyPhone(): string {
