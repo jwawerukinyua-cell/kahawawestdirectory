@@ -3,6 +3,104 @@ import { deleteStoryFromSupabase } from '../lib/supabase';
 
 export const INITIAL_COMMUNITY_STORIES: CommunityStory[] = [
   {
+    id: 'story-why-we-built-kahawa-west-directory-free-to-list',
+    slug: 'why-we-built-kahawa-west-directory-and-why-it-is-free-to-list-or-claim',
+    title: 'Why We Built Kahawa West Directory — And Why It Is 100% Free to List or Claim Your Business',
+    subtitle: '🔨 Craftsmanship meets digital tools: Why every local fundi, mama mboga, clinic, and shopkeeper deserves to be discovered without paywalls or middlemen.',
+    category: 'Socio-Economic Development',
+    zone: 'Other (Kahawa West Area)',
+    excerpt: 'In Kahawa West, our economy is fueled by hardworking people—from plumbers fixing leaks at midnight, to mama fua collectives under the Fig Tree, to fresh grocery stalls. Here is why we built a digital home for them, and why listing or claiming will always be free.',
+    content: `When you walk down the red-dirt roads and tarmac alleys of Kahawa West—from Jacaranda Estate and Bima Road to Congo Stage, Kamae, and the Fig Tree on Karura Road—you are witnessing one of the most resilient, enterprising local economies in Nairobi.
+
+Here, livelihood is carved out through honest, skilled labour:
+- **Stephen Maina** responding to a burst water pipe in Jacaranda Court at 10:00 PM.
+- **The 5-Member Karura Women's Collective** assembling under the Fig Tree daily to offer trusted Mama Fua laundry and house scrubbing.
+- **Mama Cynthia** receiving fresh farm potatoes and vegetables directly from Kinangop at dawn.
+- **Barbers and salonists** perfecting executive fades and dreadlocks at Soweto Gate.
+- **Hardware suppliers, clinics, bakers, and local fundis** keeping our neighborhood moving forward every single day.
+
+Yet for years, a glaring paradox existed in Kahawa West: **our community is full of exceptional talent and vital businesses, yet finding them was needlessly difficult.**
+
+---
+
+### 🔨 Why the Hammer and the Laptop?
+
+The photo atop this article captures two everyday tools resting together on an artisan's workbench: a steel claw hammer and a modern laptop. That image is our philosophy in a single frame.
+
+- **The Hammer** represents the foundational physical labour of Kahawa West. It is the calloused hands of the fundi, the seamstress operating a sewing machine, the mechanic tuning an engine, the caregiver tending to young children, and the shopkeeper stocking shelves.
+- **The Laptop** represents modern, clean, purpose-built digital technology.
+
+For too long, corporate tech platforms and distant commercial aggregators have ignored estate-level African communities. They cluster unrelated Nairobi CBD businesses together, bury local fundis under algorithms, or demand exorbitant subscription fees that a neighborhood artisan cannot afford.
+
+We asked ourselves a simple question: **What happens when we take first-class software engineering and put it directly at the service of the local hammer?**
+
+Kahawa West Directory is the answer. It is digital plumbing designed specifically for our postcode—instant search, estate-by-estate filtering, verified local contacts, direct click-to-call, and zero clutter.
+
+---
+
+### 💡 Why Is It 100% Free to List or Claim Your Business?
+
+Many residents and merchants have asked us: *"What is the catch? Why isn't there a registration fee? When will you start charging us to stay listed?"*
+
+Here is our firm, transparent commitment:
+
+#### 1. Zero Gatekeeping of Local Livelihoods
+Access to customers in your own neighborhood should never be a paid luxury. In an economic climate where small businesses face rising fuel, rent, and inventory costs, slapping a KES 2,000 or KES 5,000 paywall on a directory listing is predatory. A directory only truly serves the public when **every** honest trader—from the corner kiosk to the largest private hospital—is discoverable.
+
+#### 2. Zero Agency Cuts & Middleman Commissions
+When you hire through third-party gig apps, they routinely take 20% to 35% out of the provider's pocket. **We take 0%.** When a resident calls a fundi or Mama Fua through Kahawa West Directory, 100% of the money moves directly from the resident to the service provider's phone or till. 
+
+#### 3. Completeness Creates Community Value
+If only businesses who paid could be listed, residents would miss out on the best local talent. By keeping basic listings and claims permanently free, we ensure Kahawa West has the most comprehensive, accurate, and trustworthy local economic directory in the country.
+
+---
+
+### 🛡️ What Does "Claiming" Your Business Mean?
+
+If you search the directory right now, your business may already be present with verified community details. That is because our local field team and community volunteers have been carefully indexing neighborhood enterprises.
+
+**Claiming is completely free and takes less than 2 minutes:**
+1. Search for your business name or category on the directory.
+2. Tap the **"Claim This Business"** badge on your listing.
+3. Confirm your identity via phone or WhatsApp verification.
+4. **Take control:** Update your official mobile line, add your M-Pesa Till or Paybill, upload real photos of your workshop or shopfront, specify your exact estate landmark, and receive your official green **Verified Local Business** shield.
+
+If your enterprise is not yet listed, simply tap **"List Your Business"** in the top navigation to add it for free today.
+
+---
+
+### 🤝 How Does the Platform Stay Sustainable?
+
+Transparency is everything in community building. Kahawa West Directory is sustained through:
+1. **Optional, Premium Editorial Billboards:** High-visibility spotlight placements (like our verified partner billboard at the top of the homepage) for established businesses looking for boosted reach across the entire estate.
+2. **Community Sponsorships & Partnerships:** Local institutions who believe in supporting grassroots commerce and community journalism.
+
+The core service—**searching, browsing, discovering, free business listings, listing claims, direct phone calls, emergency hotlines, and resident alerts**—will **always remain free** for the people of Kahawa West.
+
+---
+
+### 📍 Keep Our Money Within Kahawa West
+
+Every time we hire an outside contractor from across town or order from a distant supermarket chain, money leaves our estate. But every time you call a fundi in Jacaranda, buy groceries in Congo, visit a chemist in Bima, or hire a Mama Fua from Karura Road, that money pays local school fees, feeds neighborhood children, and strengthens our community.
+
+We built this platform for you. Use it, share it with your neighbors, claim your business, and let us build Kahawa West together.
+
+*— The Editorial Team, Kahawa West Directory*`,
+    imageUrl: '/hammer-and-laptop.jpg',
+    imageCaption: 'A hammer beside a laptop on a craftsman’s workbench: The physical labour of Kahawa West meeting clean digital infrastructure — Photo by The Editorial Team',
+    isRealPhotoConfirmed: true,
+    authorName: 'The Editorial Team',
+    authorEmail: 'editorial@kahawawestdirectory.co.ke',
+    authorPhone: '+254764405842',
+    authorRole: 'The Editorial Team',
+    date: '2026-10-27',
+    readTimeMinutes: 4,
+    featured: true,
+    status: 'published',
+    likes: 38,
+    dislikes: 0,
+  },
+  {
     id: 'story-pp2-graduation-make-sense',
     slug: 'does-a-pp2-graduation-make-sense-a-question-from-kahawa-west-parents',
     title: 'Does a PP2 Graduation Make Sense? A Question from a Kahawa West Parents?',
@@ -513,7 +611,7 @@ export function getStoredCommunityStories(): CommunityStory[] {
       }
     }
 
-    // Always ensure PP2 graduation story is active featured at index 0
+    // Ensure our new flagship manifesto story is active featured at index 0, followed by PP2 graduation
     const pp2Story = INITIAL_COMMUNITY_STORIES.find((s) => s.id === 'story-pp2-graduation-make-sense');
     if (pp2Story && !deletedIds.has(pp2Story.id)) {
       const idx = result.findIndex((s) => s.id === pp2Story.id);
@@ -523,15 +621,23 @@ export function getStoredCommunityStories(): CommunityStory[] {
       } else if (idx === -1) {
         result.unshift(pp2Story);
       }
-      // Ensure only PP2 is featured
-      result.forEach((s) => {
-        if (s.id === pp2Story.id) {
-          s.featured = true;
-        } else {
-          s.featured = false;
-        }
-      });
     }
+
+    const manifestoStory = INITIAL_COMMUNITY_STORIES.find((s) => s.id === 'story-why-we-built-kahawa-west-directory-free-to-list');
+    if (manifestoStory && !deletedIds.has(manifestoStory.id)) {
+      const idx = result.findIndex((s) => s.id === manifestoStory.id);
+      if (idx > 0) {
+        result.splice(idx, 1);
+        result.unshift(manifestoStory);
+      } else if (idx === -1) {
+        result.unshift(manifestoStory);
+      }
+    }
+
+    // Ensure manifesto is featured
+    result.forEach((s, idx) => {
+      s.featured = idx === 0;
+    });
 
     return result;
   } catch (err) {

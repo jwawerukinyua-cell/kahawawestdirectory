@@ -276,6 +276,9 @@ export default function App() {
           rawHash.includes('el-nino') ||
           rawHash.includes('education') ||
           rawHash.includes('schools') ||
+          rawHash.includes('why-we-built') ||
+          rawHash.includes('hammer') ||
+          rawHash.includes('free-to-list') ||
           rawHash.includes('list-and-claim')
         ? rawHash
         : null;
@@ -506,15 +509,20 @@ export default function App() {
                 (p.id === 'story-1788508956440' || p.id.startsWith('story-user-') || p.id.startsWith('story-'))
             )
           );
-          // Always ensure PP2 graduation story is active featured at index 0
+          // Ensure manifesto story is active featured at index 0, followed by PP2 story
           const pp2Idx = combined.findIndex((s) => s.id === 'story-pp2-graduation-make-sense');
           if (pp2Idx > 0) {
             const [pp2] = combined.splice(pp2Idx, 1);
             combined.unshift(pp2);
           }
+          const manifestoIdx = combined.findIndex((s) => s.id === 'story-why-we-built-kahawa-west-directory-free-to-list');
+          if (manifestoIdx > 0) {
+            const [manifesto] = combined.splice(manifestoIdx, 1);
+            combined.unshift(manifesto);
+          }
           return combined.map((s, idx) => ({
             ...s,
-            featured: idx === 0 && s.id === 'story-pp2-graduation-make-sense',
+            featured: idx === 0,
           }));
         });
       }
