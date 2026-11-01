@@ -2,283 +2,305 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd http://www.google.com/schemas/sitemap-image/1.1 http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd">
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.00</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?view=emergency</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?view=list-business</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?view=promote</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?view=stories</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?view=guidelines</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?view=community-standards</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?view=privacy</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.50</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?view=terms</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.50</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=home-rentals</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=food-fresh</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=health-wellness</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=mama-fua-domestic</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=home-utilities</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=hardware-construction</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=restaurants-cafes</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=errands-deliveries</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=professional-services</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=beauty-personal-care</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=automotive</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=education</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=electronics-tech</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=shopping-retail</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=financial-services</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=churches</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=fashion-clothing</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=transport-travel</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=events-entertainment</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=home-garden</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?category=community-organizations</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Congo</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Roundabout</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Jacaranda%20Estate</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Jubilee%20Estate</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Northern%20Bypass</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Kware%20%2F%20Quarry</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Bima%20Road</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Soweto</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Kamae</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Station%20%2F%20Railway</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Mahiga</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Kamiti%20Road</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?zone=Kiamumbi%20Border</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?zone=Karura%20Estate</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?zone=Other%20(Kahawa%20West%20Area)</loc>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kenyaswimminguniversity-and-visa-dolphins-swim-club-kenya</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&amp;fit=crop&amp;w=1000&amp;q=80</image:loc>
+      <image:title>Kenyaswimminguniversity and Visa Dolphins Swim Club Kenya 🇰🇪.</image:title>
+      <image:caption>Kenyaswimminguniversity and Visa Dolphins Swim Club Kenya 🇰🇪. in Kamiti Road, Kahawa West - Professional Swimming Training &amp; Dolphins Swim Club in Kamiti Road, Kahawa West</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&amp;fit=crop&amp;w=1000&amp;q=80</image:loc>
+      <image:title>Kenyaswimminguniversity and Visa Dolphins Swim Club Kenya 🇰🇪. Photo</image:title>
+      <image:caption>Photo from Kenyaswimminguniversity and Visa Dolphins Swim Club Kenya 🇰🇪. in Kamiti Road</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=dreadlink-salon-and-barber-shop</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=nishbakers</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=weststate-valley-guest-house</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -294,7 +316,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kleenquick-laundry-services</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -315,13 +337,13 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=mama-sab-delights-catering-broth</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=mama-njeri-nyama-choma-caterers</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -352,7 +374,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=st-francis-pharmacy-kahawa-west</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -383,7 +405,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=jacaranda-executive-kinyozi-and-spa</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -414,7 +436,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=fundi-maina-certified-plumbing</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -445,7 +467,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=quickmart-fresh-grocers-kwest</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -476,7 +498,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kahawa-west-auto-garage-kamiti-rd</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -507,7 +529,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kwest-digital-cyber-and-ecitizen-hub</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -538,7 +560,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=bethel-daycare-and-kindergarten</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -568,39 +590,14 @@
     </image:image>
   </url>
   <url>
-    <loc>https://www.kahawawestdirectory.co.ke/?biz=church-ave-karura-rd-women-cleaning-collective</loc>
-    <lastmod>2026-10-13</lastmod>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=karura-women-s-cleaning-collective</loc>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
-      <image:title>Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective</image:title>
-      <image:caption>Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective in Congo, Kahawa West - Vetted Domestic House Cleaners, Mama Fua Laundry, Compound &amp; Post-Construction Care</image:caption>
-    </image:image>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
-      <image:title>Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective Photo</image:title>
-      <image:caption>Photo from Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective in Congo</image:caption>
-    </image:image>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
-      <image:title>Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective Photo</image:title>
-      <image:caption>Photo from Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective in Congo</image:caption>
-    </image:image>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
-      <image:title>Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective Photo</image:title>
-      <image:caption>Photo from Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective in Congo</image:caption>
-    </image:image>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
-      <image:title>Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective Photo</image:title>
-      <image:caption>Photo from Church Ave &amp; Karura Rd Women&apos;s Cleaning Collective in Congo</image:caption>
-    </image:image>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=mahiga-estate-care-property-agents</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -631,7 +628,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kamae-sparks-electrical-repairs</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -662,7 +659,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=soweto-wellness-dental-and-optical</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -693,7 +690,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kiamumbi-bakehouse-and-cafeteria</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -724,7 +721,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=bima-road-hardware-and-cement-dealers</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -755,7 +752,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=glow-and-glamour-salon-congo</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -785,8 +782,50 @@
     </image:image>
   </url>
   <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=kanyager-fish-shop</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=samonje-vazi</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=karay-s-books</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=crystal-drops</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=manifest-cereals</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=azuri-parloir</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=mwawa-batt</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=super-metro-route-44-sacco-office</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -817,7 +856,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=jacaranda-greens-organic-butchery</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -848,7 +887,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kahawa-west-tech-laptop-repair-doctor</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -879,7 +918,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=station-welders-metal-fabricators</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -910,7 +949,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=bima-road-family-medical-center</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -941,7 +980,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kahawa-west-sports-lounge-grill</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -972,7 +1011,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=cleanwash-eco-car-wash-carpet-spa</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1003,7 +1042,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=mama-zawadi-gas-clean-water-refill</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1034,7 +1073,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=blessed-hands-tailoring-fashion</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1065,7 +1104,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=k-west-equity-kcb-agency-banking</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1096,7 +1135,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kamiti-hardwood-timber-yard</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1127,7 +1166,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=soweto-green-fresh-vegetable-depot</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1158,7 +1197,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=highway-bodaboda-sacco-riders-hub</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1189,7 +1228,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=crown-electronics-sound-systems</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1220,7 +1259,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=k-west-fitness-gym-aerobics</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1251,7 +1290,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=neema-daycare-baby-nursing-home</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1282,7 +1321,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=station-agrovet-veterinary-supplies</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1313,7 +1352,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=jacaranda-pest-control-fumigation</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1344,7 +1383,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=congo-stage-phone-accessories-repairs</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1375,7 +1414,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kamiti-road-glass-aluminum-works</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1406,7 +1445,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=roundabout-quick-bites-fries-chicken</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1437,7 +1476,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=mahiga-ridge-clean-water-supply-bowsers</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1468,7 +1507,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=jacaranda-solar-inverter-hub</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1499,7 +1538,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=bima-road-bookshop-uniforms</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1530,7 +1569,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=soweto-premier-chemist-clinic</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1561,7 +1600,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kamae-motor-spares-oil-depot</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1592,7 +1631,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=k-west-sound-dj-equipment-hire</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1623,7 +1662,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=congo-stage-fish-point-lake-fresh</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1654,7 +1693,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=jacaranda-executive-car-wash-bay</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1685,7 +1724,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=station-cyber-photography-studio</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1716,7 +1755,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=bima-road-opticians-eye-center</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1747,7 +1786,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kiamumbi-green-valley-nursery-school</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1778,7 +1817,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=soweto-timber-yard-roofing-planks</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1809,7 +1848,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=kahawa-west-mama-fua-house-cleaning</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1840,7 +1879,7 @@
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?biz=mahiga-pool-lounge-choma-bistro</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
     <image:image>
@@ -1868,6 +1907,55 @@
       <image:title>Mahiga Pool Lounge &amp; Choma Bistro Photo</image:title>
       <image:caption>Photo from Mahiga Pool Lounge &amp; Choma Bistro in Kiamumbi Border</image:caption>
     </image:image>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=dreadlink-salon-and-barber-shop</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?biz=nishbakers</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
+      <image:title>Nishbakers </image:title>
+      <image:caption>Nishbakers  in Mahiga, Kahawa West - food-dining in Mahiga, Kahawa West</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
+      <image:title>Nishbakers  Photo</image:title>
+      <image:caption>Photo from Nishbakers  in Mahiga</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
+      <image:title>Nishbakers  Photo</image:title>
+      <image:caption>Photo from Nishbakers  in Mahiga</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
+      <image:title>Nishbakers  Photo</image:title>
+      <image:caption>Photo from Nishbakers  in Mahiga</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&amp;fit=crop&amp;w=800&amp;q=80</image:loc>
+      <image:title>Nishbakers  Photo</image:title>
+      <image:caption>Photo from Nishbakers  in Mahiga</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?story=story-why-we-built-kahawa-west-directory-free-to-list</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.kahawawestdirectory.co.ke/?story=story-pp2-graduation-make-sense</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
   </url>
   <url>
     <loc>https://www.kahawawestdirectory.co.ke/?story=story-1788508956440</loc>

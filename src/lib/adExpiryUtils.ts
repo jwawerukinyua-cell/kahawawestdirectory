@@ -148,31 +148,56 @@ export function syncAndCleanExpiredCampaigns(campaigns: BusinessAdCampaign[]): {
   return { updatedList, hasChanges };
 }
 
-export const KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN: BusinessAdCampaign = {
-  id: 'kwest-ad-karura-collective-billboard-1',
+export const WESTSTATE_VALLEY_BILLBOARD_CAMPAIGN: BusinessAdCampaign = {
+  id: 'kwest-ad-weststate-vacancy-billboard',
+  businessId: 'kw-biz-weststate-valley-guesthouse',
+  businessName: 'WestState Valley Guest House',
+  format: 'homepage-billboard',
+  headline: '14-Day Staff Relief Vacancy: Lady (Age 25–30) Needed for Guest House & Front Desk',
+  description: 'WestState Valley Guest House (Behind Mahiga Primary School, Kware/Quarry-100 Metres from PCEA) is looking for an energetic, respectful lady aged 25–30 to sit in for 14 days while a staff member is on leave. Key duties: prepping & cleaning guest rooms, receiving and welcoming guests, and general front desk assistance. Immediate start. Call 0717 580 016 and speak directly to Wanjiru for interview and direction.',
+  ctaText: 'Call Wanjiru: 0717 580 016',
+  badgeText: 'URGENT 14-DAY VACANCY • IMMEDIATE START',
+  targetZone: 'Behind Mahiga Primary School, Kware/Quarry-100 Metres from PCEA',
+  imageUrl: '/weststate-hero.jpg',
+  requestCustomDesign: true,
+  packageDuration: '15_days',
+  placementPriceKsh: 4500,
+  creativeFeeKsh: 500,
+  totalPriceKsh: 5000,
+  status: 'active',
+  createdAt: '2026-11-01T08:00:00.000Z',
+  approvedAt: '2026-11-01T08:00:00.000Z',
+  expiresAt: calculateAdExpiresAt('2026-11-01T08:00:00.000Z', '15_days'),
+  editorNotes: '14-Day Staff Relief Vacancy for WestState Valley Guest House. Direct hiring contact: Wanjiru at 0717 580 016.',
+};
+
+export const KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN: BusinessAdCampaign = {
+  id: 'kwest-ad-karura-collective-showcase',
   businessId: 'kw-biz-09',
   businessName: "Karura Women's Cleaning Collective",
-  format: 'homepage-billboard',
+  format: 'category-grid',
   headline: 'Honest Hands, Spotless Homes: Meet Your Trusted Kahawa West "Mama Fua" & Cleaning Collective',
   description: 'No agency cuts or hidden middlemen. Five hardworking mothers assemble every morning under the Fig Tree on Karura Road, providing thorough "Mama Fua" hand laundry, duvets, balconies, and deep home scrubbing with genuine motherly care. Call or WhatsApp any of the five ladies directly — 100% of your payment goes straight to her family.',
   ctaText: 'Call Any of the 5 Ladies',
-  badgeText: 'ESTATE SPOTLIGHT • 5 VETTED LADIES',
-  targetZone: 'Karura Estate',
+  badgeText: 'ESTATE SPOTLIGHT • 5 VETTED RESIDENTS',
+  targetZone: 'Karura Estate (Fig Tree)',
   imageUrl: '/karura-women-under-tree.jpg',
   requestCustomDesign: true,
-  packageDuration: '7_days',
+  packageDuration: '30_days',
   placementPriceKsh: 2500,
   creativeFeeKsh: 500,
   totalPriceKsh: 3000,
   status: 'active',
   createdAt: '2026-10-25T05:05:00.000Z',
   approvedAt: '2026-10-25T05:05:00.000Z',
-  expiresAt: calculateAdExpiresAt('2026-10-25T05:05:00.000Z', '7_days'),
-  editorNotes: '7-Day Live Test Ad for Karura Women Collective. Direct calls to all 5 ladies enabled.',
+  expiresAt: calculateAdExpiresAt('2026-10-25T05:05:00.000Z', '30_days'),
+  editorNotes: 'Community Spotlight Showcase for Karura Women Collective. Direct calls to all 5 ladies enabled.',
 };
 
+export const KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN: BusinessAdCampaign = KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN;
+
 /**
- * Loads all campaigns from localStorage, synchronizes expiry states, and returns only live active ads
+ * Loads all campaigns from localStorage, synchronizes expiry states, and returns live active ads
  */
 export function getLiveActiveAdsFromStorage(): BusinessAdCampaign[] {
   try {
@@ -185,49 +210,58 @@ export function getLiveActiveAdsFromStorage(): BusinessAdCampaign[] {
       } catch {}
     }
 
-    const karuraIndex = parsed.findIndex(
-      (c) => c.businessId === 'kw-biz-09' || c.id === 'kwest-ad-karura-collective-billboard-1'
-    );
     const nowIso = new Date().toISOString();
 
-    if (karuraIndex < 0) {
-      const activeAd = {
-        ...KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN,
+    // 1. Ensure WestState Valley 14-Day Vacancy is the premier active billboard
+    const weststateIndex = parsed.findIndex(
+      (c) => c.businessId === 'kw-biz-weststate-valley-guesthouse' || c.id === 'kwest-ad-weststate-vacancy-billboard'
+    );
+    if (weststateIndex < 0) {
+      const activeWeststate = {
+        ...WESTSTATE_VALLEY_BILLBOARD_CAMPAIGN,
         createdAt: nowIso,
         approvedAt: nowIso,
-        expiresAt: calculateAdExpiresAt(nowIso, '7_days'),
+        expiresAt: calculateAdExpiresAt(nowIso, '15_days'),
       };
-      parsed.unshift(activeAd);
-      localStorage.setItem('kwest_business_ads', JSON.stringify(parsed));
+      parsed.unshift(activeWeststate);
     } else {
-      const current = parsed[karuraIndex];
-      // Keep it active and up to date with the latest emotional copy mentioning "Mama Fua"
-      if (!current.headline.includes('Mama Fua') || current.status !== 'active') {
-        parsed[karuraIndex] = {
-          ...current,
-          format: 'homepage-billboard',
-          headline: KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN.headline,
-          description: KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN.description,
-          ctaText: KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN.ctaText,
-          badgeText: KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN.badgeText,
-          imageUrl: '/karura-women-under-tree.jpg',
-          status: 'active',
-          packageDuration: '7_days',
-          approvedAt: nowIso,
-          expiresAt: calculateAdExpiresAt(nowIso, '7_days'),
-        };
-        localStorage.setItem('kwest_business_ads', JSON.stringify(parsed));
-      }
+      parsed[weststateIndex] = {
+        ...parsed[weststateIndex],
+        ...WESTSTATE_VALLEY_BILLBOARD_CAMPAIGN,
+        status: 'active',
+      };
     }
+
+    // 2. Ensure Karura Collective campaign is maintained as the featured community showcase
+    const karuraIndex = parsed.findIndex(
+      (c) => c.businessId === 'kw-biz-09' || c.id === 'kwest-ad-karura-collective-showcase' || c.id === 'kwest-ad-karura-collective-billboard-1'
+    );
+    if (karuraIndex < 0) {
+      parsed.push({
+        ...KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN,
+        createdAt: nowIso,
+        approvedAt: nowIso,
+        expiresAt: calculateAdExpiresAt(nowIso, '30_days'),
+      });
+    } else {
+      parsed[karuraIndex] = {
+        ...parsed[karuraIndex],
+        ...KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN,
+        status: 'active',
+      };
+    }
+
+    localStorage.setItem('kwest_business_ads', JSON.stringify(parsed));
 
     const { updatedList, hasChanges } = syncAndCleanExpiredCampaigns(parsed);
     if (hasChanges) {
       localStorage.setItem('kwest_business_ads', JSON.stringify(updatedList));
     }
 
-    return updatedList.filter(isCampaignLiveAndActive);
+    const liveList = updatedList.filter(isCampaignLiveAndActive);
+    return liveList.length > 0 ? liveList : [WESTSTATE_VALLEY_BILLBOARD_CAMPAIGN, KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN];
   } catch (err) {
     console.error('Error loading live ads from storage:', err);
-    return [KARURA_COLLECTIVE_BILLBOARD_CAMPAIGN];
+    return [WESTSTATE_VALLEY_BILLBOARD_CAMPAIGN, KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN];
   }
 }

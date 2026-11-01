@@ -313,7 +313,25 @@ export function getAdCampaignAnalytics(campaignId: string): AdCampaignAnalytics 
     if (all[campaignId]) return all[campaignId];
   } catch {}
 
-  // Initial active baseline for the 7-day Karura Collective ad test
+  if (campaignId.includes('weststate')) {
+    return {
+      campaignId,
+      businessId: 'kw-biz-weststate-valley-guesthouse',
+      impressions: 64,
+      totalDwellSeconds: 1152,
+      avgDwellSeconds: 18.0,
+      totalClicks: 14,
+      callsCount: 9,
+      whatsappCount: 4,
+      profileClicks: 1,
+      memberClicks: {
+        'Wanjiru (Front Desk & Hiring Contact)': { calls: 9, whatsapp: 4 },
+      },
+      lastViewedAt: new Date().toISOString(),
+    };
+  }
+
+  // Initial active baseline for Karura Collective ad showcase
   return {
     campaignId,
     businessId: 'kw-biz-09',
