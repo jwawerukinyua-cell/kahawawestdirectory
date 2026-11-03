@@ -140,7 +140,7 @@ export const AdminAnalyticsModal: React.FC<AdminAnalyticsModalProps> = ({
     const lead = calculateLeadScore(stats, business.isClaimed);
     const totalLeads = stats.whatsappClicks + stats.phoneCalls;
 
-    return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (kahawawestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
+    return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (https://www.kahawawestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
   };
 
   const handleCopyPitch = async (business: Business) => {
@@ -350,7 +350,7 @@ export const AdminAnalyticsModal: React.FC<AdminAnalyticsModalProps> = ({
                                 <div className="flex items-center justify-end gap-1.5">
                                   <button
                                     onClick={async () => {
-                                      await copyToClipboard(`Your KWEST Merchant PIN for ${b.name} is: ${pin}. Log in at kahawawestdirectory.co.ke`);
+                                      await copyToClipboard(`Your KWEST Merchant PIN for ${b.name} is: ${pin}. Log in at https://www.kahawawestdirectory.co.ke`);
                                       setCopiedPinId(b.id);
                                       setTimeout(() => setCopiedPinId(null), 3000);
                                     }}

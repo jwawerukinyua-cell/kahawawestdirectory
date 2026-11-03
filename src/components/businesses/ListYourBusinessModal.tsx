@@ -389,7 +389,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
                   <a
                     href={getWhatsAppChatUrl(
                       '254764405842',
-                      `Hello Kahawa West Directory, I have just submitted a new listing for "${name}" (${zone}) via kahawawestdirectory.co.ke.\n\nApplicant: ${applicantName} (${applicantRole})\nPhone: ${phone}\n\nPlease review and publish our listing. Thank you!`
+                      `Hello Kahawa West Directory, I have just submitted a new listing for "${name}" (${zone}) via https://www.kahawawestdirectory.co.ke\n\nApplicant: ${applicantName} (${applicantRole})\nPhone: ${phone}\n\nPlease review and publish our listing. Thank you!`
                     )}
                     target="_blank"
                     rel="noopener noreferrer"

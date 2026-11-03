@@ -74,6 +74,21 @@ try {
 export const db = firestoreDb;
 export const auth = getAuth(app);
 
+export function isQuotaOrOfflineError(error: unknown): boolean {
+  if (!error) return false;
+  const msg = error instanceof Error ? error.message : String(error);
+  const lower = msg.toLowerCase();
+  return (
+    lower.includes('quota') ||
+    lower.includes('resource-exhausted') ||
+    lower.includes('resource_exhausted') ||
+    lower.includes('limit exceeded') ||
+    lower.includes('offline') ||
+    lower.includes('unavailable') ||
+    lower.includes('client is offline')
+  );
+}
+
 // 2. Standardized error handler adhering to Firebase integration skill
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
   const errInfo: FirestoreErrorInfo = {
@@ -93,7 +108,12 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path,
   };
-  console.error('Firestore Error:', JSON.stringify(errInfo));
+
+  if (isQuotaOrOfflineError(error)) {
+    console.warn(`[Firestore Quota Notice] Handled quota/offline state on '${path}':`, errInfo.error);
+  } else {
+    console.error('Firestore Error:', JSON.stringify(errInfo));
+  }
   throw new Error(JSON.stringify(errInfo));
 }
 
@@ -194,6 +214,10 @@ export async function fetchBusinessesFromFirestore(): Promise<Business[]> {
     });
     return list;
   } catch (error) {
+    if (isQuotaOrOfflineError(error)) {
+      console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local verified directory.`);
+      return [];
+    }
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }
@@ -240,6 +264,10 @@ export async function fetchClaimsFromFirestore(): Promise<BusinessClaim[]> {
     });
     return list;
   } catch (error) {
+    if (isQuotaOrOfflineError(error)) {
+      console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local cache.`);
+      return [];
+    }
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }
@@ -348,6 +376,10 @@ export async function fetchApplicationsFromFirestore(): Promise<BusinessApplicat
     });
     return list;
   } catch (error) {
+    if (isQuotaOrOfflineError(error)) {
+      console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local cache.`);
+      return [];
+    }
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }
@@ -424,6 +456,10 @@ export async function fetchStoriesFromFirestore(): Promise<CommunityStory[]> {
     });
     return list;
   } catch (error) {
+    if (isQuotaOrOfflineError(error)) {
+      console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local stories.`);
+      return [];
+    }
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }
@@ -486,6 +522,10 @@ export async function fetchUpdatesFromFirestore(): Promise<CommunityUpdate[]> {
     });
     return list;
   } catch (error) {
+    if (isQuotaOrOfflineError(error)) {
+      console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local updates.`);
+      return [];
+    }
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }

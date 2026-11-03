@@ -511,12 +511,22 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
           deduplicatedMapped.push(b);
         }
 
-        try {
-          localStorage.setItem(CACHE_KEYS.BUSINESSES_DATA, JSON.stringify(deduplicatedMapped));
-          localStorage.setItem(CACHE_KEYS.BUSINESSES_TIME, String(Date.now()));
-        } catch {}
+        if (deduplicatedMapped.length > 0) {
+          try {
+            localStorage.setItem(CACHE_KEYS.BUSINESSES_DATA, JSON.stringify(deduplicatedMapped));
+            localStorage.setItem(CACHE_KEYS.BUSINESSES_TIME, String(Date.now()));
+          } catch {}
+          return deduplicatedMapped;
+        }
 
-        return deduplicatedMapped;
+        const cachedData = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
+        if (cachedData) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          } catch {}
+        }
+        return null;
       } catch (fbErr) {
         console.warn('Firebase fetch businesses fallback:', fbErr);
         const cachedData = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
@@ -782,11 +792,48 @@ export const saveBusinessApplication = async (
   }
 };
 
+const DEFAULT_APPLICATIONS: BusinessApplication[] = [
+  {
+    id: 'app-fiti-customs',
+    name: 'FiTi CUSTOMS',
+    category: 'fashion-clothing',
+    subCategory: 'Custom Streetwear & Graphic Merch Printing',
+    zone: 'Kamae',
+    landmark: 'Kamae Road, near Kamae Junction & Trade Center',
+    phone: '0754503197',
+    whatsapp: '254754503197',
+    email: 'fiticustoms@gmail.com',
+    applicantName: 'Arphaxad kinoti',
+    applicantPhone: '0754503197',
+    applicantRole: 'Owner',
+    heroImage: '/assets/aistudio/image_01006e37.png',
+    galleryImages: ['/assets/aistudio/image_01006e37.png'],
+    description: 'Bespoke streetwear apparel and custom garment printing hub in Kamae, Kahawa West, founded and operated by Arphaxad Kinoti. Specializing in high-definition graphic tees (Supreme-style graphics, hip-hop & pop culture portraits), oversized hoodies (Whole Lotta Red designs, heavy cotton blends), DTF & heat-press apparel transfers, brand merch, and custom clothing personalization.',
+    services: [
+      'Custom Graphic Tees Printing',
+      'Oversized Streetwear Hoodies & Sweaters',
+      'DTF & Heat-Press Apparel Transfers',
+      'Bespoke Brand & Event Merchandise',
+      'Custom Typography & Hip-Hop Graphic Artwork',
+      'Bulk & Single Piece Custom Orders',
+    ],
+    mpesaType: 'Send Money',
+    mpesaNumber: '0754503197',
+    status: 'approved',
+    created_at: new Date().toISOString(),
+  },
+];
+
 export const getStoredApplications = (): BusinessApplication[] => {
   try {
-    return JSON.parse(localStorage.getItem(APPLICATIONS_STORAGE_KEY) || '[]');
+    const raw = localStorage.getItem(APPLICATIONS_STORAGE_KEY);
+    const stored: BusinessApplication[] = raw ? JSON.parse(raw) : [];
+    const map = new Map<string, BusinessApplication>();
+    DEFAULT_APPLICATIONS.forEach((a) => map.set(a.id || a.name, a));
+    stored.forEach((a) => map.set(a.id || a.name, a));
+    return Array.from(map.values());
   } catch {
-    return [];
+    return DEFAULT_APPLICATIONS;
   }
 };
 
@@ -964,12 +1011,22 @@ export const fetchStoriesFromSupabase = async (forceRefresh = false): Promise<Co
             likes: row.likes || 0,
           }));
 
-        try {
-          localStorage.setItem(CACHE_KEYS.STORIES_DATA, JSON.stringify(mapped));
-          localStorage.setItem(CACHE_KEYS.STORIES_TIME, String(Date.now()));
-        } catch {}
+        if (mapped.length > 0) {
+          try {
+            localStorage.setItem(CACHE_KEYS.STORIES_DATA, JSON.stringify(mapped));
+            localStorage.setItem(CACHE_KEYS.STORIES_TIME, String(Date.now()));
+          } catch {}
+          return mapped;
+        }
 
-        return mapped;
+        const cachedData = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
+        if (cachedData) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          } catch {}
+        }
+        return null;
       } catch (fbErr) {
         console.warn('Firebase fetch stories fallback:', fbErr);
         const cachedData = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
@@ -1073,12 +1130,22 @@ export const fetchUpdatesFromSupabase = async (forceRefresh = false): Promise<Co
             rejectionReason: row.rejectionReason || row.rejection_reason,
           }));
 
-        try {
-          localStorage.setItem(CACHE_KEYS.UPDATES_DATA, JSON.stringify(mapped));
-          localStorage.setItem(CACHE_KEYS.UPDATES_TIME, String(Date.now()));
-        } catch {}
+        if (mapped.length > 0) {
+          try {
+            localStorage.setItem(CACHE_KEYS.UPDATES_DATA, JSON.stringify(mapped));
+            localStorage.setItem(CACHE_KEYS.UPDATES_TIME, String(Date.now()));
+          } catch {}
+          return mapped;
+        }
 
-        return mapped;
+        const cachedData = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
+        if (cachedData) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          } catch {}
+        }
+        return null;
       } catch (fbErr) {
         console.warn('Firebase fetch updates fallback:', fbErr);
         const cachedData = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);

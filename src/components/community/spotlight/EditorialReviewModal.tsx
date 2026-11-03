@@ -515,7 +515,7 @@ export const EditorialReviewModal: React.FC<EditorialReviewModalProps> = ({
     const stats = allStats[business.id] || getBusinessStats(business.id);
     const totalLeads = stats.whatsappClicks + stats.phoneCalls;
 
-    return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (kahawawestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
+    return `Hello ${business.name} team,\n\nI am reaching out from *Kahawa West Directory (KWEST)* (https://www.kahawawestdirectory.co.ke).\n\nYour profile has generated *${stats.views} views* and *${totalLeads} direct customer inquiries* (${stats.whatsappClicks} WhatsApp chats, ${stats.phoneCalls} calls) from estate residents around ${business.zone}.\n\nSince your listing is already getting high organic reach, we would like to offer you an exclusive *Featured Homepage Billboard Ad* / *Resident Deal Spotlight* to scale your orders across all 10,000+ monthly estate visitors.\n\nWould you like me to send you the quick pricing rate card?`;
   };
 
   const handleCopyPitch = async (business: Business) => {
@@ -1936,7 +1936,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                                         claim.whatsapp_number || details.customWhatsapp || claim.phone_number,
                                         claim.status === 'verified'
                                           ? `Hello ${claim.full_name || 'Merchant'}, congratulations! Your ownership claim for "${displayName}" has been verified and APPROVED on the Kahawa West Community Directory! 🎉\n\nYour verified merchant badge is now active. View your listing here: https://www.kahawawestdirectory.co.ke/?biz=${claim.business_id}\n\nWelcome to the KWEST business network!`
-                                          : `Hello ${claim.full_name || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your ownership claim for "${displayName}". We are reviewing your submission to activate your verified merchant badge. Could you kindly confirm your business location or permit? Thank you!`
+                                          : `Hello ${claim.full_name || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (https://www.kahawawestdirectory.co.ke) regarding your ownership claim for "${displayName}". We are reviewing your submission to activate your verified merchant badge. Could you kindly confirm your business location or permit? Thank you!`
                                       )}
                                       target="_blank"
                                       rel="noopener noreferrer"
@@ -2241,7 +2241,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                                       app.whatsapp || app.applicantPhone || app.phone,
                                       app.status === 'approved'
                                         ? `Hello ${app.applicantName || 'Merchant'}, congratulations! Your business "${app.name}" in ${app.zone} has been APPROVED and published to the live Kahawa West Community Directory! 🎉\n\nView your official live listing here:\nhttps://www.kahawawestdirectory.co.ke/?biz=${generateBusinessSlug(app.name)}\n\nWelcome to the KWEST business network!`
-                                        : `Hello ${app.applicantName || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (kahawawestdirectory.co.ke) regarding your listing application for "${app.name}" (${app.zone || 'Kahawa West'}). We received your submission and are reviewing the details to publish your listing!`
+                                        : `Hello ${app.applicantName || 'Merchant'}, this is the Kahawa West Community Directory Editorial Desk (https://www.kahawawestdirectory.co.ke) regarding your listing application for "${app.name}" (${app.zone || 'Kahawa West'}). We received your submission and are reviewing the details to publish your listing!`
                                     )}
                                     target="_blank"
                                     rel="noopener noreferrer"

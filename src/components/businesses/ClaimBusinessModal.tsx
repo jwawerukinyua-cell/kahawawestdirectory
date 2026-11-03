@@ -389,7 +389,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
                   <a
                     href={getWhatsAppChatUrl(
                       '254764405842',
-                      `Hello Kahawa West Directory, I have just submitted an ownership claim for "${customName || business.name}" (ID: ${business.id}) via kahawawestdirectory.co.ke.\n\nClaimant: ${fullName} (${businessRole})\nContact: ${phoneNumber}\n\nPlease verify our ownership badge. Thank you!`
+                      `Hello Kahawa West Directory, I have just submitted an ownership claim for "${customName || business.name}" (ID: ${business.id}) via https://www.kahawawestdirectory.co.ke\n\nClaimant: ${fullName} (${businessRole})\nContact: ${phoneNumber}\n\nPlease verify our ownership badge. Thank you!`
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
