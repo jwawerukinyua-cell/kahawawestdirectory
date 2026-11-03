@@ -97,21 +97,18 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-// 3. Test connection to Firestore on boot (adhering to Firebase skill specifications)
+// 3. Test connection to Firestore (callable on demand)
 export async function testFirestoreConnection(): Promise<boolean> {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
     return true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Firestore client operating in offline mode. Local cache active.');
+    if (error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('quota'))) {
+      console.warn('Firestore operating in offline/cache mode:', error.message);
     }
-    return true;
+    return false;
   }
 }
-
-// Trigger initial connection verification
-testFirestoreConnection().catch(() => {});
 
 // ----------------------------------------------------
 // BUSINESSES
@@ -535,7 +532,7 @@ export function subscribeToApplications(
     },
     (err) => {
       if (onError) onError(err);
-      handleFirestoreError(err, OperationType.GET, path);
+      console.warn(`Firestore snapshot subscription notice on '${path}':`, err.message);
     }
   );
 }
@@ -555,7 +552,7 @@ export function subscribeToClaims(
     },
     (err) => {
       if (onError) onError(err);
-      handleFirestoreError(err, OperationType.GET, path);
+      console.warn(`Firestore snapshot subscription notice on '${path}':`, err.message);
     }
   );
 }
