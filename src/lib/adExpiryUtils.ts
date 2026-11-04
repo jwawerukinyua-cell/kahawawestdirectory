@@ -210,46 +210,22 @@ export function getLiveActiveAdsFromStorage(): BusinessAdCampaign[] {
       } catch {}
     }
 
-    const nowIso = new Date().toISOString();
-
-    // 1. Ensure WestState Valley 14-Day Vacancy is the premier active billboard
-    const weststateIndex = parsed.findIndex(
-      (c) => c.businessId === 'kw-biz-weststate-valley-guesthouse' || c.id === 'kwest-ad-weststate-vacancy-billboard'
-    );
-    if (weststateIndex < 0) {
-      const activeWeststate = {
-        ...WESTSTATE_VALLEY_BILLBOARD_CAMPAIGN,
-        createdAt: nowIso,
-        approvedAt: nowIso,
-        expiresAt: calculateAdExpiresAt(nowIso, '15_days'),
-      };
-      parsed.unshift(activeWeststate);
-    } else {
-      parsed[weststateIndex] = {
-        ...parsed[weststateIndex],
-        ...WESTSTATE_VALLEY_BILLBOARD_CAMPAIGN,
-        status: 'active',
-      };
-    }
-
-    // 2. Ensure Karura Collective campaign is maintained as the featured community showcase
-    const karuraIndex = parsed.findIndex(
-      (c) => c.businessId === 'kw-biz-09' || c.id === 'kwest-ad-karura-collective-showcase' || c.id === 'kwest-ad-karura-collective-billboard-1'
-    );
-    if (karuraIndex < 0) {
-      parsed.push({
-        ...KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN,
-        createdAt: nowIso,
-        approvedAt: nowIso,
-        expiresAt: calculateAdExpiresAt(nowIso, '30_days'),
-      });
-    } else {
-      parsed[karuraIndex] = {
-        ...parsed[karuraIndex],
-        ...KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN,
-        status: 'active',
-      };
-    }
+    // Mark WestState vacancy as completed/fulfilled (job vacancy successfully filled!)
+    parsed = parsed.map((c) => {
+      if (
+        c.businessId === 'kw-biz-weststate-valley-guesthouse' ||
+        c.id === 'kwest-ad-weststate-vacancy-billboard' ||
+        c.businessId === 'kw-biz-09' ||
+        c.id === 'kwest-ad-karura-collective-showcase' ||
+        c.id === 'kwest-ad-karura-collective-billboard-1'
+      ) {
+        return {
+          ...c,
+          status: 'expired' as const,
+        };
+      }
+      return c;
+    });
 
     localStorage.setItem('kwest_business_ads', JSON.stringify(parsed));
 
@@ -259,9 +235,9 @@ export function getLiveActiveAdsFromStorage(): BusinessAdCampaign[] {
     }
 
     const liveList = updatedList.filter(isCampaignLiveAndActive);
-    return liveList.length > 0 ? liveList : [WESTSTATE_VALLEY_BILLBOARD_CAMPAIGN, KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN];
+    return liveList;
   } catch (err) {
     console.error('Error loading live ads from storage:', err);
-    return [WESTSTATE_VALLEY_BILLBOARD_CAMPAIGN, KARURA_COLLECTIVE_SHOWCASE_CAMPAIGN];
+    return [];
   }
 }
