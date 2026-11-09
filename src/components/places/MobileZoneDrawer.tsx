@@ -15,6 +15,7 @@ const ZONES_LIST: { name: string; description: string }[] = [
   { name: 'Roundabout', description: 'Central intersection, Super Metro, mini-marts & chemists' },
   { name: 'Jacaranda Estate', description: 'Residential apartments, quiet lanes, groceries & daycare' },
   { name: 'Jubilee Estate', description: 'Gated residential courts, modern maisonettes & family stores' },
+  { name: 'Maziwa', description: 'Maziwa stage, residential courts, local kiosks & community stores' },
   { name: 'Northern Bypass', description: 'Highway corridor, bypass lounges, hardware & distribution' },
   { name: 'Kware / Quarry', description: 'Quarry artisan area, fabrication, stone works & local shops' },
   { name: 'Bima Road', description: 'Hardware stores, auto garages, bakeries & lounges' },

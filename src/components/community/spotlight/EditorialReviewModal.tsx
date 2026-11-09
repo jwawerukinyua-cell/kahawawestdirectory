@@ -2684,6 +2684,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                         <option value="Roundabout">Roundabout</option>
                         <option value="Kamiti">Kamiti Rd</option>
                         <option value="Jacaranda">Jacaranda</option>
+                        <option value="Maziwa">Maziwa</option>
                         <option value="Kiu Kenda">Kiu Kenda</option>
                         <option value="Soweto">Soweto</option>
                       </select>
@@ -3746,6 +3747,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                     <option value="Roundabout">Roundabout</option>
                     <option value="Kamiti">Kamiti Rd</option>
                     <option value="Jacaranda">Jacaranda</option>
+                    <option value="Maziwa">Maziwa</option>
                     <option value="Kiu Kenda">Kiu Kenda</option>
                     <option value="Soweto">Soweto</option>
                   </select>
@@ -3919,6 +3921,7 @@ CREATE POLICY "Public can submit feedback" ON public.business_feedback FOR INSER
                     <option value="Station / Railway">Station / Railway</option>
                     <option value="Congo">Congo</option>
                     <option value="Jacaranda Estate">Jacaranda Estate</option>
+                    <option value="Maziwa">Maziwa</option>
                     <option value="Bima Road">Bima Road</option>
                     <option value="Soweto">Soweto</option>
                     <option value="Kamae">Kamae</option>

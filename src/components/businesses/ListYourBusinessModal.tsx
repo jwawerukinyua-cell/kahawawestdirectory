@@ -306,6 +306,7 @@ export const ListYourBusinessModal: React.FC<ListYourBusinessModalProps> = ({
     'Roundabout',
     'Jacaranda Estate',
     'Jubilee Estate',
+    'Maziwa',
     'Northern Bypass',
     'Kware / Quarry',
     'Bima Road',

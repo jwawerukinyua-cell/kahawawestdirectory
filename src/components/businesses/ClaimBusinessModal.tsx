@@ -276,6 +276,7 @@ export const ClaimBusinessModal: React.FC<ClaimBusinessModalProps> = ({
     'Roundabout',
     'Jacaranda Estate',
     'Jubilee Estate',
+    'Maziwa',
     'Northern Bypass',
     'Kware / Quarry',
     'Bima Road',

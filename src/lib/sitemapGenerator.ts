@@ -49,6 +49,7 @@ export const ESTATE_ZONES_LIST: EstateZone[] = [
   'Roundabout',
   'Jacaranda Estate',
   'Jubilee Estate',
+  'Maziwa',
   'Northern Bypass',
   'Kware / Quarry',
   'Bima Road',

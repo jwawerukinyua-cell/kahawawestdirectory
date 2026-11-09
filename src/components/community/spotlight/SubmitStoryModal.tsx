@@ -41,6 +41,7 @@ const SPOTLIGHT_ZONES: EstateZone[] = [
   'Roundabout',
   'Jacaranda Estate',
   'Jubilee Estate',
+  'Maziwa',
   'Northern Bypass',
   'Kware / Quarry',
   'Bima Road',

@@ -1375,7 +1375,7 @@ function generateAdditionalBusinesses(): Business[] {
   // We expand systematically to generate 50 rich businesses matching all zones & categories
   const zones: Business['zone'][] = [
     'Congo', 'Roundabout', 'Jacaranda Estate', 'Bima Road', 'Soweto',
-    'Kamae', 'Station / Railway', 'Mahiga', 'Kamiti Road', 'Kiamumbi Border'
+    'Kamae', 'Station / Railway', 'Mahiga', 'Kamiti Road', 'Kiamumbi Border', 'Maziwa'
   ];
 
   const businessNames = [

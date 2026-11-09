@@ -45,6 +45,7 @@ const ESTATE_ZONES: EstateZone[] = [
   'Congo',
   'Jacaranda Estate',
   'Jubilee Estate',
+  'Maziwa',
   'Bima Road',
   'Soweto',
   'Kamae',

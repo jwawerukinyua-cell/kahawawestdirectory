@@ -15,6 +15,7 @@ export const ZONES: { id: string; name: string }[] = [
   { id: 'Roundabout', name: 'Roundabout' },
   { id: 'Jacaranda Estate', name: 'Jacaranda' },
   { id: 'Jubilee Estate', name: 'Jubilee Estate' },
+  { id: 'Maziwa', name: 'Maziwa' },
   { id: 'Northern Bypass', name: 'Northern Bypass' },
   { id: 'Kware / Quarry', name: 'Kware / Quarry' },
   { id: 'Bima Road', name: 'Bima Road' },
