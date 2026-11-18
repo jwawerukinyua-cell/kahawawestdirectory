@@ -2,6 +2,8 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import {
   initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   getFirestore,
   doc,
   getDoc,
@@ -57,12 +59,13 @@ export interface FirestoreErrorInfo {
 // 1. Initialize Firebase App
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// CRITICAL: Initialize Firestore with autoDetectLongPolling to allow fast WebSockets while automatically adapting to proxy/cellular environments
+// CRITICAL: Enable persistent IndexedDB cache across reloads + autoDetectLongPolling for cellular/proxy networks
 let firestoreDb;
 try {
   firestoreDb = initializeFirestore(
     app,
     {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
       experimentalAutoDetectLongPolling: true,
     },
     (firebaseConfig as any).firestoreDatabaseId
@@ -74,7 +77,10 @@ try {
 export const db = firestoreDb;
 export const auth = getAuth(app);
 
-export function isQuotaOrOfflineError(error: unknown): boolean {
+const QUOTA_COOLDOWN_KEY = 'kwest_firestore_quota_cooldown_until';
+const QUOTA_COOLDOWN_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+
+export function isQuotaLimitError(error: unknown): boolean {
   if (!error) return false;
   const msg = error instanceof Error ? error.message : String(error);
   const lower = msg.toLowerCase();
@@ -82,11 +88,41 @@ export function isQuotaOrOfflineError(error: unknown): boolean {
     lower.includes('quota') ||
     lower.includes('resource-exhausted') ||
     lower.includes('resource_exhausted') ||
-    lower.includes('limit exceeded') ||
+    lower.includes('limit exceeded')
+  );
+}
+
+export function isQuotaOrOfflineError(error: unknown): boolean {
+  if (!error) return false;
+  const msg = error instanceof Error ? error.message : String(error);
+  const lower = msg.toLowerCase();
+  return (
+    isQuotaLimitError(error) ||
     lower.includes('offline') ||
     lower.includes('unavailable') ||
     lower.includes('client is offline')
   );
+}
+
+export function isFirestoreQuotaCooldownActive(): boolean {
+  try {
+    const until = Number(localStorage.getItem(QUOTA_COOLDOWN_KEY) || 0);
+    return until > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+export function activateFirestoreQuotaCooldown(): void {
+  try {
+    localStorage.setItem(QUOTA_COOLDOWN_KEY, String(Date.now() + QUOTA_COOLDOWN_DURATION_MS));
+  } catch {}
+}
+
+export function clearFirestoreQuotaCooldown(): void {
+  try {
+    localStorage.removeItem(QUOTA_COOLDOWN_KEY);
+  } catch {}
 }
 
 // 2. Standardized error handler adhering to Firebase integration skill
@@ -204,6 +240,9 @@ export async function saveBusinessToFirestore(business: Business): Promise<boole
 
 export async function fetchBusinessesFromFirestore(): Promise<Business[]> {
   const path = 'businesses';
+  if (isFirestoreQuotaCooldownActive()) {
+    return [];
+  }
   try {
     const colRef = collection(db, 'businesses');
     const snapshot = await getDocs(colRef);
@@ -215,6 +254,7 @@ export async function fetchBusinessesFromFirestore(): Promise<Business[]> {
     return list;
   } catch (error) {
     if (isQuotaOrOfflineError(error)) {
+      if (isQuotaLimitError(error)) activateFirestoreQuotaCooldown();
       console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local verified directory.`);
       return [];
     }
@@ -254,6 +294,9 @@ export async function saveClaimToFirestore(claim: BusinessClaim): Promise<{ succ
 
 export async function fetchClaimsFromFirestore(): Promise<BusinessClaim[]> {
   const path = 'claims';
+  if (isFirestoreQuotaCooldownActive()) {
+    return [];
+  }
   try {
     const colRef = collection(db, 'claims');
     const q = query(colRef, orderBy('created_at', 'desc'));
@@ -265,6 +308,7 @@ export async function fetchClaimsFromFirestore(): Promise<BusinessClaim[]> {
     return list;
   } catch (error) {
     if (isQuotaOrOfflineError(error)) {
+      if (isQuotaLimitError(error)) activateFirestoreQuotaCooldown();
       console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local cache.`);
       return [];
     }
@@ -366,6 +410,9 @@ export async function saveApplicationToFirestore(
 
 export async function fetchApplicationsFromFirestore(): Promise<BusinessApplication[]> {
   const path = 'applications';
+  if (isFirestoreQuotaCooldownActive()) {
+    return [];
+  }
   try {
     const colRef = collection(db, 'applications');
     const q = query(colRef, orderBy('created_at', 'desc'));
@@ -377,6 +424,7 @@ export async function fetchApplicationsFromFirestore(): Promise<BusinessApplicat
     return list;
   } catch (error) {
     if (isQuotaOrOfflineError(error)) {
+      if (isQuotaLimitError(error)) activateFirestoreQuotaCooldown();
       console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local cache.`);
       return [];
     }
@@ -446,6 +494,9 @@ export async function saveStoryToFirestore(story: CommunityStory): Promise<boole
 
 export async function fetchStoriesFromFirestore(): Promise<CommunityStory[]> {
   const path = 'community_stories';
+  if (isFirestoreQuotaCooldownActive()) {
+    return [];
+  }
   try {
     const colRef = collection(db, 'community_stories');
     const q = query(colRef, orderBy('date', 'desc'));
@@ -457,6 +508,7 @@ export async function fetchStoriesFromFirestore(): Promise<CommunityStory[]> {
     return list;
   } catch (error) {
     if (isQuotaOrOfflineError(error)) {
+      if (isQuotaLimitError(error)) activateFirestoreQuotaCooldown();
       console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local stories.`);
       return [];
     }
@@ -512,6 +564,9 @@ export async function saveUpdateToFirestore(update: CommunityUpdate): Promise<bo
 
 export async function fetchUpdatesFromFirestore(): Promise<CommunityUpdate[]> {
   const path = 'community_updates';
+  if (isFirestoreQuotaCooldownActive()) {
+    return [];
+  }
   try {
     const colRef = collection(db, 'community_updates');
     const q = query(colRef, orderBy('date', 'desc'));
@@ -523,6 +578,7 @@ export async function fetchUpdatesFromFirestore(): Promise<CommunityUpdate[]> {
     return list;
   } catch (error) {
     if (isQuotaOrOfflineError(error)) {
+      if (isQuotaLimitError(error)) activateFirestoreQuotaCooldown();
       console.warn(`[Firestore Quota Notice] Daily read quota reached on '${path}'. Serving from local updates.`);
       return [];
     }
@@ -562,6 +618,9 @@ export function subscribeToApplications(
   onError?: (err: Error) => void
 ): Unsubscribe {
   const path = 'applications';
+  if (isFirestoreQuotaCooldownActive()) {
+    return () => {};
+  }
   const q = query(collection(db, 'applications'), orderBy('created_at', 'desc'));
   return onSnapshot(
     q,
@@ -571,6 +630,7 @@ export function subscribeToApplications(
       onUpdate(list);
     },
     (err) => {
+      if (isQuotaLimitError(err)) activateFirestoreQuotaCooldown();
       if (onError) onError(err);
       console.warn(`Firestore snapshot subscription notice on '${path}':`, err.message);
     }
@@ -582,6 +642,9 @@ export function subscribeToClaims(
   onError?: (err: Error) => void
 ): Unsubscribe {
   const path = 'claims';
+  if (isFirestoreQuotaCooldownActive()) {
+    return () => {};
+  }
   const q = query(collection(db, 'claims'), orderBy('created_at', 'desc'));
   return onSnapshot(
     q,
@@ -591,6 +654,7 @@ export function subscribeToClaims(
       onUpdate(list);
     },
     (err) => {
+      if (isQuotaLimitError(err)) activateFirestoreQuotaCooldown();
       if (onError) onError(err);
       console.warn(`Firestore snapshot subscription notice on '${path}':`, err.message);
     }
@@ -712,6 +776,9 @@ export async function saveAdCampaignToFirestore(campaign: any): Promise<boolean>
 }
 
 export async function fetchAdCampaignsFromFirestore(): Promise<any[]> {
+  if (isFirestoreQuotaCooldownActive()) {
+    return [];
+  }
   try {
     const colRef = collection(db, 'ad_campaigns');
     const snapshot = await getDocs(colRef);
@@ -721,6 +788,7 @@ export async function fetchAdCampaignsFromFirestore(): Promise<any[]> {
     });
     return list;
   } catch (error) {
+    if (isQuotaLimitError(error)) activateFirestoreQuotaCooldown();
     console.warn('[Firebase] Fetch ad campaigns fallback:', error);
     return [];
   }

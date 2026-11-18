@@ -66,6 +66,7 @@ import {
   generateBusinessSlug,
   subscribeToApplications,
   subscribeToClaims,
+  clearFirestoreQuotaCooldown,
   supabase,
   isSupabaseConfigured,
   PURGED_TEST_BUSINESS_IDS,
@@ -581,10 +582,10 @@ export default function App() {
     };
   }, []);
 
-  // Auto-refresh admin queues with live remote data when opening Editorial Review desk
+  // Sync cached directory data when Editorial Review desk opens (live claims & applications come from onSnapshot below)
   useEffect(() => {
     if (isEditorialReviewOpen) {
-      refreshCloudData(true, true);
+      refreshCloudData(false, false);
     }
   }, [isEditorialReviewOpen, refreshCloudData]);
 
@@ -1790,7 +1791,10 @@ export default function App() {
             onToggleVerifyBusiness={handleToggleVerifyBusiness}
             onOpenSubmitModal={() => setIsSubmitStoryOpen(true)}
             onOpenSubmitUpdateModal={() => setIsSubmitUpdateOpen(true)}
-            onRefreshCloudData={() => refreshCloudData(true, true)}
+            onRefreshCloudData={() => {
+              clearFirestoreQuotaCooldown();
+              refreshCloudData(true, true);
+            }}
             isSyncingCloud={isSyncingCloud}
             lastCloudSyncTime={lastCloudSyncTime}
           />

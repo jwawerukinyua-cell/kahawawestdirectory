@@ -29,6 +29,7 @@ import {
   testFirebaseSyncStatus,
   subscribeToApplications,
   subscribeToClaims,
+  clearFirestoreQuotaCooldown,
   FirebaseSyncReport,
 } from './firebase';
 import { sanitizeClaimedBy } from './merchantAuth';
@@ -37,6 +38,7 @@ import { sanitizeBusinessPhotos } from './imageCompression';
 export {
   subscribeToApplications,
   subscribeToClaims,
+  clearFirestoreQuotaCooldown,
 };
 
 // Supabase legacy client maintained as passive secondary fallback
@@ -103,8 +105,8 @@ const BUSINESSES_STORAGE_KEY = 'kwest_directory_custom_businesses';
 const FEEDBACK_STORAGE_KEY = 'kwest_directory_feedback';
 const APPLICATIONS_STORAGE_KEY = 'kwest_directory_applications';
 
-export const SUPABASE_CACHE_TTL_MS = 10 * 60 * 1000;
-export const SUPABASE_ADMIN_CACHE_TTL_MS = 2 * 60 * 1000;
+export const SUPABASE_CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours for public visitors to protect Firestore free daily read quota
+export const SUPABASE_ADMIN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes for admin queues
 
 const CACHE_KEYS = {
   BUSINESSES_DATA: 'kwest_cache_businesses_data_v2',
@@ -520,6 +522,9 @@ export const fetchBusinessesFromSupabase = async (forceRefresh = false): Promise
         }
 
         const cachedData = localStorage.getItem(CACHE_KEYS.BUSINESSES_DATA);
+        try {
+          localStorage.setItem(CACHE_KEYS.BUSINESSES_TIME, String(Date.now()));
+        } catch {}
         if (cachedData) {
           try {
             const parsed = JSON.parse(cachedData);
@@ -1020,6 +1025,9 @@ export const fetchStoriesFromSupabase = async (forceRefresh = false): Promise<Co
         }
 
         const cachedData = localStorage.getItem(CACHE_KEYS.STORIES_DATA);
+        try {
+          localStorage.setItem(CACHE_KEYS.STORIES_TIME, String(Date.now()));
+        } catch {}
         if (cachedData) {
           try {
             const parsed = JSON.parse(cachedData);
@@ -1139,6 +1147,9 @@ export const fetchUpdatesFromSupabase = async (forceRefresh = false): Promise<Co
         }
 
         const cachedData = localStorage.getItem(CACHE_KEYS.UPDATES_DATA);
+        try {
+          localStorage.setItem(CACHE_KEYS.UPDATES_TIME, String(Date.now()));
+        } catch {}
         if (cachedData) {
           try {
             const parsed = JSON.parse(cachedData);
